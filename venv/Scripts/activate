@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="D:\PycharmProjects\Bots\5LettersBot\venv"
+VIRTUAL_ENV="G:\PycharmProjects\Bots\HyperKeeperBot\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
