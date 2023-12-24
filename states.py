@@ -1,0 +1,14 @@
+from aiogram.dispatcher.filters.state import StatesGroup, State
+
+
+class Folder(StatesGroup):
+    NewName = State()
+    EditName = State()
+    Delete = State()
+
+
+class Item(StatesGroup):
+    NewStepTitle = State()
+    NewStepFolder = State()
+    EditTitle = State()
+    EditText = State()
