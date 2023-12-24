@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=D:\PycharmProjects\Bots\5LettersBot\venv
+set VIRTUAL_ENV=G:\PycharmProjects\Bots\HyperKeeperBot\venv
 
 if not defined PROMPT set PROMPT=$P$G
 
