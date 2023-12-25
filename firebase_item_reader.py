@@ -16,7 +16,9 @@ async def get_folder_items(tg_user_id, folder_id):
     """Возвращает элементы папки по её идентификатору."""
     folder_data = await get_folder_data(tg_user_id, folder_id)
     items = folder_data.get("items", [])
-    sorted_items = dict(sorted(items.items(), key=lambda x: get_last_number(x[0])))
+    # сортировка по title or text
+    sorted_items = dict(sorted(items.items(), key=lambda x: x[1]["title"] or x[1]["text"])) #get_last_number(x[0])))
+
     return sorted_items
 
 
@@ -43,7 +45,7 @@ async def get_item(tg_user_id, item_id):
     return None
 
 
-async def get_item_property(tg_user_id, folder_id, item_id, key):
+async def get_item_property(tg_user_id, item_id, key):
     item_dict = await get_item_dict(tg_user_id, item_id)
     if item_dict:
         # Если элемент найден, возвращаем значение ключа

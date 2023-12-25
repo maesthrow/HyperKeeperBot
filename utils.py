@@ -6,7 +6,7 @@ from aiogram.utils.callback_data import CallbackData
 
 from button_manager import check_button_exists
 from firebase_item_reader import get_folder_items, get_item
-from load_all import dp, bot
+from load_all import dp
 from enums import Environment
 
 invalid_chars = r'/\:,.*?"<>|'
@@ -60,14 +60,9 @@ async def create_folder_button(folder_id, folder_name):
 def get_inline_markup_folders(folder_buttons):
     inline_markup = InlineKeyboardMarkup(row_width=3)
 
-    for button in folder_buttons:
+    sorted_buttons = sorted(folder_buttons, key=lambda x: x.text)
+    for button in sorted_buttons:
         folder_name_button = button
-        # Вычисляем ширину кнопок на основе длины текста
-        #folder_name_width = len(button.text)
-
-        # Устанавливаем ширину кнопки с названием папки
-        #folder_name_button.resize_keyboard = True
-        #folder_name_button.resize_keyboard_width = folder_name_width + 2  # Добавляем отступ справа
 
         # Добавляем кнопки на одну строку
         inline_markup.row(folder_name_button, InlineKeyboardButton(text='', callback_data='empty'),

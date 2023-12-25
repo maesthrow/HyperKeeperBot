@@ -65,11 +65,11 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>", reply_markup=markup)
     folders_inline_markup = get_inline_markup_folders(folder_buttons)
     if folders_inline_markup.inline_keyboard:
-        await bot.send_message(message.chat.id, f"⬇️ Папки", reply_markup=folders_inline_markup)
+        await bot.send_message(message.chat.id, f"⬇️ Папки внутри хранилища ⬇️", reply_markup=folders_inline_markup)
     load_message = await bot.send_message(chat.id, f"⌛️")
     items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID)
     if items_inline_markup.inline_keyboard:
-        await bot.send_message(message.chat.id, f"⬇️ Записи", reply_markup=items_inline_markup)
+        await bot.send_message(message.chat.id, f"⬇️ Записи в хранилище ⬇️", reply_markup=items_inline_markup)
     await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
 
 
