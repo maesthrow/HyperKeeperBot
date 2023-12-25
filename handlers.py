@@ -11,9 +11,9 @@ from button_manager import create_general_reply_markup, general_buttons_folder, 
 from firebase import add_user
 from firebase_folder_reader import ROOT_FOLDER_ID, get_user_folders, get_folder_path_names
 from firebase_folder_writer import set_current_folder
-from handlers_folder import create_folder_button, create_folder_inline_markup, on_delete_folder
+from handlers_folder import create_folder_button, on_delete_folder
 from load_all import dp, bot
-from utils import get_environment
+from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders
 from enums import Environment
 from models import Item
 
@@ -47,6 +47,7 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     await state.reset_state()
 
     tg_user = aiogram.types.User.get_current()
+    chat = aiogram.types.Chat.get_current()
     user_folders = await get_user_folders(tg_user.id)
 
     await set_current_folder(tg_user.id, ROOT_FOLDER_ID)
@@ -56,15 +57,20 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
         for folder_id, folder_data in user_folders.items()
     ]
 
-    inline_markup = create_folder_inline_markup(folder_buttons)
     markup = create_general_reply_markup(general_buttons_folder)
     await state.update_data(current_keyboard=markup)
     await dp.storage.update_data(user=tg_user, chat=message.chat, data={'current_keyboard': markup})
 
     current_folder_path_names = await get_folder_path_names(tg_user.id)
-    bot_message = await bot.send_message(message.chat.id, "🗂️", reply_markup=markup)
-    await dp.storage.update_data(user=tg_user, chat=message.chat, data={'bot_message': bot_message})
-    await bot.send_message(message.chat.id, f"<b>{current_folder_path_names}</b>", reply_markup=inline_markup)
+    await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>", reply_markup=markup)
+    folders_inline_markup = get_inline_markup_folders(folder_buttons)
+    if folders_inline_markup.inline_keyboard:
+        await bot.send_message(message.chat.id, f"⬇️ Папки", reply_markup=folders_inline_markup)
+    load_message = await bot.send_message(chat.id, f"⌛️")
+    items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID)
+    if items_inline_markup.inline_keyboard:
+        await bot.send_message(message.chat.id, f"⬇️ Записи", reply_markup=items_inline_markup)
+    await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
 
 
 @dp.message_handler(Text(equals="🗑 Удалить"))

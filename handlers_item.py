@@ -15,7 +15,7 @@ import states
 from button_manager import create_general_reply_markup, skip_enter_item_title_button, general_buttons_items, \
     general_buttons_item, cancel_add_new_item_button
 from enums import Environment
-from firebase_folder_reader import get_current_folder_id, get_folder_name
+from firebase_folder_reader import get_current_folder_id, get_folder_name, get_parent_folder_id
 from firebase_item_reader import get_folder_items, get_item
 from firebase_item_writer import add_item_to_folder, delete_item, delete_all_items_in_folder, edit_item
 from handlers_folder import show_folders
@@ -25,65 +25,6 @@ from utils import get_environment, get_inline_markup_for_accept_cancel
 
 cancel_edit_item_button = InlineKeyboardButton("Отменить", callback_data=f"cancel_edit_item")
 add_none_title_item_button = InlineKeyboardButton("Пустой заголовок", callback_data=f"add_none_title_item")
-
-
-@dp.message_handler(Text(contains="Показать записи в текущей папке"))
-async def handler_show_folder_items(message: aiogram.types.Message):
-    print(message.text)
-    tg_user = aiogram.types.User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
-    # Удаляем предыдущее отправленное сообщение
-    try:
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    except:
-        pass
-    # Отображаем содержимое папки
-    await show_folder_items(message.chat.id, current_folder_id)
-
-
-# Определяем функцию для обработки отображения содержимого папки
-async def show_folder_items(chat_id, current_folder_id):
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current()
-    current_folder_name = await get_folder_name(tg_user.id, current_folder_id)
-
-    markup = create_general_reply_markup(general_buttons_items)
-    await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
-
-    bot_message = await bot.send_message(chat_id, f"⬇️ Записи в папке ⬇️", reply_markup=markup)
-    await dp.storage.update_data(user=tg_user, chat=chat, data={'bot_message': bot_message})
-    load_message = await bot.send_message(chat_id, f"Загружаю... ")
-
-    # Получаем записи из коллекции items для текущей папки
-    folder_items = await get_folder_items(tg_user.id, current_folder_id)
-
-    buttons = []
-    # Создаем список кнопок для каждой записи
-    for item_id in folder_items:
-        # item_title = await get_item_property(tg_user.id, current_folder_id, item_id, "title")
-        item = await get_item(tg_user.id, item_id)
-
-        # read_button = InlineKeyboardButton("📖", callback_data=f"read_item_{current_folder_id}_{item}")
-        # edit_button = InlineKeyboardButton("✏️", callback_data=f"edit_item_{current_folder_id}_{item}")
-        # move_button = InlineKeyboardButton("🔀", callback_data=f"move_item_{current_folder_id}_{item}")
-        # delete_button = InlineKeyboardButton("🗑", callback_data=f"delete_item_{current_folder_id}_{item}")
-
-        item_button_text = item.title or item.get_short_title()  # item.get_short_parse_title()
-        if item:
-            buttons.append([InlineKeyboardButton(f"📄 {item_button_text}", callback_data=f"item_{item_id}")])
-        # buttons = [[read_button, edit_button, move_button, delete_button]]
-
-    await bot.delete_message(chat_id=chat_id, message_id=load_message.message_id)
-    # Создаем разметку и отправляем сообщение с кнопками для каждой item
-    item_inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
-    await bot.send_message(chat_id, f"📁 <b>{current_folder_name}:</b>", reply_markup=item_inline_markup)
-
-
-@dp.message_handler(Text(equals="️↩️ Назад к записям"))
-async def back_to_items_handler(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
-    await show_folder_items(tg_user.id, current_folder_id)
 
 
 # Обработчик для ответа на нажатие кнопки
@@ -112,26 +53,11 @@ async def show_item(item_id):
     await bot.send_message(tg_user.id, item_content, reply_markup=markup)
 
 
-async def back_to_environment():
+@dp.message_handler(Text(equals="️↩️ Назад к папке"))
+async def back_to_folder(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
-
-    environment = await get_environment()
-
-    if environment == Environment.FOLDERS:
-        await show_folders()
-    elif environment == Environment.FOLDER_ITEMS:
-        await show_folder_items(tg_user.id, current_folder_id)
-    elif environment == Environment.ITEM_CONTENT:
-        await show_folder_items(tg_user.id, current_folder_id)
-
-
-# @dp.message_handler(Text(equals="🗑 Удалить"))
-# async def delete_item_handler(message: aiogram.types.Message):
-#     environment = await get_environment()
-#
-#     if environment == Environment.ITEM_CONTENT:
-#         await on_delete_item(message)
+    folder_id = await get_current_folder_id(tg_user.id)
+    await show_folders(folder_id)
 
 
 @dp.callback_query_handler(text_contains="cancel_add_new_item", state=states.Item.NewStepTitle)
@@ -144,8 +70,7 @@ async def cancel_add_new_item(call: CallbackQuery, state: FSMContext):
 
     await state.reset_data()
     await state.reset_state()
-    await back_to_environment()
-    # await show_folders(call)
+    await show_folders()
 
 
 @dp.callback_query_handler(text_contains="skip_enter_item_title", state=states.Item.NewStepTitle)
@@ -175,7 +100,7 @@ async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
 
     await state.reset_data()
     await state.reset_state()
-    await back_to_environment()
+    await show_folders()
 
 
 @dp.message_handler(state=states.Item.NewStepTitle)
@@ -209,7 +134,7 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
 
     await state.reset_data()
     await state.reset_state()
-    await back_to_environment()
+    await show_folders()
 
 
 async def on_delete_item(message: aiogram.types.Message):
@@ -217,17 +142,18 @@ async def on_delete_item(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
     item_id = data.get('item_id')
 
-    sent_message = await bot.send_message(message.chat.id, "<b>Подготовка к удалению записи</b>",
+    sent_message = await bot.send_message(message.chat.id, "⌛️",
                                           reply_markup=ReplyKeyboardRemove())
 
-    inline_markup = get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
+    inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
                                                         callback_data=f"delete_item_request_{item_id}")
 
-    await asyncio.sleep(0.5)
-    await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
+    #await asyncio.sleep(0.5)
+
     await bot.send_message(message.chat.id,
                            f"Хотите удалить эту запись ?",
                            reply_markup=inline_markup)
+    await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
 
 
 @dp.callback_query_handler(text_contains="delete_item_request")
@@ -249,30 +175,32 @@ async def delete_item_request(call: CallbackQuery):
             # Отправляем ответ в виде всплывающего уведомления
             # await call.answer(f"Запись удалена") #всплывающее сообщение сверху
             await call.answer(text=f"Запись удалена.", show_alert=True)
-            await back_to_environment()
         else:
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить запись.'", show_alert=True)
+        await show_folders()
     except MessageNotModified:
         await call.answer(text=f"Что то пошло не так при удалении записи.", show_alert=True)
+        await show_folders()
 
 
-@dp.message_handler(Text(equals="️🗑 Удалить все записи в папке"))
+@dp.message_handler(Text(equals="️🧹 Удалить все записи"))
 async def delete_all_items_handler(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
 
-    sent_message = await bot.send_message(message.chat.id, "<b>Подготовка к удалению записей</b>",
+    sent_message = await bot.send_message(message.chat.id, "⌛️",
                                           reply_markup=ReplyKeyboardRemove())
 
-    inline_markup = get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
+    inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
                                                         callback_data=f"delete_all_items_request_{current_folder_id}")
 
-    await asyncio.sleep(0.5)
-    await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
+    #await asyncio.sleep(0.5)
+
     await bot.send_message(message.chat.id,
                            f"Действительно хотите удалить все записи в этой папке?",
                            reply_markup=inline_markup)
+    await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
 
 
 @dp.callback_query_handler(text_contains="delete_all_items_request")
@@ -282,7 +210,7 @@ async def delete_all_items_request(call: CallbackQuery):
 
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        await back_to_environment()
+        await show_folders()
         return
 
     try:
@@ -293,12 +221,13 @@ async def delete_all_items_request(call: CallbackQuery):
             # Отправляем ответ в виде всплывающего уведомления
             # await call.answer(f"Запись удалена") #всплывающее сообщение сверху
             await call.answer(text=f"Все записи в папке удалены.", show_alert=True)
-            await back_to_environment()
         else:
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить записи.'", show_alert=True)
+        await show_folders()
     except MessageNotModified:
         await call.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
+        await show_folders()
 
 
 @dp.message_handler(Text(equals="️✏️ Редактировать заголовок"))

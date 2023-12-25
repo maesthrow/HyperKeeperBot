@@ -1,8 +1,8 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 
 general_buttons_folder = [
-        [KeyboardButton("📄 Показать записи в текущей папке")],
-        [KeyboardButton("➕ Новая папка"), KeyboardButton("🔍 Поиск")]
+        [KeyboardButton("➕ Новая папка"), KeyboardButton("🔍 Поиск")],
+        [KeyboardButton("️📊 Статистика"), KeyboardButton("️🧹 Удалить все записи")],
     ]
 
 general_buttons_items = [
@@ -14,7 +14,7 @@ general_buttons_items = [
 general_buttons_item = [
         [KeyboardButton("️✏️ Редактировать заголовок"), KeyboardButton("️📝 Редактировать текст")],
         [KeyboardButton("️🔀 Переместить"), KeyboardButton("🗑 Удалить")],
-        [KeyboardButton("️↩️ Назад к записям")],
+        [KeyboardButton("️↩️ Назад к папке")],
     ]
 
 skip_enter_item_title_button = InlineKeyboardButton("Без заголовка", callback_data="skip_enter_item_title")
