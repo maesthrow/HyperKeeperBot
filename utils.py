@@ -1,4 +1,5 @@
 import asyncio
+import math
 
 import aiogram
 from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
@@ -11,6 +12,7 @@ from enums import Environment
 
 invalid_chars = r'/\:,.*?"<>|'
 folder_callback = CallbackData("folder", "folder_id")
+folders_on_page_count = 3
 
 
 def is_valid_folder_name(name):
@@ -57,16 +59,33 @@ async def create_folder_button(folder_id, folder_name):
     )
 
 
-def get_inline_markup_folders(folder_buttons):
+def get_inline_markup_folders(folder_buttons, current_page):
     inline_markup = InlineKeyboardMarkup(row_width=3)
 
     sorted_buttons = sorted(folder_buttons, key=lambda x: x.text)
-    for button in sorted_buttons:
+    buttons = sorted_buttons[current_page * folders_on_page_count - folders_on_page_count:
+                             current_page * folders_on_page_count]
+    for button in buttons:
         folder_name_button = button
 
         # Добавляем кнопки на одну строку
         inline_markup.row(folder_name_button, InlineKeyboardButton(text='', callback_data='empty'),
                           InlineKeyboardButton(text='', callback_data='empty'))
+
+    last_page = math.ceil(len(folder_buttons) / folders_on_page_count)
+    if last_page > 1:
+        prev_page = current_page - 1 if current_page - 1 > 0 else last_page
+        next_page = current_page + 1 if current_page < last_page else 1
+        max_folder_num = len(sorted_buttons)
+        first_on_page = (current_page - 1) * folders_on_page_count + 1
+        last_on_page = current_page * folders_on_page_count
+        if last_on_page > max_folder_num:
+            last_on_page = max_folder_num
+        current_nums = f"{first_on_page}..{last_on_page}" if first_on_page != last_on_page else f"{first_on_page}"
+        mid_btn_text = f"{current_nums} / {max_folder_num}"
+        inline_markup.add(InlineKeyboardButton(text='⬅️', callback_data=f'go_to_page_folders_{prev_page}'),
+                          InlineKeyboardButton(text=mid_btn_text, callback_data='none'),
+                          InlineKeyboardButton(text='➡️', callback_data=f'go_to_page_folders_{next_page}'))
 
     return inline_markup
 
