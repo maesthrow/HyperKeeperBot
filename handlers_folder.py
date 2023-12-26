@@ -76,13 +76,19 @@ async def show_folders(current_folder_id=None):
         general_buttons.append([KeyboardButton("✏️ Переименовать"), KeyboardButton("🗑 Удалить")])
         general_buttons.append([KeyboardButton("↩️ Назад")])
     markup = create_general_reply_markup(general_buttons)
-    await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
 
     current_folder_path_names = await get_folder_path_names(tg_user.id, current_folder_id)
-    await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>", reply_markup=markup)
-    folders_inline_markup = get_inline_markup_folders(folder_buttons)
-    if folders_inline_markup.inline_keyboard:
-        await bot.send_message(chat.id, f"⬇️ Папки внутри текущей ⬇️", reply_markup=folders_inline_markup)
+    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    current_page_folders = data.get('current_page_folders')
+    page = current_page_folders or 1
+    folders_inline_markup = get_inline_markup_folders(folder_buttons, page)
+    #if folders_inline_markup.inline_keyboard:
+    folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
+                                             reply_markup=folders_inline_markup)
+    await dp.storage.update_data(user=tg_user, chat=chat,
+                                 data={'current_keyboard': markup, 'folders_message': folders_message})
     load_message = await bot.send_message(chat.id, f"⌛️")
     items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id)
     if items_inline_markup.inline_keyboard:
@@ -255,3 +261,28 @@ async def on_delete_folder(message: aiogram.types.Message):
     await bot.send_message(message.chat.id,
                            f"Хотите удалить папку 📁 '{folder_name}' и все ее содержимое?",
                            reply_markup=inline_markup)
+
+
+@dp.callback_query_handler(text_contains="go_to_page_folders")
+async def go_to_page_folders(call: CallbackQuery):
+    match = re.match(r"go_to_page_folders_(\d+)", call.data)
+
+    if match:
+        page_number = int(match.group(1))
+        tg_user = aiogram.types.User.get_current()
+        chat = aiogram.types.Chat.get_current()
+        data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
+        folders_message = data.get('folders_message')
+
+        current_folder_id = await get_current_folder_id(tg_user.id)
+        user_folders = await get_user_folders(tg_user.id, current_folder_id)
+
+        folder_buttons = [
+            await create_folder_button(folder_id, folder_data.get("name"))
+            for folder_id, folder_data in user_folders.items()
+        ]
+
+        folders_inline_markup = get_inline_markup_folders(folder_buttons, page_number)
+        await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
+        await dp.storage.update_data(user=tg_user, chat=chat,
+                                     data={'folders_message': folders_message, 'current_page_folders': page_number})
