@@ -12,7 +12,9 @@ from enums import Environment
 
 invalid_chars = r'/\:,.*?"<>|'
 folder_callback = CallbackData("folder", "folder_id")
-folders_on_page_count = 3
+folders_on_page_count = 4
+items_on_page_count = 4
+separator = 'из'
 
 
 def is_valid_folder_name(name):
@@ -54,13 +56,14 @@ async def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback
 
 async def create_folder_button(folder_id, folder_name):
     return InlineKeyboardButton(
-        f"📁 {folder_name}",
+        f"🗂️ {folder_name}",
         callback_data=folder_callback.new(folder_id=folder_id)
     )
 
 
-def get_inline_markup_folders(folder_buttons, current_page):
+async def get_inline_markup_folders(folder_buttons, current_page):
     inline_markup = InlineKeyboardMarkup(row_width=3)
+    current_page = int(current_page)
 
     sorted_buttons = sorted(folder_buttons, key=lambda x: x.text)
     buttons = sorted_buttons[current_page * folders_on_page_count - folders_on_page_count:
@@ -72,33 +75,30 @@ def get_inline_markup_folders(folder_buttons, current_page):
         inline_markup.row(folder_name_button, InlineKeyboardButton(text='', callback_data='empty'),
                           InlineKeyboardButton(text='', callback_data='empty'))
 
-    last_page = math.ceil(len(folder_buttons) / folders_on_page_count)
+    max_folder_num = len(sorted_buttons)
+    last_page = math.ceil(max_folder_num / folders_on_page_count)
     if last_page > 1:
-        prev_page = current_page - 1 if current_page - 1 > 0 else last_page
-        next_page = current_page + 1 if current_page < last_page else 1
-        max_folder_num = len(sorted_buttons)
-        first_on_page = (current_page - 1) * folders_on_page_count + 1
-        last_on_page = current_page * folders_on_page_count
-        if last_on_page > max_folder_num:
-            last_on_page = max_folder_num
-        current_nums = f"{first_on_page}..{last_on_page}" if first_on_page != last_on_page else f"{first_on_page}"
-        mid_btn_text = f"{current_nums} / {max_folder_num}"
-        inline_markup.add(InlineKeyboardButton(text='⬅️', callback_data=f'go_to_page_folders_{prev_page}'),
-                          InlineKeyboardButton(text=mid_btn_text, callback_data='none'),
-                          InlineKeyboardButton(text='➡️', callback_data=f'go_to_page_folders_{next_page}'))
+        inline_markup = await get_inline_markup_for_pages('folders', inline_markup, current_page,
+                                                          last_page, folders_on_page_count,
+                                                          max_folder_num, 'go_to_page_folders_')
 
     return inline_markup
 
 
-async def get_inline_markup_items_in_folder(current_folder_id):
+async def get_inline_markup_items_in_folder(current_folder_id, current_page):
     tg_user = aiogram.types.User.get_current()
 
     # Получаем записи из коллекции items для текущей папки
     folder_items = await get_folder_items(tg_user.id, current_folder_id)
+    list_items_id = []
+    for item_id in folder_items:
+        list_items_id.append(item_id)
+
+    current_items = list_items_id[current_page * items_on_page_count - items_on_page_count:
+                                  current_page * items_on_page_count]
 
     buttons = []
-    # Создаем список кнопок для каждой записи
-    for item_id in folder_items:
+    for item_id in current_items:
         item = await get_item(tg_user.id, item_id)
 
         item_button_text = item.title or item.get_short_title()
@@ -106,5 +106,36 @@ async def get_inline_markup_items_in_folder(current_folder_id):
             buttons.append([InlineKeyboardButton(f"📄 {item_button_text}", callback_data=f"item_{item_id}")])
 
     # Создаем разметку и отправляем сообщение с кнопками для каждой item
-    items_inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+    items_inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
+    max_items_num = len(folder_items)
+    last_page = math.ceil(max_items_num / items_on_page_count)
+    if last_page > 1:
+        items_inline_markup = await get_inline_markup_for_pages('items', items_inline_markup, current_page,
+                                                                last_page, items_on_page_count,
+                                                                max_items_num, 'go_to_page_items_')
     return items_inline_markup
+
+
+async def get_inline_markup_for_pages(instance_text, inline_markup, current_page, last_page, on_page_count, max_num,
+                                      callback_data_text):
+    instance_smile = '🗂️' if instance_text == 'folders' else '📄'
+
+    prev_page = current_page - 1 if current_page - 1 > 0 else last_page
+    next_page = current_page + 1 if current_page < last_page else 1
+
+    first_on_page = (current_page - 1) * on_page_count + 1
+    last_on_page = current_page * on_page_count
+    if last_on_page > max_num:
+        last_on_page = max_num
+    current_nums = f"{first_on_page}..{last_on_page}" if first_on_page != last_on_page else f"{first_on_page}"
+    mid_btn_text = f"{current_nums} {separator} {max_num} {instance_smile}"
+
+    inline_markup.add(InlineKeyboardButton(text='⬅️', callback_data=f'{callback_data_text}{prev_page}'),
+                      InlineKeyboardButton(text=mid_btn_text, callback_data=f'all_{instance_text}'),
+                      InlineKeyboardButton(text='➡️', callback_data=f'{callback_data_text}{next_page}'))
+
+    return inline_markup
+
+
+async def get_level_folders(folder_id):
+    return len(folder_id.split('/')) - 1

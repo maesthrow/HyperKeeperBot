@@ -184,7 +184,7 @@ async def delete_item_request(call: CallbackQuery):
         await show_folders()
 
 
-@dp.message_handler(Text(equals="️🧹 Удалить все записи"))
+@dp.message_handler(Text(equals="️🧹 Удалить все записи в папке"))
 async def delete_all_items_handler(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
