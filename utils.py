@@ -63,7 +63,6 @@ async def create_folder_button(folder_id, folder_name):
 
 async def get_inline_markup_folders(folder_buttons, current_page):
     inline_markup = InlineKeyboardMarkup(row_width=3)
-    current_page = int(current_page)
 
     sorted_buttons = sorted(folder_buttons, key=lambda x: x.text)
     buttons = sorted_buttons[current_page * folders_on_page_count - folders_on_page_count:
@@ -139,3 +138,26 @@ async def get_inline_markup_for_pages(instance_text, inline_markup, current_page
 
 async def get_level_folders(folder_id):
     return len(folder_id.split('/')) - 1
+
+
+async def get_folders_page_info(folder_id, current_page=None):
+    tg_user = aiogram.types.User.get_current()
+    chat = aiogram.types.Chat.get_current()
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+
+    page_folders = data.get('page_folders')
+    level = await get_level_folders(folder_id)
+    list_pages = page_folders.split('/')
+    if not current_page:
+        current_page = list_pages[level] if level < len(list_pages) else '1'
+    else:
+        current_page = str(current_page)
+    new_page_folders = list_pages[:level + 1] if level + 1 < len(list_pages) else list_pages
+    if level + 1 > len(new_page_folders):
+        new_page_folders.append(current_page)
+    else:
+        new_page_folders[-1] = current_page
+    new_page_folders = '/'.join(new_page_folders)
+    print(new_page_folders)
+    folders_page_info = {'current_page': int(current_page), 'page_folders': new_page_folders}
+    return folders_page_info

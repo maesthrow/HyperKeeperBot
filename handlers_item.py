@@ -46,7 +46,7 @@ async def show_item(item_id):
     if item.title:
         item_content = f"📄 <b>{item.title}</b>\n\n{item.text}"
     else:
-        item_content = f"📄\n{item.text}"
+        item_content = f"📄\n\n{item.text}"
     markup = create_general_reply_markup(general_buttons_item)
     bot_message = await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
     await dp.storage.update_data(user=tg_user, chat=chat, data={'bot_message': bot_message, 'item_id': item_id})

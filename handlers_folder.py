@@ -20,7 +20,7 @@ from handlers import create_general_reply_markup
 # from handlers_item import get_items_in_folder
 from load_all import dp, bot
 from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
-    is_valid_folder_name, invalid_chars, clean_folder_name, get_level_folders
+    is_valid_folder_name, invalid_chars, clean_folder_name, get_level_folders, get_folders_page_info
 
 cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_data=f"cancel_enter_folder_name")
 
@@ -80,20 +80,11 @@ async def show_folders(current_folder_id=None):
     current_folder_path_names = await get_folder_path_names(tg_user.id, current_folder_id)
     await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
 
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    folders_page_info = await get_folders_page_info(current_folder_id)
+    current_folder_page = folders_page_info.get('current_page')
+    new_page_folders = folders_page_info.get('page_folders')
 
-    page_folders = data.get('page_folders')
-    level = await get_level_folders(current_folder_id)
-    list_pages = page_folders.split('/')
-    page = list_pages[level] if level < len(list_pages) else '1'
-    new_page_folders = list_pages[:level + 1] if level + 1 < len(list_pages) else list_pages
-    if level + 1 > len(new_page_folders):
-        new_page_folders.append(page)
-    else:
-        new_page_folders[-1] = page
-    new_page_folders = '/'.join(new_page_folders)
-
-    folders_inline_markup = await get_inline_markup_folders(folder_buttons, page)
+    folders_inline_markup = await get_inline_markup_folders(folder_buttons, current_folder_page)
 
     folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
@@ -283,18 +274,14 @@ async def go_to_page_folders(call: CallbackQuery):
     match = re.match(r"go_to_page_folders_(\d+)", call.data)
 
     if match:
-        page = match.group(1)
+        page = int(match.group(1))
 
         tg_user = aiogram.types.User.get_current()
         chat = aiogram.types.Chat.get_current()
         data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
         current_folder_id = await get_current_folder_id(tg_user.id)
-        page_folders = data.get('page_folders')
-        level = await get_level_folders(current_folder_id)
-        new_page_folders = page_folders.split('/')[:level + 1]
-        new_page_folders[-1] = page
-        new_page_folders = '/'.join(new_page_folders)
-
+        folders_page_info = await get_folders_page_info(current_folder_id, page)
+        new_page_folders = folders_page_info.get('page_folders')
 
         folders_message = data.get('folders_message')
 
