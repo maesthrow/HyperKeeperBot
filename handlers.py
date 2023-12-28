@@ -33,9 +33,9 @@ async def start(message: aiogram.types.Message, state: FSMContext):
 
     bot_username = (await bot.me).username
 
-    text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля Вас создано персональное хранилище 🗂️, "
+    text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля Вас создано персональное хранилище, "
             f"которое доступно с помощью команды /storage\n\n"
-            f"Управляйте вашими данными 💼, создавайте папки 📁 и записи 📄, используя кнопки и подсказки на клавиатуре📱\n\n"
+            f"Управляйте вашими данными 💼, создавайте папки 🗂️ и записи 📄, используя кнопки и подсказки на клавиатуре📱\n\n"
             f"Для доступа ко всем функциям бота жмите на кнопку Меню рядом с полем ввода сообщения ↙️\n\n"
             f"Приятного использования! ☺️")
     await bot.send_message(chat_id, text, reply_markup=ReplyKeyboardRemove())
@@ -58,25 +58,29 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
         for folder_id, folder_data in user_folders.items()
     ]
     markup = create_general_reply_markup(general_buttons_folder)
-    #await state.update_data(current_keyboard=markup)
 
     current_folder_path_names = await get_folder_path_names(tg_user.id)
     await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
-    folders_inline_markup = get_inline_markup_folders(folder_buttons, 1)
-    #if folders_inline_markup.inline_keyboard:
+    folders_inline_markup = await get_inline_markup_folders(folder_buttons, 1)
+
     folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
-    await dp.storage.update_data(user=tg_user, chat=chat,
-                                 data={'current_keyboard': markup, 'folders_message': folders_message})
-    #    await bot.send_message(message.chat.id, f"⬇️ Папки внутри текущей ⬇️", reply_markup=folders_inline_markup)
-    load_message = await bot.send_message(chat.id, f"⌛️")
-    items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID)
+
+    #load_message = await bot.send_message(chat.id, f"⌛️")
+    items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID, 1)
     if items_inline_markup.inline_keyboard:
-        await bot.send_message(message.chat.id, f"⬇️ Записи в текущей папке ⬇️", reply_markup=items_inline_markup)
-    await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+        for row in items_inline_markup.inline_keyboard:
+            folders_inline_markup.add(*row)
+        await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
+
+    #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+    folders_message.reply_markup = folders_inline_markup
+    await dp.storage.update_data(user=tg_user, chat=chat,
+                                 data={'current_keyboard': markup, 'folders_message': folders_message,
+                                       'page_folders': str(1)})
 
 
-@dp.message_handler(Text(equals="🗑 Удалить"))
+@dp.message_handler(Text(contains="🗑 Удалить"))
 async def delete_handler(message: aiogram.types.Message):
     environment = await get_environment()
 

@@ -2,7 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 
 general_buttons_folder = [
         [KeyboardButton("➕ Новая папка"), KeyboardButton("🔍 Поиск")],
-        [KeyboardButton("️📊 Статистика"), KeyboardButton("️🧹 Удалить все записи")],
+        [KeyboardButton("️📊 Статистика"), KeyboardButton("️🧹 Удалить все записи в папке")],
     ]
 
 general_buttons_items = [

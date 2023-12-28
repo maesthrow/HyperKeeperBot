@@ -46,7 +46,7 @@ async def show_item(item_id):
     if item.title:
         item_content = f"📄 <b>{item.title}</b>\n\n{item.text}"
     else:
-        item_content = f"📄\n{item.text}"
+        item_content = f"📄\n\n{item.text}"
     markup = create_general_reply_markup(general_buttons_item)
     bot_message = await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
     await dp.storage.update_data(user=tg_user, chat=chat, data={'bot_message': bot_message, 'item_id': item_id})
@@ -184,7 +184,7 @@ async def delete_item_request(call: CallbackQuery):
         await show_folders()
 
 
-@dp.message_handler(Text(equals="️🧹 Удалить все записи"))
+@dp.message_handler(Text(equals="️🧹 Удалить все записи в папке"))
 async def delete_all_items_handler(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
