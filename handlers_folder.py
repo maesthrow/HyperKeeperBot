@@ -20,7 +20,7 @@ from handlers import create_general_reply_markup
 # from handlers_item import get_items_in_folder
 from load_all import dp, bot
 from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
-    is_valid_folder_name, invalid_chars, clean_folder_name, get_level_folders, get_folders_page_info
+    is_valid_folder_name, invalid_chars, clean_folder_name, get_level_folders, get_folders_page_info, get_page_info
 
 cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_data=f"cancel_enter_folder_name")
 
@@ -80,8 +80,8 @@ async def show_folders(current_folder_id=None):
     current_folder_path_names = await get_folder_path_names(tg_user.id, current_folder_id)
     await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
 
-    folders_page_info = await get_folders_page_info(current_folder_id)
-    current_folder_page = folders_page_info.get('current_page')
+    folders_page_info = await get_page_info(current_folder_id, 'folders') #get_folders_page_info(current_folder_id)
+    current_folder_page = folders_page_info.get('current_page_folders')
     new_page_folders = folders_page_info.get('page_folders')
 
     folders_inline_markup = await get_inline_markup_folders(folder_buttons, current_folder_page)
@@ -89,7 +89,10 @@ async def show_folders(current_folder_id=None):
     folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
     #load_message = await bot.send_message(chat.id, f"⌛️")
-    items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, 1)
+    items_page_info = await get_page_info(current_folder_id, 'items')
+    current_item_page = items_page_info.get('current_page_items')
+    new_page_items = items_page_info.get('page_items')
+    items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=current_item_page)
     if items_inline_markup.inline_keyboard:
         for row in items_inline_markup.inline_keyboard:
             folders_inline_markup.add(*row)
@@ -99,7 +102,7 @@ async def show_folders(current_folder_id=None):
     folders_message.reply_markup = folders_inline_markup
     await dp.storage.update_data(user=tg_user, chat=chat,
                                  data={'current_keyboard': markup, 'folders_message': folders_message,
-                                       'page_folders': new_page_folders})
+                                       'page_folders': str(new_page_folders), 'page_items': str(new_page_items)})
 
 
 # Используем обработчик CallbackQuery для навигации по папкам
@@ -280,7 +283,7 @@ async def go_to_page_folders(call: CallbackQuery):
         chat = aiogram.types.Chat.get_current()
         data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
         current_folder_id = await get_current_folder_id(tg_user.id)
-        folders_page_info = await get_folders_page_info(current_folder_id, page)
+        folders_page_info = await get_page_info(current_folder_id, 'folders', page) #get_folders_page_info(current_folder_id, page)
         new_page_folders = folders_page_info.get('page_folders')
 
         folders_message = data.get('folders_message')
@@ -296,11 +299,50 @@ async def go_to_page_folders(call: CallbackQuery):
         folders_inline_markup = await get_inline_markup_folders(folder_buttons, page)
         inline_markup = folders_message.reply_markup
         for row in inline_markup.inline_keyboard:
-            for button in row[:1]:
-                if (isinstance(button, InlineKeyboardButton)
-                        and 'item' in button.callback_data):  # and 'page_items' not in button.callback_data):
+            for button in row[-1:]:
+                if 'item' in button.callback_data:  # and 'page_items' not in button.callback_data):
                     folders_inline_markup.add(*row)
 
-        await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
+        folders_message = await folders_message.edit_text(
+            folders_message.text,
+            reply_markup=folders_inline_markup,
+        )
         await dp.storage.update_data(user=tg_user, chat=chat,
-                                     data={'folders_message': folders_message, 'page_folders': new_page_folders})
+                                     data={'folders_message': folders_message, 'page_folders': str(new_page_folders)})
+
+
+@dp.callback_query_handler(text_contains="go_to_page_items")
+async def go_to_page_items(call: CallbackQuery):
+    match = re.match(r"go_to_page_items_(\d+)", call.data)
+
+    if match:
+        page = int(match.group(1))
+
+        tg_user = aiogram.types.User.get_current()
+        chat = aiogram.types.Chat.get_current()
+        data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
+        current_folder_id = await get_current_folder_id(tg_user.id)
+        items_page_info = await get_page_info(current_folder_id, 'items', page)
+        new_page_items = items_page_info.get('page_items')
+
+        folders_message = data.get('folders_message')
+
+        current_folder_id = await get_current_folder_id(tg_user.id)
+
+        items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=page)
+        inline_markup = folders_message.reply_markup
+        new_inline_markup = InlineKeyboardMarkup()
+        for row in inline_markup.inline_keyboard:
+            button = row[0]  # Получаем первую кнопку в строке
+            if 'folder' in button.callback_data:
+                new_inline_markup.add(*row)
+
+        for row in items_inline_markup.inline_keyboard:
+            new_inline_markup.add(*row)
+
+        folders_message = await folders_message.edit_text(
+            folders_message.text,
+            reply_markup=new_inline_markup,
+        )
+        await dp.storage.update_data(user=tg_user, chat=chat,
+                                     data={'folders_message': folders_message, 'page_items': str(new_page_items)})

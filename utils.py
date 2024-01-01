@@ -84,7 +84,7 @@ async def get_inline_markup_folders(folder_buttons, current_page):
     return inline_markup
 
 
-async def get_inline_markup_items_in_folder(current_folder_id, current_page):
+async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
     tg_user = aiogram.types.User.get_current()
 
     # Получаем записи из коллекции items для текущей папки
@@ -140,6 +140,7 @@ async def get_level_folders(folder_id):
     return len(folder_id.split('/')) - 1
 
 
+
 async def get_folders_page_info(folder_id, current_page=None):
     tg_user = aiogram.types.User.get_current()
     chat = aiogram.types.Chat.get_current()
@@ -158,6 +159,29 @@ async def get_folders_page_info(folder_id, current_page=None):
     else:
         new_page_folders[-1] = current_page
     new_page_folders = '/'.join(new_page_folders)
-    print(new_page_folders)
+
     folders_page_info = {'current_page': int(current_page), 'page_folders': new_page_folders}
     return folders_page_info
+
+
+async def get_page_info(folder_id, entities_key, current_page=None):
+    tg_user = aiogram.types.User.get_current()
+    chat = aiogram.types.Chat.get_current()
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+
+    page_entities = data.get(f'page_{entities_key}')
+    level = await get_level_folders(folder_id)
+    list_pages = page_entities.split('/')
+    if not current_page:
+        current_page = list_pages[level] if level < len(list_pages) else '1'
+    else:
+        current_page = str(current_page)
+    new_page_entities = list_pages[:level + 1] if level + 1 < len(list_pages) else list_pages
+    if level + 1 > len(new_page_entities):
+        new_page_entities.append(current_page)
+    else:
+        new_page_entities[-1] = current_page
+    new_page_entities = '/'.join(new_page_entities)
+
+    page_info = {f'current_page_{entities_key}': int(current_page), f'page_{entities_key}': new_page_entities}
+    return page_info
