@@ -77,7 +77,7 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     folders_message.reply_markup = folders_inline_markup
     await dp.storage.update_data(user=tg_user, chat=chat,
                                  data={'current_keyboard': markup, 'folders_message': folders_message,
-                                       'page_folders': str(1)})
+                                       'page_folders': str(1), 'page_items': str(1)})
 
 
 @dp.message_handler(Text(contains="🗑 Удалить"))
