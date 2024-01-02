@@ -5,29 +5,29 @@ from html import escape
 import aiogram
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, KeyboardButton
-from aiogram.utils.callback_data import CallbackData
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, \
+    KeyboardButton, User, Chat
 from aiogram.utils.exceptions import MessageNotModified
 
 import states
-from button_manager import general_buttons_folder
+from button_manager import general_buttons_folder, create_general_reply_markup
 from firebase import ROOT_FOLDER_ID
-from firebase_folder_reader import get_folder_name, get_current_folder_id, get_user_folders, get_folder_path_names, \
+from firebase_folder_reader import get_folder_name, get_current_folder_id, get_folder_path_names, \
     get_parent_folder_id
-from firebase_folder_writer import delete_folder, get_sub_folder_names, add_new_folder, rename_folder, \
-    set_current_folder
-from handlers import create_general_reply_markup
+from firebase_folder_writer import get_sub_folder_names, set_current_folder
+
 # from handlers_item import get_items_in_folder
 from load_all import dp, bot
 from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
-    is_valid_folder_name, invalid_chars, clean_folder_name, get_level_folders, get_folders_page_info, get_page_info
+    is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info
+from utils_folders_db import util_delete_folder, util_get_user_folders, util_add_new_folder, util_rename_folder
 
 cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_data=f"cancel_enter_folder_name")
 
 
 @dp.callback_query_handler(text_contains="delete_folder_request")
 async def delete_folder_request(call: CallbackQuery):
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
 
     folder_id = (call.data.replace("delete_folder_request_", "")
@@ -42,7 +42,7 @@ async def delete_folder_request(call: CallbackQuery):
 
     try:
         # Вызываем метод для удаления папки
-        result = await delete_folder(tg_user.id, folder_id)
+        result = await util_delete_folder(folder_id)
         if result:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
@@ -58,13 +58,13 @@ async def delete_folder_request(call: CallbackQuery):
 
 # Определяем функцию для обработки отображения папок
 async def show_folders(current_folder_id=None):
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current()
+    tg_user = User.get_current()
+    chat = Chat.get_current()
     if not current_folder_id:
         current_folder_id = await get_current_folder_id(tg_user.id)
 
     await set_current_folder(tg_user.id, current_folder_id)
-    user_folders = await get_user_folders(tg_user.id, current_folder_id)
+    user_folders = await util_get_user_folders(current_folder_id)
 
     folder_buttons = [
         await create_folder_button(folder_id, folder_data.get("name"))
@@ -174,11 +174,14 @@ async def new_folder(message: aiogram.types.Message, state: FSMContext):
     if not new_folder_name:
         return
 
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
-    await add_new_folder(tg_user.id, new_folder_name, current_folder_id)
-
-    sent_message = await bot.send_message(message.chat.id, text=f"Новая папка '{new_folder_name}' успешно создана ✅")
+    result = await util_add_new_folder(new_folder_name, current_folder_id)
+    if result:
+        sent_message = await bot.send_message(message.chat.id, text=f"Новая папка '{new_folder_name}' успешно создана ✅")
+    else:
+        sent_message = await bot.send_message(message.chat.id,
+                                              text=f"Не удалось создать папку ❌")
     # await message.answer("Новая папка успешно создана ✅")
     await state.reset_data()
     await state.reset_state()
@@ -198,7 +201,8 @@ async def edit_folder(message: aiogram.types.Message, state: FSMContext):
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
     folder_id = data.get('folder_id')  # Получаем значение по ключу 'folder_id'
 
-    if await rename_folder(tg_user.id, folder_id, folder_new_name):
+    result = await util_rename_folder(folder_id, folder_new_name)
+    if result:
         sent_message = await bot.send_message(message.chat.id, "Папка успешно переименована ✅")
     else:
         sent_message = await bot.send_message(message.chat.id, "Что то пошло не так при редактировании папки ❌")
@@ -279,8 +283,8 @@ async def go_to_page_folders(call: CallbackQuery):
     if match:
         page = int(match.group(1))
 
-        tg_user = aiogram.types.User.get_current()
-        chat = aiogram.types.Chat.get_current()
+        tg_user = User.get_current()
+        chat = Chat.get_current()
         data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
         current_folder_id = await get_current_folder_id(tg_user.id)
         folders_page_info = await get_page_info(current_folder_id, 'folders', page) #get_folders_page_info(current_folder_id, page)
@@ -289,7 +293,7 @@ async def go_to_page_folders(call: CallbackQuery):
         folders_message = data.get('folders_message')
 
         current_folder_id = await get_current_folder_id(tg_user.id)
-        user_folders = await get_user_folders(tg_user.id, current_folder_id)
+        user_folders = await util_get_user_folders(current_folder_id)
 
         folder_buttons = [
             await create_folder_button(folder_id, folder_data.get("name"))

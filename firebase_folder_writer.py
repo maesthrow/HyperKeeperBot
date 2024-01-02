@@ -142,7 +142,4 @@ async def get_sub_folder_names(tg_user_id, folder_id):
     sub_folder_ids = list(target_folders.keys())
     sub_folder_names = [await get_folder_name(tg_user_id, sub_folder_id) for sub_folder_id in sub_folder_ids]
 
-    # Выводим названия подпапок на печать
-    print("Названия подпапок:", sub_folder_names)
-
     return sub_folder_names

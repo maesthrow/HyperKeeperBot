@@ -1,14 +1,13 @@
-import asyncio
 import math
 
 import aiogram
-from aiogram.types import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.callback_data import CallbackData
 
 from button_manager import check_button_exists
+from enums import Environment
 from firebase_item_reader import get_folder_items, get_item
 from load_all import dp
-from enums import Environment
 
 invalid_chars = r'/\:,.*?"<>|'
 folder_callback = CallbackData("folder", "folder_id")
@@ -138,7 +137,6 @@ async def get_inline_markup_for_pages(instance_text, inline_markup, current_page
 
 async def get_level_folders(folder_id):
     return len(folder_id.split('/')) - 1
-
 
 
 async def get_folders_page_info(folder_id, current_page=None):

@@ -10,18 +10,11 @@ def get_parent_folder_id(folder_id):
     return folder_id.rsplit('/', 1)[0]
 
 
-async def get_user_folders(tg_user_id, folder_id=ROOT_FOLDER_ID):
+async def get_user_folders_collection(tg_user_id):
     """Возвращает папки пользователя по идентификатору."""
     user_data = await get_user_data(tg_user_id)
     folders_collection = user_data.get("folders", {})
-    folder_ids = folder_id.split('/')
-    target_folders = folders_collection
-    folder_id_with_path = None
-    for folder_id in folder_ids:
-        folder_id_with_path = f"{folder_id_with_path}/{folder_id}" if folder_id_with_path else folder_id
-        target_folder = target_folders.get(folder_id_with_path, {})
-        target_folders = target_folder.get("folders", {})
-    return target_folders
+    return folders_collection
 
 
 async def get_folder_data(tg_user_id, folder_id):

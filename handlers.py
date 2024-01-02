@@ -1,24 +1,23 @@
 import asyncio
-import math
 
 import aiogram
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command, CommandStart, Text
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat
 
+import handlers_item
 import states
 from button_manager import create_general_reply_markup, general_buttons_folder, skip_enter_item_title_button, \
     cancel_add_new_item_button
+from enums import Environment
 from firebase import add_user
-from firebase_folder_reader import ROOT_FOLDER_ID, get_user_folders, get_folder_path_names
+from firebase_folder_reader import ROOT_FOLDER_ID, get_folder_path_names
 from firebase_folder_writer import set_current_folder
 from handlers_folder import create_folder_button, on_delete_folder
 from load_all import dp, bot
-from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders, folders_on_page_count
-from enums import Environment
 from models import Item
-
-import handlers_item
+from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders
+from utils_folders_db import util_get_user_folders
 
 
 # Используем фильтр CommandStart для команды /start
@@ -47,9 +46,9 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     await state.reset_data()
     await state.reset_state()
 
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current()
-    user_folders = await get_user_folders(tg_user.id)
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    user_folders = await util_get_user_folders()
 
     await set_current_folder(tg_user.id, ROOT_FOLDER_ID)
 
