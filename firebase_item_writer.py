@@ -1,16 +1,12 @@
 from firebase import get_user_data, set_user_data
-from firebase_folder_reader import get_folder_data
 from firebase_item_reader import get_folder_id
 from models import Item
+from utils_folders_db import get_folders_collection
 
 
 async def add_item_to_folder(tg_user_id, folder_id, item: Item):
     """Добавляет элемент (item) в указанную папку."""
-    # Получаем данные о пользователе
-    user_data = await get_user_data(tg_user_id)
-
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
+    folders_collection = await get_folders_collection()
 
     # Разбиваем идентификатор папки на части
     folder_ids = folder_id.split('/')
@@ -45,9 +41,7 @@ async def add_item_to_folder(tg_user_id, folder_id, item: Item):
 
 
 async def delete_item(tg_user_id, item_id):
-    user_data = await get_user_data(tg_user_id)
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
+    folders_collection = await get_folders_collection()
 
     folder_id = get_folder_id(item_id)
     # Разбиваем идентификатор папки на части
@@ -76,9 +70,7 @@ async def delete_item(tg_user_id, item_id):
 
 
 async def delete_all_items_in_folder(tg_user_id, folder_id):
-    user_data = await get_user_data(tg_user_id)
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
+    folders_collection = await get_folders_collection()
 
     # Разбиваем идентификатор папки на части
     folder_ids = folder_id.split('/')
@@ -106,9 +98,7 @@ async def delete_all_items_in_folder(tg_user_id, folder_id):
 
 
 async def edit_item(tg_user_id, item_id, item: Item):
-    user_data = await get_user_data(tg_user_id)
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
+    folders_collection = await get_folders_collection()
 
     folder_id = get_folder_id(item_id)
     # Разбиваем идентификатор папки на части

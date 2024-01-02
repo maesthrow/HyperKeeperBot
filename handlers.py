@@ -11,13 +11,13 @@ from button_manager import create_general_reply_markup, general_buttons_folder, 
     cancel_add_new_item_button
 from enums import Environment
 from firebase import add_user
-from firebase_folder_reader import ROOT_FOLDER_ID, get_folder_path_names
+from firebase_folder_reader import ROOT_FOLDER_ID
 from firebase_folder_writer import set_current_folder
 from handlers_folder import create_folder_button, on_delete_folder
 from load_all import dp, bot
 from models import Item
 from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders
-from utils_folders_db import util_get_user_folders
+from utils_folders_db import util_get_user_folders, get_folder_path_names
 
 
 # Используем фильтр CommandStart для команды /start
@@ -58,7 +58,7 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     ]
     markup = create_general_reply_markup(general_buttons_folder)
 
-    current_folder_path_names = await get_folder_path_names(tg_user.id)
+    current_folder_path_names = await get_folder_path_names()
     await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
     folders_inline_markup = await get_inline_markup_folders(folder_buttons, 1)
 

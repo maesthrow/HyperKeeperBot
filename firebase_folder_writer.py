@@ -1,14 +1,35 @@
-from firebase import db, get_user_data, set_user_data
-from firebase_folder_reader import get_folder_name
+from aiogram.types import User, Chat
+
+from firebase import get_user_data, set_user_data
+from firebase_folder_reader import get_user_folders_collection
+from load_all import dp
+
+
+async def get_folders_collection():
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    folders_collection = data.get('folders_collection', None)
+
+    if not folders_collection:
+        folders_collection = await get_user_folders_collection(tg_user.id)
+        await set_folders_collection(folders_collection)
+
+    return folders_collection
+
+
+async def set_folders_collection(folders_collection=None):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    if not folders_collection:
+        folders_collection = await get_user_folders_collection(tg_user.id)
+    await dp.storage.update_data(user=tg_user, chat=chat,
+                                 data={'folders_collection': folders_collection})
 
 
 async def add_new_folder(tg_user_id, new_folder_name, parent_folder_id):
     """Добавляет новую папку в указанную родительскую папку."""
-    # Получаем данные о пользователе
-    user_data = await get_user_data(tg_user_id)
-
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
+    folders_collection = await get_folders_collection()
 
     # Разбиваем идентификатор родительской папки на части
     parent_folder_ids = parent_folder_id.split('/')
@@ -44,11 +65,7 @@ async def add_new_folder(tg_user_id, new_folder_name, parent_folder_id):
 
 async def delete_folder(tg_user_id, folder_id):
     """Удаляет папку из базы данных."""
-    # Получаем данные о пользователе
-    user_data = await get_user_data(tg_user_id)
-
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
+    folders_collection = await get_folders_collection()
 
     # Разбиваем идентификатор папки на части
     folder_ids = folder_id.split('/')
@@ -83,11 +100,7 @@ async def set_current_folder(tg_user_id, folder_id):
 
 async def rename_folder(tg_user_id, folder_id, folder_new_name):
     """Переименовывает указанную папку."""
-    # Получаем данные о пользователе
-    user_data = await get_user_data(tg_user_id)
-
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
+    folders_collection = await get_folders_collection()
 
     # Разбиваем идентификатор папки на части
     folder_ids = folder_id.split('/')
@@ -115,31 +128,3 @@ async def rename_folder(tg_user_id, folder_id, folder_new_name):
         return True  # Успешно переименовано
     else:
         return False  # Папка не найдена
-
-
-async def get_sub_folder_names(tg_user_id, folder_id):
-    """Возвращает список всех folder_id внутри указанной папки."""
-    # Получаем данные о пользователе
-    user_data = await get_user_data(tg_user_id)
-
-    # Получаем коллекцию папок пользователя
-    folders_collection = user_data.get("folders", {})
-
-    # Разбиваем идентификатор папки на части
-    folder_ids = folder_id.split('/')
-
-    # Инициализируем переменные для навигации по папкам
-    target_folders = folders_collection
-    folder_id_with_path = None
-
-    # Проходим по уровням вложенности папки
-    for folder_part in folder_ids:
-        folder_id_with_path = f"{folder_id_with_path}/{folder_part}" if folder_id_with_path else folder_part
-        target_folder = target_folders.get(folder_id_with_path, {})
-        target_folders = target_folder.get("folders", {})
-
-    # Получаем все folder_id внутри указанной папки
-    sub_folder_ids = list(target_folders.keys())
-    sub_folder_names = [await get_folder_name(tg_user_id, sub_folder_id) for sub_folder_id in sub_folder_ids]
-
-    return sub_folder_names

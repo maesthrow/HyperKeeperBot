@@ -1,7 +1,7 @@
 import math
 
 import aiogram
-from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, User
 from aiogram.utils.callback_data import CallbackData
 
 from button_manager import check_button_exists
@@ -23,6 +23,10 @@ def is_valid_folder_name(name):
 def clean_folder_name(name):
     cleaned_name = ''.join(char if char not in invalid_chars and char not in '\n\r' else ' ' for char in name)
     return cleaned_name
+
+
+def get_parent_folder_id(folder_id):
+    return folder_id.rsplit('/', 1)[0]
 
 
 async def get_environment():
@@ -84,10 +88,10 @@ async def get_inline_markup_folders(folder_buttons, current_page):
 
 
 async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
 
     # Получаем записи из коллекции items для текущей папки
-    folder_items = await get_folder_items(tg_user.id, current_folder_id)
+    folder_items = await get_folder_items(current_folder_id)
     list_items_id = []
     for item_id in folder_items:
         list_items_id.append(item_id)

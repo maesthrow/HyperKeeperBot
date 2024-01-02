@@ -1,27 +1,21 @@
 import asyncio
+from datetime import datetime
 
 import aiogram
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher.filters import Text
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, \
-    ReplyKeyboardRemove
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, User
 from aiogram.utils.exceptions import MessageNotModified
-from datetime import datetime
-
-from aiogram.utils.markdown import escape_md
 
 import states
-from button_manager import create_general_reply_markup, skip_enter_item_title_button, general_buttons_items, \
-    general_buttons_item, cancel_add_new_item_button
-from enums import Environment
-from firebase_folder_reader import get_current_folder_id, get_folder_name, get_parent_folder_id
-from firebase_item_reader import get_folder_items, get_item
-from firebase_item_writer import add_item_to_folder, delete_item, delete_all_items_in_folder, edit_item
+from button_manager import create_general_reply_markup, general_buttons_item
+from firebase_folder_reader import get_current_folder_id
+from firebase_item_reader import get_item
 from handlers_folder import show_folders
 from load_all import dp, bot
 from models import Item
-from utils import get_environment, get_inline_markup_for_accept_cancel
+from utils import get_inline_markup_for_accept_cancel
+from utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, util_edit_item
 
 cancel_edit_item_button = InlineKeyboardButton("Отменить", callback_data=f"cancel_edit_item")
 add_none_title_item_button = InlineKeyboardButton("Пустой заголовок", callback_data=f"add_none_title_item")
@@ -81,9 +75,9 @@ async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
     #                       f"Новая запись:\n{item.title}\n{item.text}"
     #                       )
 
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
-    result = await add_item_to_folder(tg_user.id, current_folder_id, item)
+    result = await util_add_item_to_folder(current_folder_id, item)
 
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
@@ -115,9 +109,9 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
     #                       f"Новая запись:\n{item.title}\n{item.text}"
     #                       )
 
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
-    result = await add_item_to_folder(tg_user.id, current_folder_id, item)
+    result = await util_add_item_to_folder(current_folder_id, item)
 
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
@@ -169,7 +163,7 @@ async def delete_item_request(call: CallbackQuery):
 
     try:
         # Вызываем метод для удаления папки
-        result = await delete_item(tg_user.id, item_id)
+        result = await util_delete_item(item_id)
         if result:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
@@ -205,7 +199,7 @@ async def delete_all_items_handler(message: aiogram.types.Message):
 
 @dp.callback_query_handler(text_contains="delete_all_items_request")
 async def delete_all_items_request(call: CallbackQuery):
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
 
     if "cancel" in call.data:
@@ -215,7 +209,7 @@ async def delete_all_items_request(call: CallbackQuery):
 
     try:
         # Вызываем метод для удаления папки
-        result = await delete_all_items_in_folder(tg_user.id, current_folder_id)
+        result = await util_delete_all_items_in_folder(current_folder_id)
         if result:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
@@ -317,7 +311,7 @@ async def on_edit_item(edit_text, state: FSMContext):
 
     item.date_modified = datetime.now()
 
-    result = await edit_item(tg_user.id, item_id, item)
+    result = await util_edit_item(item_id, item)
     if result:
         sent_message = await bot.send_message(chat.id, message_success_text)
     else:

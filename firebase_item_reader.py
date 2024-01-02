@@ -1,5 +1,5 @@
-from firebase_folder_reader import get_folder_data
 from models import Item
+from utils_folders_db import get_folder_data
 
 
 # Функция для извлечения последнего числа из ключа
@@ -12,9 +12,9 @@ def get_folder_id(item_id):
     return item_id.rsplit('/', 1)[0]
 
 
-async def get_folder_items(tg_user_id, folder_id):
+async def get_folder_items(folder_id):
     """Возвращает элементы папки по её идентификатору."""
-    folder_data = await get_folder_data(tg_user_id, folder_id)
+    folder_data = await get_folder_data(folder_id)
     items = folder_data.get("items", [])
     # сортировка по title or text
     sorted_items = dict(sorted(items.items(), key=lambda x: x[1]["title"] or x[1]["text"])) #get_last_number(x[0])))
@@ -25,7 +25,7 @@ async def get_folder_items(tg_user_id, folder_id):
 async def get_item_dict(tg_user_id, item_id):
     folder_id = get_folder_id(item_id)
     """Возвращает словарь элемента в папке."""
-    items = await get_folder_items(tg_user_id, folder_id)
+    items = await get_folder_items(folder_id)
 
     # Ищем элемент с заданным item_id
     if item_id in items:

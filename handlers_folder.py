@@ -12,15 +12,15 @@ from aiogram.utils.exceptions import MessageNotModified
 import states
 from button_manager import general_buttons_folder, create_general_reply_markup
 from firebase import ROOT_FOLDER_ID
-from firebase_folder_reader import get_folder_name, get_current_folder_id, get_folder_path_names, \
-    get_parent_folder_id
-from firebase_folder_writer import get_sub_folder_names, set_current_folder
+from firebase_folder_reader import get_current_folder_id
+from firebase_folder_writer import set_current_folder
 
 # from handlers_item import get_items_in_folder
 from load_all import dp, bot
 from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
-    is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info
-from utils_folders_db import util_delete_folder, util_get_user_folders, util_add_new_folder, util_rename_folder
+    is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info, get_parent_folder_id
+from utils_folders_db import util_delete_folder, util_get_user_folders, util_add_new_folder, util_rename_folder, \
+    get_folder_name, get_folder_path_names, get_sub_folder_names
 
 cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_data=f"cancel_enter_folder_name")
 
@@ -33,7 +33,7 @@ async def delete_folder_request(call: CallbackQuery):
     folder_id = (call.data.replace("delete_folder_request_", "")
                  .replace("_accept", "")
                  .replace("_cancel", ""))
-    folder_name = await get_folder_name(tg_user.id, folder_id)
+    folder_name = await get_folder_name(folder_id)
 
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -77,7 +77,7 @@ async def show_folders(current_folder_id=None):
         general_buttons.append([KeyboardButton("↩️ Назад")])
     markup = create_general_reply_markup(general_buttons)
 
-    current_folder_path_names = await get_folder_path_names(tg_user.id, current_folder_id)
+    current_folder_path_names = await get_folder_path_names(current_folder_id)
     await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
 
     folders_page_info = await get_page_info(current_folder_id, 'folders') #get_folders_page_info(current_folder_id)
@@ -157,7 +157,7 @@ async def get_enter_folder_name(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
     current_folder_id = await get_current_folder_id(tg_user.id)
     parent_folder_id = get_parent_folder_id(current_folder_id)
-    sub_folders_names = await get_sub_folder_names(tg_user.id, parent_folder_id)
+    sub_folders_names = await get_sub_folder_names(parent_folder_id)
     new_folder_name = clean_folder_name(new_folder_name)
 
     if new_folder_name.lower() in map(str.lower, sub_folders_names):
