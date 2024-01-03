@@ -1,0 +1,33 @@
+from aiogram.types import User, Chat
+from load_all import bot, dp
+from button_manager import general_buttons_items_show_all, create_general_reply_markup
+from firebase_folder_reader import get_current_folder_id
+from utils import get_page_info, get_inline_markup_items_in_folder
+from utils_folders_db import get_folder_path_names
+
+
+async def show_all_items(current_folder_id=None):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    if not current_folder_id:
+        current_folder_id = await get_current_folder_id(tg_user.id)
+
+    general_buttons = general_buttons_items_show_all[:]
+    markup = create_general_reply_markup(general_buttons)
+
+    current_folder_path_names = await get_folder_path_names(current_folder_id)
+    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+
+    #load_message = await bot.send_message(chat.id, f"⌛️")
+    items_page_info = await get_page_info(current_folder_id, 'items', 0)
+    current_item_page = items_page_info.get('current_page_items')
+    new_page_items = items_page_info.get('page_items')
+
+    items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=current_item_page)
+    folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
+                                                 reply_markup=items_inline_markup)
+    #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+
+    await dp.storage.update_data(user=tg_user, chat=chat,
+                                 data={'current_keyboard': markup, 'folders_message': folders_message,
+                                       'page_items': str(new_page_items)})

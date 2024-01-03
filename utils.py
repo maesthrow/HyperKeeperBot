@@ -101,8 +101,11 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
     for item_id in folder_items:
         list_items_id.append(item_id)
 
-    current_items = list_items_id[current_page * items_on_page_count - items_on_page_count:
-                                  current_page * items_on_page_count]
+    if current_page > 0:
+        current_items = list_items_id[current_page * items_on_page_count - items_on_page_count:
+                                      current_page * items_on_page_count]
+    else:
+        current_items = list_items_id
 
     buttons = []
     for item_id in current_items:
@@ -116,7 +119,7 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
     items_inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
     max_items_num = len(folder_items)
     last_page = math.ceil(max_items_num / items_on_page_count)
-    if last_page > 1:
+    if last_page > 1 and current_page > 0:
         items_inline_markup = await get_inline_markup_for_pages('items', items_inline_markup, current_page,
                                                                 last_page, items_on_page_count,
                                                                 max_items_num, 'go_to_page_items_')
@@ -192,3 +195,4 @@ async def get_page_info(folder_id, entities_key, current_page=None):
 
     page_info = {f'current_page_{entities_key}': int(current_page), f'page_{entities_key}': new_page_entities}
     return page_info
+

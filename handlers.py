@@ -16,8 +16,9 @@ from firebase_folder_writer import set_current_folder
 from handlers_folder import create_folder_button, on_delete_folder, show_all_folders, show_folders
 from load_all import dp, bot
 from models import Item
-from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders, smile_folder
+from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders
 from utils_folders_db import util_get_user_folders, get_folder_path_names
+from utils_items import show_all_items
 
 
 # Используем фильтр CommandStart для команды /start
@@ -84,14 +85,14 @@ async def show_all_entities_handler(call: CallbackQuery):
     if 'folders' in call.data:
         await show_all_folders()
     elif 'items' in call.data:
-        #await show_all_folders()
-        pass
+        await show_all_items()
+
 
 @dp.message_handler(Text(equals="️↩️ Назад к общему виду"))
 async def back_to_folder(message: aiogram.types.Message):
     tg_user = User.get_current()
     folder_id = await get_current_folder_id(tg_user.id)
-    await show_folders(folder_id, page=1)
+    await show_folders(folder_id, page_folder=1, page_item=1)
 
 
 @dp.message_handler(Text(contains="🗑 Удалить"))

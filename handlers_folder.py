@@ -21,6 +21,7 @@ from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, 
     is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info, get_parent_folder_id
 from utils_folders_db import util_delete_folder, util_get_user_folders, util_add_new_folder, util_rename_folder, \
     get_folder_name, get_folder_path_names, get_sub_folder_names
+from utils_items import show_all_items
 
 cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_data=f"cancel_enter_folder_name")
 
@@ -57,7 +58,7 @@ async def delete_folder_request(call: CallbackQuery):
 
 
 # Определяем функцию для обработки отображения папок
-async def show_folders(current_folder_id=None, page=None):
+async def show_folders(current_folder_id=None, page_folder=None, page_item=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
     if not current_folder_id:
@@ -77,12 +78,20 @@ async def show_folders(current_folder_id=None, page=None):
         general_buttons.append([KeyboardButton("↩️ Назад")])
     markup = create_general_reply_markup(general_buttons)
 
-    folders_page_info = await get_page_info(current_folder_id, 'folders', page)
+    folders_page_info = await get_page_info(current_folder_id, 'folders', page_folder)
     current_folder_page = folders_page_info.get('current_page_folders')
     new_page_folders = folders_page_info.get('page_folders')
 
     if current_folder_page == 0:
         await show_all_folders()
+        return
+
+    items_page_info = await get_page_info(current_folder_id, 'items', page_item)
+    current_item_page = items_page_info.get('current_page_items')
+    new_page_items = items_page_info.get('page_items')
+
+    if current_item_page == 0:
+        await show_all_items()
         return
 
     current_folder_path_names = await get_folder_path_names(current_folder_id)
@@ -93,9 +102,6 @@ async def show_folders(current_folder_id=None, page=None):
     folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
     #load_message = await bot.send_message(chat.id, f"⌛️")
-    items_page_info = await get_page_info(current_folder_id, 'items')
-    current_item_page = items_page_info.get('current_page_items')
-    new_page_items = items_page_info.get('page_items')
 
     if current_folder_page > 0:
         items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=current_item_page)
