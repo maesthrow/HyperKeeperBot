@@ -10,7 +10,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQu
 from aiogram.utils.exceptions import MessageNotModified
 
 import states
-from button_manager import general_buttons_folder, create_general_reply_markup
+from button_manager import general_buttons_folder, create_general_reply_markup, general_buttons_folder_show_all
 from firebase import ROOT_FOLDER_ID
 from firebase_folder_reader import get_current_folder_id
 from firebase_folder_writer import set_current_folder
@@ -57,7 +57,7 @@ async def delete_folder_request(call: CallbackQuery):
 
 
 # Определяем функцию для обработки отображения папок
-async def show_folders(current_folder_id=None):
+async def show_folders(current_folder_id=None, page=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
     if not current_folder_id:
@@ -77,12 +77,16 @@ async def show_folders(current_folder_id=None):
         general_buttons.append([KeyboardButton("↩️ Назад")])
     markup = create_general_reply_markup(general_buttons)
 
-    current_folder_path_names = await get_folder_path_names(current_folder_id)
-    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
-
-    folders_page_info = await get_page_info(current_folder_id, 'folders') #get_folders_page_info(current_folder_id)
+    folders_page_info = await get_page_info(current_folder_id, 'folders', page)
     current_folder_page = folders_page_info.get('current_page_folders')
     new_page_folders = folders_page_info.get('page_folders')
+
+    if current_folder_page == 0:
+        await show_all_folders()
+        return
+
+    current_folder_path_names = await get_folder_path_names(current_folder_id)
+    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
 
     folders_inline_markup = await get_inline_markup_folders(folder_buttons, current_folder_page)
 
@@ -92,17 +96,55 @@ async def show_folders(current_folder_id=None):
     items_page_info = await get_page_info(current_folder_id, 'items')
     current_item_page = items_page_info.get('current_page_items')
     new_page_items = items_page_info.get('page_items')
-    items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=current_item_page)
-    if items_inline_markup.inline_keyboard:
-        for row in items_inline_markup.inline_keyboard:
-            folders_inline_markup.add(*row)
-        await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
-    #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
-    folders_message.reply_markup = folders_inline_markup
+    if current_folder_page > 0:
+        items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=current_item_page)
+        if items_inline_markup.inline_keyboard:
+            for row in items_inline_markup.inline_keyboard:
+                folders_inline_markup.add(*row)
+            await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
+        #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+        folders_message.reply_markup = folders_inline_markup
+
     await dp.storage.update_data(user=tg_user, chat=chat,
                                  data={'current_keyboard': markup, 'folders_message': folders_message,
                                        'page_folders': str(new_page_folders), 'page_items': str(new_page_items)})
+
+
+async def show_all_folders(current_folder_id=None):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    if not current_folder_id:
+        current_folder_id = await get_current_folder_id(tg_user.id)
+
+    user_folders = await util_get_user_folders(current_folder_id)
+
+    folder_buttons = [
+        await create_folder_button(folder_id, folder_data.get("name"))
+        for folder_id, folder_data in user_folders.items()
+    ]
+
+    general_buttons = general_buttons_folder_show_all[:]
+    if current_folder_id != ROOT_FOLDER_ID:
+        general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
+    general_buttons.append([KeyboardButton("️↩️ Назад к общему виду")])
+    markup = create_general_reply_markup(general_buttons)
+
+    current_folder_path_names = await get_folder_path_names(current_folder_id)
+    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+
+    folders_page_info = await get_page_info(current_folder_id, 'folders', 0)
+    current_folder_page = folders_page_info.get('current_page_folders')
+    new_page_folders = folders_page_info.get('page_folders')
+
+    folders_inline_markup = await get_inline_markup_folders(folder_buttons, current_folder_page)
+
+    folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
+                                             reply_markup=folders_inline_markup)
+    #load_message = await bot.send_message(chat.id, f"⌛️")
+    #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+    await dp.storage.update_data(user=tg_user, chat=chat,
+                                 data={'current_keyboard': markup, 'page_folders': str(new_page_folders)})
 
 
 # Используем обработчик CallbackQuery для навигации по папкам

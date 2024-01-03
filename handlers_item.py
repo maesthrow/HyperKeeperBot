@@ -49,7 +49,7 @@ async def show_item(item_id):
 
 @dp.message_handler(Text(equals="️↩️ Назад к папке"))
 async def back_to_folder(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
     folder_id = await get_current_folder_id(tg_user.id)
     await show_folders(folder_id)
 
@@ -345,3 +345,5 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
                            state=states.Item.EditTitle)
 async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
     await on_edit_item(None, state)
+
+

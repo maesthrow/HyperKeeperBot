@@ -5,6 +5,10 @@ general_buttons_folder = [
         [KeyboardButton("️📊 Статистика"), KeyboardButton("️🧹 Удалить все записи в папке")],
     ]
 
+general_buttons_folder_show_all = [
+        [KeyboardButton("➕ Новая папка"), KeyboardButton("️📊 Статистика")],
+    ]
+
 general_buttons_items = [
         [KeyboardButton("️🔍 Поиск"), KeyboardButton("️📊 Статистика")],
         [KeyboardButton("️🗑 Удалить все записи в папке")],

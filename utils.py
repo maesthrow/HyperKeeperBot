@@ -1,7 +1,7 @@
 import math
 
 import aiogram
-from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, User
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, User, Chat
 from aiogram.utils.callback_data import CallbackData
 
 from button_manager import check_button_exists
@@ -14,6 +14,8 @@ folder_callback = CallbackData("folder", "folder_id")
 folders_on_page_count = 4
 items_on_page_count = 4
 separator = 'из'
+smile_folder = '🗂️'
+smile_item = '📄'
 
 
 def is_valid_folder_name(name):
@@ -59,7 +61,7 @@ async def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback
 
 async def create_folder_button(folder_id, folder_name):
     return InlineKeyboardButton(
-        f"🗂️ {folder_name}",
+        f"{smile_folder} {folder_name}",
         callback_data=folder_callback.new(folder_id=folder_id)
     )
 
@@ -68,8 +70,11 @@ async def get_inline_markup_folders(folder_buttons, current_page):
     inline_markup = InlineKeyboardMarkup(row_width=3)
 
     sorted_buttons = sorted(folder_buttons, key=lambda x: x.text)
-    buttons = sorted_buttons[current_page * folders_on_page_count - folders_on_page_count:
-                             current_page * folders_on_page_count]
+    if current_page > 0:
+        buttons = sorted_buttons[current_page * folders_on_page_count - folders_on_page_count:
+                                 current_page * folders_on_page_count]
+    else:
+        buttons = sorted_buttons
     for button in buttons:
         folder_name_button = button
 
@@ -79,7 +84,7 @@ async def get_inline_markup_folders(folder_buttons, current_page):
 
     max_folder_num = len(sorted_buttons)
     last_page = math.ceil(max_folder_num / folders_on_page_count)
-    if last_page > 1:
+    if last_page > 1 and current_page > 0:
         inline_markup = await get_inline_markup_for_pages('folders', inline_markup, current_page,
                                                           last_page, folders_on_page_count,
                                                           max_folder_num, 'go_to_page_folders_')
@@ -105,7 +110,7 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
 
         item_button_text = item.title or item.get_short_title()
         if item:
-            buttons.append([InlineKeyboardButton(f"📄 {item_button_text}", callback_data=f"item_{item_id}")])
+            buttons.append([InlineKeyboardButton(f"{smile_item} {item_button_text}", callback_data=f"item_{item_id}")])
 
     # Создаем разметку и отправляем сообщение с кнопками для каждой item
     items_inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
@@ -120,7 +125,7 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
 
 async def get_inline_markup_for_pages(instance_text, inline_markup, current_page, last_page, on_page_count, max_num,
                                       callback_data_text):
-    instance_smile = '🗂️' if instance_text == 'folders' else '📄'
+    instance_smile = f'{smile_folder}' if instance_text == 'folders' else f'{smile_item}'
 
     prev_page = current_page - 1 if current_page - 1 > 0 else last_page
     next_page = current_page + 1 if current_page < last_page else 1
@@ -133,7 +138,7 @@ async def get_inline_markup_for_pages(instance_text, inline_markup, current_page
     mid_btn_text = f"{current_nums} {separator} {max_num} {instance_smile}"
 
     inline_markup.add(InlineKeyboardButton(text='⬅️', callback_data=f'{callback_data_text}{prev_page}'),
-                      InlineKeyboardButton(text=mid_btn_text, callback_data=f'all_{instance_text}'),
+                      InlineKeyboardButton(text=mid_btn_text, callback_data=f'show_all_{instance_text}'),
                       InlineKeyboardButton(text='➡️', callback_data=f'{callback_data_text}{next_page}'))
 
     return inline_markup
@@ -167,14 +172,14 @@ async def get_folders_page_info(folder_id, current_page=None):
 
 
 async def get_page_info(folder_id, entities_key, current_page=None):
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current()
+    tg_user = User.get_current()
+    chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
 
     page_entities = data.get(f'page_{entities_key}')
     level = await get_level_folders(folder_id)
     list_pages = page_entities.split('/')
-    if not current_page:
+    if current_page is None:
         current_page = list_pages[level] if level < len(list_pages) else '1'
     else:
         current_page = str(current_page)
