@@ -393,7 +393,7 @@ async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     data['movement_item_id'] = None
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
-    message_text = f"Перемещение записи было отменено."
+    message_text = f"Перемещение записи отменено 🔄"
     await bot.send_message(message.chat.id, message_text)
     await asyncio.sleep(0.5)
 
