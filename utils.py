@@ -140,9 +140,9 @@ async def get_inline_markup_for_pages(instance_text, inline_markup, current_page
     current_nums = f"{first_on_page}..{last_on_page}" if first_on_page != last_on_page else f"{first_on_page}"
     mid_btn_text = f"{current_nums} {separator} {max_num} {instance_smile}"
 
-    inline_markup.add(InlineKeyboardButton(text='⬅️', callback_data=f'{callback_data_text}{prev_page}'),
+    inline_markup.add(InlineKeyboardButton(text='⬅️', callback_data=f'{callback_data_text}prev_{prev_page}'),
                       InlineKeyboardButton(text=mid_btn_text, callback_data=f'show_all_{instance_text}'),
-                      InlineKeyboardButton(text='➡️', callback_data=f'{callback_data_text}{next_page}'))
+                      InlineKeyboardButton(text='➡️', callback_data=f'{callback_data_text}next_{next_page}'))
 
     return inline_markup
 
@@ -178,6 +178,8 @@ async def get_page_info(folder_id, entities_key, current_page=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
+    pf = data.get('page_folders')
+    print(f'data.get(page_folders) = {pf}')
 
     page_entities = data.get(f'page_{entities_key}')
     level = await get_level_folders(folder_id)
@@ -192,6 +194,7 @@ async def get_page_info(folder_id, entities_key, current_page=None):
     else:
         new_page_entities[-1] = current_page
     new_page_entities = '/'.join(new_page_entities)
+    print(f'new_page_entities {new_page_entities}')
 
     page_info = {f'current_page_{entities_key}': int(current_page), f'page_{entities_key}': new_page_entities}
     return page_info

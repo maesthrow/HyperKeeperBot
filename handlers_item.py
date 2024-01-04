@@ -44,9 +44,13 @@ async def show_item(item_id):
     else:
         item_content = f"📄\n\n{item.text}"
     markup = create_general_reply_markup(general_buttons_item)
-    bot_message = await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
-    await dp.storage.update_data(user=tg_user, chat=chat, data={'bot_message': bot_message, 'item_id': item_id})
-    await bot.send_message(tg_user.id, item_content, reply_markup=markup)
+    bot_message = await bot.send_message(tg_user.id, item_content, reply_markup=markup)
+    #await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
+
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data['bot_message'] = bot_message
+    data['item_id'] = item_id
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
 
 @dp.message_handler(Text(equals="️↩️ Назад к папке"))
@@ -251,9 +255,8 @@ async def edit_item_title_handler(message: aiogram.types.Message):
                                                  f"Придумайте новый заголовок:",
                                                  reply_markup=inline_markup)
 
-    await dp.storage.update_data(user=tg_user, chat=message.chat,
-                                 data={'edit_item_messages':
-                                           (edit_item_message_1, edit_item_message_2, edit_item_message_3)})
+    data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
+    await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
     await states.Item.EditTitle.set()
 
@@ -283,9 +286,8 @@ async def edit_item_text_handler(message: aiogram.types.Message):
                                                  f"Напишите новый текст:",
                                                  reply_markup=inline_markup)
 
-    await dp.storage.update_data(user=tg_user, chat=message.chat,
-                                 data={'edit_item_messages':
-                                           (edit_item_message_1, edit_item_message_2, edit_item_message_3)})
+    data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
+    await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
     await states.Item.EditText.set()
 
@@ -337,8 +339,8 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
         for message in edit_item_messages:
             await bot.delete_message(message.chat.id, message.message_id)
 
-    await dp.storage.update_data(user=tg_user, chat=call.message.chat,
-                                 data={'edit_item_messages': None})
+    data['edit_item_messages'] = None
+    await dp.storage.update_data(user=tg_user, chat=call.message.chat, data=data)
     await state.reset_state()
     await show_item(item_id)
 

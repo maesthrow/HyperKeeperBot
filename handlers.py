@@ -88,7 +88,7 @@ async def show_all_entities_handler(call: CallbackQuery):
         await show_all_items()
 
 
-@dp.message_handler(Text(equals="️↩️ Назад к общему виду"))
+@dp.message_handler(Text(equals="️↩️ Назад к общему виду папки"))
 async def back_to_folder(message: aiogram.types.Message):
     tg_user = User.get_current()
     folder_id = await get_current_folder_id(tg_user.id)

@@ -28,6 +28,8 @@ async def show_all_items(current_folder_id=None):
                                                  reply_markup=items_inline_markup)
     #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
 
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    page_folders = data.get('page_folders')
     await dp.storage.update_data(user=tg_user, chat=chat,
                                  data={'current_keyboard': markup, 'folders_message': folders_message,
-                                       'page_items': str(new_page_items)})
+                                       'page_folders': page_folders, 'page_items': str(new_page_items)})
