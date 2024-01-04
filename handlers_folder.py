@@ -10,10 +10,12 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQu
 from aiogram.utils.exceptions import MessageNotModified
 
 import states
-from button_manager import general_buttons_folder, create_general_reply_markup, general_buttons_folder_show_all
+from button_manager import general_buttons_folder, create_general_reply_markup, general_buttons_folder_show_all, \
+    general_buttons_movement_item
 from firebase import ROOT_FOLDER_ID
 from firebase_folder_reader import get_current_folder_id
 from firebase_folder_writer import set_current_folder
+from firebase_item_reader import get_folder_id
 
 # from handlers_item import get_items_in_folder
 from load_all import dp, bot
@@ -61,6 +63,13 @@ async def delete_folder_request(call: CallbackQuery):
 async def show_folders(current_folder_id=None, page_folder=None, page_item=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
+
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+
+    #если это перемещение записи
+    movement_item_id = data.get('movement_item_id')
+    movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
+
     if not current_folder_id:
         current_folder_id = await get_current_folder_id(tg_user.id)
 
@@ -72,9 +81,15 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
         for folder_id, folder_data in user_folders.items()
     ]
 
-    general_buttons = general_buttons_folder[:]
+    if movement_item_id:
+        general_buttons = general_buttons_movement_item[:]
+        if movement_item_initial_folder_id != current_folder_id:
+            general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
+    else:
+        general_buttons = general_buttons_folder[:]
     if current_folder_id != ROOT_FOLDER_ID:
-        general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
+        if not movement_item_id:
+            general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
         general_buttons.append([KeyboardButton("↩️ Назад")])
     markup = create_general_reply_markup(general_buttons)
 
@@ -112,7 +127,6 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
         #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
         folders_message.reply_markup = folders_inline_markup
 
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['current_keyboard'] = markup
     data['folders_message'] = folders_message
     data['page_folders'] = str(new_page_folders)

@@ -11,13 +11,16 @@ import states
 from button_manager import create_general_reply_markup, general_buttons_item, general_buttons_folder, \
     general_buttons_items_show_all
 from firebase_folder_reader import get_current_folder_id
-from firebase_item_reader import get_item
+from firebase_folder_writer import set_current_folder
+from firebase_item_reader import get_item, get_folder_id
+from firebase_item_writer import move_item
 from handlers_folder import show_folders
 from load_all import dp, bot
 from models import Item
 from utils import get_inline_markup_for_accept_cancel, get_page_info, get_inline_markup_items_in_folder
 from utils_folders_db import get_folder_path_names
-from utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, util_edit_item
+from utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, util_edit_item, \
+    util_move_item
 
 cancel_edit_item_button = InlineKeyboardButton("Отменить", callback_data=f"cancel_edit_item")
 add_none_title_item_button = InlineKeyboardButton("Пустой заголовок", callback_data=f"add_none_title_item")
@@ -26,6 +29,16 @@ add_none_title_item_button = InlineKeyboardButton("Пустой заголово
 # Обработчик для ответа на нажатие кнопки
 @dp.callback_query_handler(lambda c: c.data and c.data.startswith('item_'))
 async def show_item_button(callback_query: CallbackQuery):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+    # если это перемещение записи
+    movement_item_id = data.get('movement_item_id')
+    if movement_item_id:
+        current_folder_id = await get_current_folder_id(tg_user.id)
+        await movement_item_handler(callback_query.message, current_folder_id)
+        return
+
     # Получаем item_id из callback_data
     item_id = callback_query.data.split('_')[1]
     await show_item(item_id)
@@ -45,11 +58,12 @@ async def show_item(item_id):
         item_content = f"📄\n\n{item.text}"
     markup = create_general_reply_markup(general_buttons_item)
     bot_message = await bot.send_message(tg_user.id, item_content, reply_markup=markup)
-    #await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
+    # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
 
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     data['bot_message'] = bot_message
     data['item_id'] = item_id
+    data['current_keyboard'] = markup
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
 
@@ -146,9 +160,9 @@ async def on_delete_item(message: aiogram.types.Message):
                                           reply_markup=ReplyKeyboardRemove())
 
     inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
-                                                        callback_data=f"delete_item_request_{item_id}")
+                                                              callback_data=f"delete_item_request_{item_id}")
 
-    #await asyncio.sleep(0.5)
+    # await asyncio.sleep(0.5)
 
     await bot.send_message(message.chat.id,
                            f"Хотите удалить эту запись ?",
@@ -193,9 +207,9 @@ async def delete_all_items_handler(message: aiogram.types.Message):
                                           reply_markup=ReplyKeyboardRemove())
 
     inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
-                                                        callback_data=f"delete_all_items_request_{current_folder_id}")
+                                                              callback_data=f"delete_all_items_request_{current_folder_id}")
 
-    #await asyncio.sleep(0.5)
+    # await asyncio.sleep(0.5)
 
     await bot.send_message(message.chat.id,
                            f"Действительно хотите удалить все записи в этой папке?",
@@ -327,7 +341,6 @@ async def on_edit_item(edit_text, state: FSMContext):
     await show_item(item_id)
 
 
-
 @dp.callback_query_handler(text_contains="cancel_edit_item",
                            state=[states.Item.EditTitle, states.Item.EditText])
 async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
@@ -351,3 +364,66 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
     await on_edit_item(None, state)
 
 
+@dp.message_handler(Text(equals="️🔀 Переместить"))
+async def movement_item_handler(message: aiogram.types.Message, folder_id=None):
+    tg_user = User.get_current()
+
+    data = await dp.storage.get_data(chat=message.chat, user=tg_user)
+    item_id = data.get('item_id')
+    if not data.get('movement_item_id'):
+        data['movement_item_id'] = item_id
+        await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
+
+    message_text = "❗Вы не завершили перемещение❗\n" if folder_id else ""
+    message_text += f"Выберите папку, в которую хотите переместить запись ⬇️"
+    await bot.send_message(message.chat.id, message_text)
+    await asyncio.sleep(0.5)
+
+    if not folder_id:
+        folder_id = get_folder_id(item_id)
+    await show_folders(folder_id)
+
+
+@dp.message_handler(Text(equals="️🔄 Оставить в исходной папке"))
+async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
+    tg_user = User.get_current()
+
+    data = await dp.storage.get_data(chat=message.chat, user=tg_user)
+    movement_item_id = data.get('movement_item_id')
+    data['movement_item_id'] = None
+    await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
+
+    message_text = f"Перемещение записи было отменено."
+    await bot.send_message(message.chat.id, message_text)
+    await asyncio.sleep(0.5)
+
+    folder_id = get_folder_id(movement_item_id)
+    await set_current_folder(tg_user.id, folder_id)
+    await show_folders(folder_id)
+    await asyncio.sleep(0.3)
+    await show_item(movement_item_id)
+
+
+@dp.message_handler(Text(equals="🔀 Переместить в текущую папку"))
+async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
+    tg_user = User.get_current()
+
+    data = await dp.storage.get_data(chat=message.chat, user=tg_user)
+    movement_item_id = data.get('movement_item_id')
+    data['movement_item_id'] = None
+    await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
+
+    folder_id = await get_current_folder_id(tg_user.id)
+    new_movement_item_id = await util_move_item(movement_item_id, folder_id)
+    if new_movement_item_id:
+        movement_item_id = new_movement_item_id
+        message_text = f"Запись была перемещена ✅"
+    else:
+        folder_id = get_folder_id(movement_item_id)
+        message_text = f"Не удалось переместить запись ❌"
+
+    await bot.send_message(message.chat.id, message_text)
+    await asyncio.sleep(0.5)
+    await show_folders(folder_id)
+    await asyncio.sleep(0.3)
+    await show_item(movement_item_id)

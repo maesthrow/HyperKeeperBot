@@ -1,5 +1,8 @@
+import asyncio
+
 from firebase import get_user_data, set_user_data
-from firebase_item_reader import get_folder_id
+from firebase_folder_writer import set_folders_collection
+from firebase_item_reader import get_folder_id, get_item
 from models import Item
 from utils_folders_db import get_folders_collection
 
@@ -28,16 +31,18 @@ async def add_item_to_folder(tg_user_id, folder_id, item: Item):
         # Преобразуем объект Item в словарь перед добавлением
         item_dict = item.to_dict()
 
-        max_child_number = max([int(child_item_id.split('/')[-1]) for child_item_id in target_folder["items"].keys()] + [0])
+        max_child_number = max(
+            [int(child_item_id.split('/')[-1]) for child_item_id in target_folder["items"].keys()] + [0])
+        new_item_id = f"{folder_id}/{max_child_number + 1}"
         # Добавляем элемент в папку
-        target_folder["items"][f"{folder_id}/{max_child_number + 1}"] = item_dict
+        target_folder["items"][new_item_id] = item_dict
 
         # Обновляем данные пользователя
         await set_user_data(tg_user_id, {"folders": folders_collection})
 
-        return True  # Успешно добавлено
+        return new_item_id  # Успешно добавлено
     else:
-        return False  # Папка не найдена
+        return None  # Папка не найдена
 
 
 async def delete_item(tg_user_id, item_id):
@@ -126,3 +131,14 @@ async def edit_item(tg_user_id, item_id, item: Item):
     else:
         return False  # Папка не найдена
 
+
+async def move_item(tg_user_id, item_id, dest_folder_id):
+    item: Item = await get_item(tg_user_id, item_id)
+
+    result_del = await delete_item(tg_user_id, item_id)
+    if result_del:
+        await set_folders_collection()
+        new_movement_item_id = await add_item_to_folder(tg_user_id, dest_folder_id, item)
+        return new_movement_item_id
+
+    return None

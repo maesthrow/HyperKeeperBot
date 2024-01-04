@@ -3,16 +3,17 @@ import asyncio
 import aiogram
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command, CommandStart, Text
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton
 
 import handlers_item
 import states
 from button_manager import create_general_reply_markup, general_buttons_folder, skip_enter_item_title_button, \
-    cancel_add_new_item_button
+    cancel_add_new_item_button, general_buttons_movement_item
 from enums import Environment
 from firebase import add_user
 from firebase_folder_reader import ROOT_FOLDER_ID, get_current_folder_id
 from firebase_folder_writer import set_current_folder
+from firebase_item_reader import get_folder_id
 from handlers_folder import create_folder_button, on_delete_folder, show_all_folders, show_folders
 from load_all import dp, bot
 from models import Item
@@ -51,13 +52,27 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     chat = Chat.get_current()
     user_folders = await util_get_user_folders()
 
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+
+    # если это перемещение записи
+    movement_item_id = data.get('movement_item_id')
+    movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
+
     await set_current_folder(tg_user.id, ROOT_FOLDER_ID)
 
     folder_buttons = [
         await create_folder_button(folder_id, folder_data.get("name"))
         for folder_id, folder_data in user_folders.items()
     ]
-    markup = create_general_reply_markup(general_buttons_folder)
+
+    if movement_item_id:
+        general_buttons = general_buttons_movement_item[:]
+        if movement_item_initial_folder_id != ROOT_FOLDER_ID:
+            general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
+    else:
+        general_buttons = general_buttons_folder[:]
+
+    markup = create_general_reply_markup(general_buttons)
 
     current_folder_path_names = await get_folder_path_names()
     await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
@@ -107,6 +122,18 @@ async def delete_handler(message: aiogram.types.Message):
 
 @dp.message_handler(~Command(["start", "storage"]))
 async def any_message(message: aiogram.types.Message, state: FSMContext):
+    tg_user = User.get_current()
+
+    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
+
+    # если это перемещение записи
+    movement_item_id = data.get('movement_item_id')
+    if movement_item_id:
+        current_folder_id = await get_current_folder_id(tg_user.id)
+        await handlers_item.movement_item_handler(message, current_folder_id)
+        return
+
+
     buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     add_item_message_1 = await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌",

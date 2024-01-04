@@ -32,8 +32,8 @@ def get_parent_folder_id(folder_id):
 
 
 async def get_environment():
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current()
+    tg_user = User.get_current()
+    chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     keyboard: ReplyKeyboardMarkup = data.get('current_keyboard', None)
     environment: Environment = Environment.FOLDERS
