@@ -21,6 +21,10 @@ general_buttons_item = [
         [KeyboardButton("️↩️ Назад к папке")],
     ]
 
+general_buttons_movement_item = [
+        [KeyboardButton("️🔄 Оставить в исходной папке")],
+    ]
+
 skip_enter_item_title_button = InlineKeyboardButton("Без заголовка", callback_data="skip_enter_item_title")
 cancel_add_new_item_button = InlineKeyboardButton("Не добавлять запись", callback_data="cancel_add_new_item")
 
