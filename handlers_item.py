@@ -8,17 +8,14 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQu
 from aiogram.utils.exceptions import MessageNotModified
 
 import states
-from button_manager import create_general_reply_markup, general_buttons_item, general_buttons_folder, \
-    general_buttons_items_show_all
+from button_manager import create_general_reply_markup, general_buttons_item
 from firebase_folder_reader import get_current_folder_id
 from firebase_folder_writer import set_current_folder
 from firebase_item_reader import get_item, get_folder_id
-from firebase_item_writer import move_item
 from handlers_folder import show_folders
 from load_all import dp, bot
 from models import Item
-from utils import get_inline_markup_for_accept_cancel, get_page_info, get_inline_markup_items_in_folder
-from utils_folders_db import get_folder_path_names
+from utils import get_inline_markup_for_accept_cancel
 from utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, util_edit_item, \
     util_move_item
 
@@ -47,7 +44,7 @@ async def show_item_button(callback_query: CallbackQuery):
 async def show_item(item_id):
     tg_user = aiogram.types.User.get_current()
     chat = aiogram.types.Chat.get_current()
-    item = await get_item(tg_user.id, item_id)
+    item = await get_item(item_id)
 
     # ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ!!!
     # await callback_query.answer(f"{item.title}\n{item.text}")
@@ -250,7 +247,7 @@ async def edit_item_title_handler(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
     item_id = data.get('item_id')
 
-    item: Item = await get_item(tg_user.id, item_id)
+    item: Item = await get_item(item_id)
     if item.title and item.title != "":
         item_title = f"<b>{item.title}</b>"
     else:
@@ -281,7 +278,7 @@ async def edit_item_text_handler(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
     item_id = data.get('item_id')
 
-    item: Item = await get_item(tg_user.id, item_id)
+    item: Item = await get_item(item_id)
     if item.text and item.text != "":
         item_text = item.text
     else:
@@ -316,7 +313,7 @@ async def on_edit_item(edit_text, state: FSMContext):
     chat = aiogram.types.Chat.get_current(())
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     item_id = data.get('item_id')
-    item: Item = await get_item(tg_user.id, item_id)
+    item: Item = await get_item(item_id)
     current_state = await state.get_state()
     if current_state == states.Item.EditTitle.state:
         item.title = edit_text

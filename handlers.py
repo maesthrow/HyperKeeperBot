@@ -21,6 +21,8 @@ from utils import get_environment, get_inline_markup_items_in_folder, get_inline
 from utils_folders_db import util_get_user_folders, get_folder_path_names
 from utils_items import show_all_items
 
+import handlers_search
+
 
 # Используем фильтр CommandStart для команды /start
 @dp.message_handler(CommandStart())

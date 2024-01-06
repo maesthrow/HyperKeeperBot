@@ -133,7 +133,7 @@ async def edit_item(tg_user_id, item_id, item: Item):
 
 
 async def move_item(tg_user_id, item_id, dest_folder_id):
-    item: Item = await get_item(tg_user_id, item_id)
+    item: Item = await get_item(item_id)
 
     result_del = await delete_item(tg_user_id, item_id)
     if result_del:

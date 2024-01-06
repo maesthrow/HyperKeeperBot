@@ -12,17 +12,36 @@ def get_folder_id(item_id):
     return item_id.rsplit('/', 1)[0]
 
 
-async def get_folder_items(folder_id):
-    """Возвращает элементы папки по её идентификатору."""
+# async def get_folder_items(folder_id):
+#     """Возвращает элементы папки по её идентификатору."""
+#     folder_data = await get_folder_data(folder_id)
+#     items = folder_data.get("items", [])
+#     # сортировка по title or text
+#     sorted_items = dict(sorted(items.items(), key=lambda x: x[1]["title"] or x[1]["text"]))  # get_last_number(x[0])))
+#
+#     return sorted_items
+
+
+async def get_folder_items(folder_id, text_search=None):
+    """Возвращает элементы папки по её идентификатору с учетом текстового поиска."""
     folder_data = await get_folder_data(folder_id)
     items = folder_data.get("items", [])
-    # сортировка по title or text
-    sorted_items = dict(sorted(items.items(), key=lambda x: x[1]["title"] or x[1]["text"])) #get_last_number(x[0])))
+
+    if text_search:
+        # Фильтрация элементов по текстовому поиску в title или text
+        filtered_items = {key: value for key, value in items.items()
+                          if (text_search.lower() in str(value.get("title", "")).lower()) or
+                          (text_search.lower() in str(value.get("text", "")).lower())}
+    else:
+        filtered_items = items
+
+    # Сортировка по title или text
+    sorted_items = dict(sorted(filtered_items.items(), key=lambda x: x[1]["title"] or x[1]["text"]))
 
     return sorted_items
 
 
-async def get_item_dict(tg_user_id, item_id):
+async def get_item_dict(item_id):
     folder_id = get_folder_id(item_id)
     """Возвращает словарь элемента в папке."""
     items = await get_folder_items(folder_id)
@@ -36,8 +55,8 @@ async def get_item_dict(tg_user_id, item_id):
     return None
 
 
-async def get_item(tg_user_id, item_id):
-    item_dict = await get_item_dict(tg_user_id, item_id)
+async def get_item(item_id):
+    item_dict = await get_item_dict(item_id)
     if item_dict:
         item = Item(item_dict["text"], item_dict["title"], item_dict["date_created"])
         return item
@@ -45,8 +64,8 @@ async def get_item(tg_user_id, item_id):
     return None
 
 
-async def get_item_property(tg_user_id, item_id, key):
-    item_dict = await get_item_dict(tg_user_id, item_id)
+async def get_item_property(item_id, key):
+    item_dict = await get_item_dict(item_id)
     if item_dict:
         # Если элемент найден, возвращаем значение ключа
         return item_dict.get(key, None)
