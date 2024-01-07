@@ -2,7 +2,8 @@ import asyncio
 
 import aiogram
 from aiogram.dispatcher import FSMContext
-from aiogram.types import User, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Chat
+from aiogram.types import User, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Chat, \
+    ParseMode
 from aiogram.dispatcher.filters import Text
 
 import states
@@ -32,19 +33,19 @@ async def get_search_text(message: aiogram.types.Message, state: FSMContext):
     chat = Chat.get_current()
     folder_id = await get_current_folder_id()
     dict_inline_markups = await get_all_search_items(folder_id, search_text=message.text)
-    if len(dict_inline_markups) > 0:
-        dict_search_data = {
-            'source_folder_id': folder_id, 'search_text': message.text, 'dict_inline_markups': dict_inline_markups
-        }
-        await show_search_results(dict_search_data)
 
+    dict_search_data = {
+        'source_folder_id': folder_id, 'search_text': message.text, 'dict_inline_markups': dict_inline_markups
+    }
+    await show_search_results(dict_search_data)
+
+    if len(dict_inline_markups) > 0:
         data = await dp.storage.get_data(user=tg_user, chat=chat)
         data['dict_search_data'] = dict_search_data
         await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
     else:
-        await bot.send_message(message.chat.id, f"По запросу '<b>{message.text}</b>' ничего не найдено 🤷‍♂️")
-        await asyncio.sleep(0.4)
+        await asyncio.sleep(1)
         await show_folders()
 
     await state.reset_state()
@@ -65,15 +66,24 @@ async def show_search_results(dict_search_data):
     data['current_keyboard'] = markup
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
+    chat = Chat.get_current()
+
     level_folder_path_names = await get_folder_path_names(source_folder_id)
-    await bot.send_message(Chat.get_current().id, f"⬇️ <b>РЕЗУЛЬТАТЫ ПОИСКА</b> 🔍️\n"
-                                                  f"<u>На уровне</u> 🗂️ {level_folder_path_names}\n"
-                                                  f"<u>По запросу</u> <b>'{search_text}'</b>:",
+    await bot.send_message(chat.id, f"⬇️ <b>РЕЗУЛЬТАТЫ ПОИСКА</b> 🔍️\n\n"
+                                                  f"<u>Уровень (включая вложенные папки)</u>:\n"
+                                                  f"🗂️ <b>{level_folder_path_names[:-1]}</b>\n\n"
+                                                  f"<u>Запрос</u>: "
+                                                  f"<b>'{search_text}'</b>",
                            reply_markup=markup)
-    for sub_folder_id, inline_markup in dict_inline_markups.items():
-        await asyncio.sleep(0.5)
-        folder_path_names = await get_folder_path_names(sub_folder_id)
-        await bot.send_message(Chat.get_current().id, f"🗂️ {folder_path_names}", reply_markup=inline_markup)
+    if len(dict_inline_markups) > 0:
+        for sub_folder_id, inline_markup in dict_inline_markups.items():
+            await asyncio.sleep(0.3)
+            folder_path_names = await get_folder_path_names(sub_folder_id)
+            await bot.send_message(Chat.get_current().id, f"🗂️ {folder_path_names}",
+                                   reply_markup=inline_markup)
+    else:
+        await asyncio.sleep(0.2)
+        await bot.send_message(chat.id, f"Ничего не найдено 🤷‍♂️")
 
 
 @dp.callback_query_handler(text_contains="cancel_enter_search_text", state=states.Item.Search)

@@ -52,10 +52,6 @@ async def show_item(item_id):
     # ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ!!!
     # await callback_query.answer(f"{item.title}\n{item.text}")
 
-    if item.title:
-        item_content = f"📄 <b>{item.title}</b>\n\n{item.text}"
-    else:
-        item_content = f"📄\n\n{item.text}"
     buttons = general_buttons_item[:]
     if data['dict_search_data']:
         buttons.pop(len(buttons) - 1)
@@ -67,7 +63,17 @@ async def show_item(item_id):
         ]
         buttons.extend(search_mode_buttons)
 
+        search_text = data['dict_search_data'].get('search_text', None)
+        if search_text:
+            item.select_search_text(search_text)
+
     markup = create_general_reply_markup(buttons)
+
+    if item.title:
+        item_content = f"📄 <b>{item.title}</b>\n\n{item.text}"
+    else:
+        item_content = f"📄\n\n{item.text}"
+
     bot_message = await bot.send_message(tg_user.id, item_content, reply_markup=markup)
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
 
