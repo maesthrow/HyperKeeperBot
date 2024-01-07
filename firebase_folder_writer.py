@@ -23,8 +23,12 @@ async def set_folders_collection(folders_collection=None):
     chat = Chat.get_current()
     if not folders_collection:
         folders_collection = await get_user_folders_collection(tg_user.id)
-    await dp.storage.update_data(user=tg_user, chat=chat,
-                                 data={'folders_collection': folders_collection})
+
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data['dict_search_data'] = None
+    data['folders_collection'] = folders_collection
+
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
 
 async def add_new_folder(tg_user_id, new_folder_name, parent_folder_id):

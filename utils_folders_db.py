@@ -83,6 +83,11 @@ async def get_folder_data(folder_id):
     return target_folder
 
 
+async def get_sub_folders(folder_id):
+    folders = await get_folder_data(folder_id)
+    return folders.get("folders", {})
+
+
 async def get_sub_folder_names(folder_id):
     """Возвращает список всех folder_id внутри указанной папки."""
     folders_collection = await get_folders_collection()

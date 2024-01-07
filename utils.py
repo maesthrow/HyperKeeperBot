@@ -92,11 +92,10 @@ async def get_inline_markup_folders(folder_buttons, current_page):
     return inline_markup
 
 
-async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
-    tg_user = User.get_current()
+async def get_inline_markup_items_in_folder(current_folder_id, current_page=1, search_text=None):
 
     # Получаем записи из коллекции items для текущей папки
-    folder_items = await get_folder_items(current_folder_id)
+    folder_items = await get_folder_items(current_folder_id, search_text)
     list_items_id = []
     for item_id in folder_items:
         list_items_id.append(item_id)
@@ -109,7 +108,7 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1):
 
     buttons = []
     for item_id in current_items:
-        item = await get_item(tg_user.id, item_id)
+        item = await get_item(item_id)
 
         item_button_text = item.title or item.get_short_title()
         if item:
@@ -179,7 +178,6 @@ async def get_page_info(folder_id, entities_key, current_page=None):
     chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     pf = data.get('page_folders')
-    print(f'data.get(page_folders) = {pf}')
 
     page_entities = data.get(f'page_{entities_key}')
     level = await get_level_folders(folder_id)
@@ -194,7 +192,6 @@ async def get_page_info(folder_id, entities_key, current_page=None):
     else:
         new_page_entities[-1] = current_page
     new_page_entities = '/'.join(new_page_entities)
-    print(f'new_page_entities {new_page_entities}')
 
     page_info = {f'current_page_{entities_key}': int(current_page), f'page_{entities_key}': new_page_entities}
     return page_info

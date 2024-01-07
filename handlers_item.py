@@ -4,21 +4,21 @@ from datetime import datetime
 import aiogram
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, User, Chat
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, User, Chat, \
+    KeyboardButton
 from aiogram.utils.exceptions import MessageNotModified
 
 import states
-from button_manager import create_general_reply_markup, general_buttons_item, general_buttons_folder, \
-    general_buttons_items_show_all
+from enums import Environment
+from button_manager import create_general_reply_markup, general_buttons_item
 from firebase_folder_reader import get_current_folder_id
 from firebase_folder_writer import set_current_folder
 from firebase_item_reader import get_item, get_folder_id
-from firebase_item_writer import move_item
 from handlers_folder import show_folders
+from handlers_search import show_search_results
 from load_all import dp, bot
 from models import Item
-from utils import get_inline_markup_for_accept_cancel, get_page_info, get_inline_markup_items_in_folder
-from utils_folders_db import get_folder_path_names
+from utils import get_inline_markup_for_accept_cancel, get_environment
 from utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, util_edit_item, \
     util_move_item
 
@@ -47,7 +47,9 @@ async def show_item_button(callback_query: CallbackQuery):
 async def show_item(item_id):
     tg_user = aiogram.types.User.get_current()
     chat = aiogram.types.Chat.get_current()
-    item = await get_item(tg_user.id, item_id)
+    item = await get_item(item_id)
+
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
 
     # ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ!!!
     # await callback_query.answer(f"{item.title}\n{item.text}")
@@ -56,11 +58,21 @@ async def show_item(item_id):
         item_content = f"📄 <b>{item.title}</b>\n\n{item.text}"
     else:
         item_content = f"📄\n\n{item.text}"
-    markup = create_general_reply_markup(general_buttons_item)
+    buttons = general_buttons_item[:]
+    if data['dict_search_data']:
+        buttons.pop(len(buttons) - 1)
+
+        search_mode_buttons = [
+            [KeyboardButton("️🗂️ Перейти к папке")],
+            [KeyboardButton("️↩️ Назад к результатам поиска 🔍")],
+            [KeyboardButton("🫡 Завершить режим поиска 🔍️")]
+        ]
+        buttons.extend(search_mode_buttons)
+
+    markup = create_general_reply_markup(buttons)
     bot_message = await bot.send_message(tg_user.id, item_content, reply_markup=markup)
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
 
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
     data['bot_message'] = bot_message
     data['item_id'] = item_id
     data['current_keyboard'] = markup
@@ -71,6 +83,22 @@ async def show_item(item_id):
 async def back_to_folder(message: aiogram.types.Message):
     tg_user = User.get_current()
     folder_id = await get_current_folder_id(tg_user.id)
+    await show_folders(folder_id)
+
+
+@dp.message_handler(Text(equals="️↩️ Назад к результатам поиска 🔍"))
+async def back_to_search_results(message: aiogram.types.Message):
+    data = await dp.storage.get_data(chat=Chat.get_current(), user=User.get_current())
+    await show_search_results(data['dict_search_data'])
+
+
+@dp.message_handler(Text(equals="️🗂️ Перейти к папке"))
+async def back_to_folder(message: aiogram.types.Message):
+    data = await dp.storage.get_data(chat=Chat.get_current(), user=User.get_current())
+    item_id = data['item_id']
+    folder_id = get_folder_id(item_id)
+    data['dict_search_data'] = None
+    await dp.storage.update_data(user=User.get_current(), chat=Chat.get_current(), data=data)
     await show_folders(folder_id)
 
 
@@ -149,6 +177,11 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
     await state.reset_data()
     await state.reset_state()
     await show_folders()
+
+
+@dp.message_handler(Text(equals="🗑 Удалить"))
+async def delete_handler(message: aiogram.types.Message):
+    await on_delete_item(message)
 
 
 async def on_delete_item(message: aiogram.types.Message):
@@ -250,7 +283,7 @@ async def edit_item_title_handler(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
     item_id = data.get('item_id')
 
-    item: Item = await get_item(tg_user.id, item_id)
+    item: Item = await get_item(item_id)
     if item.title and item.title != "":
         item_title = f"<b>{item.title}</b>"
     else:
@@ -281,7 +314,7 @@ async def edit_item_text_handler(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
     item_id = data.get('item_id')
 
-    item: Item = await get_item(tg_user.id, item_id)
+    item: Item = await get_item(item_id)
     if item.text and item.text != "":
         item_text = item.text
     else:
@@ -316,7 +349,7 @@ async def on_edit_item(edit_text, state: FSMContext):
     chat = aiogram.types.Chat.get_current(())
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     item_id = data.get('item_id')
-    item: Item = await get_item(tg_user.id, item_id)
+    item: Item = await get_item(item_id)
     current_state = await state.get_state()
     if current_state == states.Item.EditTitle.state:
         item.title = edit_text
@@ -427,3 +460,20 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
     await show_folders(folder_id)
     await asyncio.sleep(0.3)
     await show_item(movement_item_id)
+
+
+@dp.message_handler(Text(equals="🫡 Завершить режим поиска 🔍️"))
+async def search_item_handler(message: aiogram.types.Message):
+    data = await dp.storage.get_data(user=User.get_current(), chat=Chat.get_current())
+    data['dict_search_data'] = None
+    await dp.storage.update_data(user=User.get_current(), chat=Chat.get_current(), data=data)
+
+    environment: Environment = await get_environment()
+    if environment is Environment.FOLDERS:
+        await show_folders()
+    elif environment is Environment.ITEM_CONTENT:
+        item_id = data.get('item_id')
+        if item_id:
+            current_folder = get_folder_id(item_id)
+            await set_current_folder(User.get_current().id, current_folder)
+            await show_item(item_id)

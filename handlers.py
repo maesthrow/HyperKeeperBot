@@ -9,7 +9,6 @@ import handlers_item
 import states
 from button_manager import create_general_reply_markup, general_buttons_folder, skip_enter_item_title_button, \
     cancel_add_new_item_button, general_buttons_movement_item
-from enums import Environment
 from firebase import add_user
 from firebase_folder_reader import ROOT_FOLDER_ID, get_current_folder_id
 from firebase_folder_writer import set_current_folder
@@ -20,6 +19,8 @@ from models import Item
 from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders
 from utils_folders_db import util_get_user_folders, get_folder_path_names
 from utils_items import show_all_items
+
+import handlers_search
 
 
 # Используем фильтр CommandStart для команды /start
@@ -110,16 +111,6 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(folder_id, page_folder=1, page_item=1)
 
 
-@dp.message_handler(Text(contains="🗑 Удалить"))
-async def delete_handler(message: aiogram.types.Message):
-    environment = await get_environment()
-
-    if environment == Environment.FOLDERS:
-        await on_delete_folder(message)
-    elif environment == Environment.ITEM_CONTENT:
-        await handlers_item.on_delete_item(message)
-
-
 @dp.message_handler(~Command(["start", "storage"]))
 async def any_message(message: aiogram.types.Message, state: FSMContext):
     tg_user = User.get_current()
@@ -131,6 +122,11 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     if movement_item_id:
         current_folder_id = await get_current_folder_id(tg_user.id)
         await handlers_item.movement_item_handler(message, current_folder_id)
+        return
+
+    dict_search_data = data['dict_search_data']
+    if dict_search_data:
+        await message.reply('Завершите режим поиска 🔍 для добавления новой записи.')
         return
 
 
@@ -146,4 +142,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     await state.update_data(item=item, add_item_messages=(add_item_message_1, add_item_message_2))
 
     await states.Item.NewStepTitle.set()
+
+
+
 

@@ -10,7 +10,7 @@ general_buttons_folder_show_all = [
     ]
 
 general_buttons_items_show_all = [
-        [KeyboardButton("️🔍 Поиск"), KeyboardButton("️📊 Статистика")],
+        [KeyboardButton("🔍 Поиск"), KeyboardButton("️📊 Статистика")],
         [KeyboardButton("️🧹 Удалить все записи в папке")],
         [KeyboardButton("️↩️ Назад к общему виду папки")]
     ]
@@ -23,6 +23,10 @@ general_buttons_item = [
 
 general_buttons_movement_item = [
         [KeyboardButton("️🔄 Оставить в исходной папке")],
+    ]
+
+general_buttons_search_items = [
+        [KeyboardButton("🫡 Завершить режим поиска 🔍️")],
     ]
 
 skip_enter_item_title_button = InlineKeyboardButton("Без заголовка", callback_data="skip_enter_item_title")
