@@ -45,7 +45,6 @@ async def get_environment():
 
 
 async def set_current_folder_id(folder_id=ROOT_FOLDER_ID):
-    print(f"set folder_id {folder_id}")
     """Устанавливает новый идентификатор текущей папки для пользователя."""
     tg_user = User.get_current()
     chat = Chat.get_current()
@@ -61,7 +60,6 @@ async def get_current_folder_id(tg_user=None, chat=None):
         chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     current_folder_id = data.get('current_folder_id')
-    print(f"get folder_id {current_folder_id}")
     if not current_folder_id:
         current_folder_id = ROOT_FOLDER_ID
     return current_folder_id
@@ -217,8 +215,6 @@ async def get_page_info(folder_id, entities_key, current_page=None):
     else:
         new_page_entities[-1] = current_page
     new_page_entities = '/'.join(new_page_entities)
-
-    print(f"new_page_entities = {new_page_entities}")
 
     page_info = {f'current_page_{entities_key}': int(current_page), f'page_{entities_key}': new_page_entities}
     return page_info

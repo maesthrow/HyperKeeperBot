@@ -15,7 +15,6 @@ from button_manager import general_buttons_folder, create_general_reply_markup, 
 from firebase import ROOT_FOLDER_ID
 from firebase_item_reader import get_folder_id
 
-# from handlers_item import get_items_in_folder
 from load_all import dp, bot
 from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
     is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info, get_parent_folder_id, get_current_folder_id, \
