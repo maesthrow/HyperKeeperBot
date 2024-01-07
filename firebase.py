@@ -18,7 +18,6 @@ async def add_user(tg_user):
                      "username": tg_user.username,
                      "subscription_code": 0,
                      "is_paid": False,
-                     "current_folder": ROOT_FOLDER_ID,
                      "folders": {
                          "0": {
                              "name": "Хранилище",

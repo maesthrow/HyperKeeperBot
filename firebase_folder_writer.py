@@ -97,11 +97,6 @@ async def delete_folder(tg_user_id, folder_id):
         return False  # Папка не найдена
 
 
-async def set_current_folder(tg_user_id, folder_id):
-    """Устанавливает новый идентификатор текущей папки для пользователя."""
-    await set_user_data(tg_user_id, {"current_folder": folder_id})
-
-
 async def rename_folder(tg_user_id, folder_id, folder_new_name):
     """Переименовывает указанную папку."""
     folders_collection = await get_folders_collection()

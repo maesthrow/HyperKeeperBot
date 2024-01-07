@@ -7,9 +7,9 @@ from aiogram.dispatcher.filters import Text
 
 import states
 from button_manager import create_general_reply_markup, general_buttons_search_items
-from firebase_folder_reader import get_current_folder_id
 from handlers_folder import show_folders
 from load_all import dp, bot
+from utils import get_current_folder_id
 from utils_folders_db import get_folder_path_names
 from utils_items import get_all_search_items
 
@@ -30,7 +30,7 @@ async def search_item_handler(message: aiogram.types.Message):
 async def get_search_text(message: aiogram.types.Message, state: FSMContext):
     tg_user = User.get_current()
     chat = Chat.get_current()
-    folder_id = await get_current_folder_id(tg_user.id)
+    folder_id = await get_current_folder_id()
     dict_inline_markups = await get_all_search_items(folder_id, search_text=message.text)
     if len(dict_inline_markups) > 0:
         dict_search_data = {
@@ -51,12 +51,20 @@ async def get_search_text(message: aiogram.types.Message, state: FSMContext):
 
 
 async def show_search_results(dict_search_data):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+
     source_folder_id = dict_search_data['source_folder_id']
     search_text = dict_search_data['search_text']
     dict_inline_markups = dict_search_data['dict_inline_markups']
 
     general_buttons = general_buttons_search_items[:]
     markup = create_general_reply_markup(general_buttons)
+
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+    data['current_keyboard'] = markup
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
     level_folder_path_names = await get_folder_path_names(source_folder_id)
     await bot.send_message(Chat.get_current().id, f"⬇️ <b>РЕЗУЛЬТАТЫ ПОИСКА</b> 🔍️\n"
                                                   f"<u>На уровне</u> 🗂️ {level_folder_path_names}\n"

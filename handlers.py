@@ -10,17 +10,15 @@ import states
 from button_manager import create_general_reply_markup, general_buttons_folder, skip_enter_item_title_button, \
     cancel_add_new_item_button, general_buttons_movement_item
 from firebase import add_user
-from firebase_folder_reader import ROOT_FOLDER_ID, get_current_folder_id
-from firebase_folder_writer import set_current_folder
+from firebase_folder_reader import ROOT_FOLDER_ID
 from firebase_item_reader import get_folder_id
-from handlers_folder import create_folder_button, on_delete_folder, show_all_folders, show_folders
+from handlers_folder import create_folder_button, show_all_folders, show_folders
 from load_all import dp, bot
 from models import Item
-from utils import get_environment, get_inline_markup_items_in_folder, get_inline_markup_folders
+from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, set_current_folder_id, \
+    get_current_folder_id
 from utils_folders_db import util_get_user_folders, get_folder_path_names
 from utils_items import show_all_items
-
-import handlers_search
 
 
 # Используем фильтр CommandStart для команды /start
@@ -59,7 +57,7 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     movement_item_id = data.get('movement_item_id')
     movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
 
-    await set_current_folder(tg_user.id, ROOT_FOLDER_ID)
+    await set_current_folder_id()
 
     folder_buttons = [
         await create_folder_button(folder_id, folder_data.get("name"))
@@ -106,8 +104,7 @@ async def show_all_entities_handler(call: CallbackQuery):
 
 @dp.message_handler(Text(equals="️↩️ Назад к общему виду папки"))
 async def back_to_folder(message: aiogram.types.Message):
-    tg_user = User.get_current()
-    folder_id = await get_current_folder_id(tg_user.id)
+    folder_id = await get_current_folder_id()
     await show_folders(folder_id, page_folder=1, page_item=1)
 
 
@@ -120,7 +117,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
     if movement_item_id:
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
         await handlers_item.movement_item_handler(message, current_folder_id)
         return
 

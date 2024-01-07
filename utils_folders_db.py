@@ -1,13 +1,8 @@
-from aiogram.types import User, Chat
+from aiogram.types import User
 
 from firebase import ROOT_FOLDER_ID
-from firebase_folder_reader import get_user_folders_collection
 from firebase_folder_writer import add_new_folder, delete_folder, rename_folder, get_folders_collection, \
     set_folders_collection
-from load_all import dp
-
-
-
 
 
 async def util_get_user_folders(folder_id=ROOT_FOLDER_ID):

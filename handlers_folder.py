@@ -13,14 +13,13 @@ import states
 from button_manager import general_buttons_folder, create_general_reply_markup, general_buttons_folder_show_all, \
     general_buttons_movement_item
 from firebase import ROOT_FOLDER_ID
-from firebase_folder_reader import get_current_folder_id
-from firebase_folder_writer import set_current_folder
 from firebase_item_reader import get_folder_id
 
 # from handlers_item import get_items_in_folder
 from load_all import dp, bot
 from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
-    is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info, get_parent_folder_id
+    is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info, get_parent_folder_id, get_current_folder_id, \
+    set_current_folder_id
 from utils_folders_db import util_delete_folder, util_get_user_folders, util_add_new_folder, util_rename_folder, \
     get_folder_name, get_folder_path_names, get_sub_folder_names
 from utils_items import show_all_items
@@ -31,7 +30,7 @@ cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_
 @dp.callback_query_handler(text_contains="delete_folder_request")
 async def delete_folder_request(call: CallbackQuery):
     tg_user = User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
 
     folder_id = (call.data.replace("delete_folder_request_", "")
                  .replace("_accept", "")
@@ -71,9 +70,9 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
     movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
 
     if not current_folder_id:
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
 
-    await set_current_folder(tg_user.id, current_folder_id)
+    await set_current_folder_id(current_folder_id)
     user_folders = await util_get_user_folders(current_folder_id)
 
     folder_buttons = [
@@ -138,7 +137,7 @@ async def show_all_folders(current_folder_id=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
     if not current_folder_id:
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
 
     user_folders = await util_get_user_folders(current_folder_id)
 
@@ -182,8 +181,7 @@ async def to_folder(call: CallbackQuery, callback_data: dict):
 # Используем обработчик CallbackQuery для навигации по папкам
 @dp.message_handler(Text(equals="↩️ Назад"))
 async def back_to_folders(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
-    folder_id = await get_current_folder_id(tg_user.id)
+    folder_id = await get_current_folder_id()
     back_to_folder_id = get_parent_folder_id(folder_id)
     await to_folder(call=CallbackQuery(), callback_data={"folder_id": back_to_folder_id})
 
@@ -225,7 +223,7 @@ async def get_enter_folder_name(message: aiogram.types.Message):
         return None
 
     tg_user = aiogram.types.User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
     parent_folder_id = get_parent_folder_id(current_folder_id)
     sub_folders_names = await get_sub_folder_names(parent_folder_id)
     new_folder_name = clean_folder_name(new_folder_name)
@@ -245,7 +243,7 @@ async def new_folder(message: aiogram.types.Message, state: FSMContext):
         return
 
     tg_user = User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
     result = await util_add_new_folder(new_folder_name, current_folder_id)
     if result:
         sent_message = await bot.send_message(message.chat.id, text=f"Новая папка '{new_folder_name}' успешно создана ✅")
@@ -313,14 +311,14 @@ async def create_new_folder(message: aiogram.types.Message):
 @dp.message_handler(Text(equals="✏️ Переименовать папку"))
 async def edit_folder_handler(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
     await edit_this_folder(message, current_folder_id)
 
 
 async def on_delete_folder(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
     # Извлекаем из callback_data идентификатор папки, который прикреплен к кнопке
-    folder_id = await get_current_folder_id(tg_user.id)
+    folder_id = await get_current_folder_id()
     folder_name = await get_folder_name(folder_id)
 
     sent_message = await bot.send_message(message.chat.id, "<b>Подготовка к удалению папки</b>",
@@ -362,13 +360,13 @@ async def go_to_page_folders(call: CallbackQuery):
         tg_user = User.get_current()
         chat = Chat.get_current()
         data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
         folders_page_info = await get_page_info(current_folder_id, 'folders', page) #get_folders_page_info(current_folder_id, page)
         new_page_folders = folders_page_info.get('page_folders')
 
         folders_message = data.get('folders_message')
 
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
         user_folders = await util_get_user_folders(current_folder_id)
 
         folder_buttons = [
@@ -405,13 +403,13 @@ async def go_to_page_items(call: CallbackQuery):
         tg_user = aiogram.types.User.get_current()
         chat = aiogram.types.Chat.get_current()
         data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
         items_page_info = await get_page_info(current_folder_id, 'items', page)
         new_page_items = items_page_info.get('page_items')
 
         folders_message = data.get('folders_message')
 
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
 
         items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=page)
         inline_markup = folders_message.reply_markup
