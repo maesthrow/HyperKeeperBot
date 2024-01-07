@@ -6,6 +6,7 @@ from aiogram.utils.callback_data import CallbackData
 
 from button_manager import check_button_exists
 from enums import Environment
+from firebase import ROOT_FOLDER_ID
 from firebase_item_reader import get_folder_items, get_item
 from load_all import dp
 
@@ -41,6 +42,27 @@ async def get_environment():
         if check_button_exists(keyboard, tmp_environment.value):
             environment = tmp_environment
     return environment
+
+
+async def set_current_folder_id(folder_id=ROOT_FOLDER_ID):
+    """Устанавливает новый идентификатор текущей папки для пользователя."""
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data['current_folder_id'] = folder_id
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
+
+async def get_current_folder_id(tg_user=None, chat=None):
+    """Устанавливает новый идентификатор текущей папки для пользователя."""
+    if tg_user is None and chat is None:
+        tg_user = User.get_current()
+        chat = Chat.get_current()
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    current_folder_id = data.get('current_folder_id')
+    if not current_folder_id:
+        current_folder_id = ROOT_FOLDER_ID
+    return current_folder_id
 
 
 async def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback_data):
@@ -178,6 +200,7 @@ async def get_page_info(folder_id, entities_key, current_page=None):
     chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     pf = data.get('page_folders')
+
 
     page_entities = data.get(f'page_{entities_key}')
     level = await get_level_folders(folder_id)

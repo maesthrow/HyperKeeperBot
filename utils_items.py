@@ -1,9 +1,8 @@
 from aiogram.types import User, Chat
 
 from button_manager import general_buttons_items_show_all, create_general_reply_markup
-from firebase_folder_reader import get_current_folder_id
 from load_all import bot, dp
-from utils import get_page_info, get_inline_markup_items_in_folder
+from utils import get_page_info, get_inline_markup_items_in_folder, get_current_folder_id
 from utils_folders_db import get_folder_path_names, get_sub_folders
 
 
@@ -11,7 +10,7 @@ async def show_all_items(current_folder_id=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
     if not current_folder_id:
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
 
     general_buttons = general_buttons_items_show_all[:]
     markup = create_general_reply_markup(general_buttons)

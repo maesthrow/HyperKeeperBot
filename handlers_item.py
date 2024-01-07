@@ -11,14 +11,12 @@ from aiogram.utils.exceptions import MessageNotModified
 import states
 from enums import Environment
 from button_manager import create_general_reply_markup, general_buttons_item
-from firebase_folder_reader import get_current_folder_id
-from firebase_folder_writer import set_current_folder
 from firebase_item_reader import get_item, get_folder_id
 from handlers_folder import show_folders
 from handlers_search import show_search_results
 from load_all import dp, bot
 from models import Item
-from utils import get_inline_markup_for_accept_cancel, get_environment
+from utils import get_inline_markup_for_accept_cancel, get_environment, get_current_folder_id, set_current_folder_id
 from utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, util_edit_item, \
     util_move_item
 
@@ -35,7 +33,7 @@ async def show_item_button(callback_query: CallbackQuery):
     # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
     if movement_item_id:
-        current_folder_id = await get_current_folder_id(tg_user.id)
+        current_folder_id = await get_current_folder_id()
         await movement_item_handler(callback_query.message, current_folder_id)
         return
 
@@ -73,6 +71,7 @@ async def show_item(item_id):
     bot_message = await bot.send_message(tg_user.id, item_content, reply_markup=markup)
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
 
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['bot_message'] = bot_message
     data['item_id'] = item_id
     data['current_keyboard'] = markup
@@ -81,8 +80,7 @@ async def show_item(item_id):
 
 @dp.message_handler(Text(equals="️↩️ Назад к папке"))
 async def back_to_folder(message: aiogram.types.Message):
-    tg_user = User.get_current()
-    folder_id = await get_current_folder_id(tg_user.id)
+    folder_id = await get_current_folder_id()
     await show_folders(folder_id)
 
 
@@ -124,7 +122,7 @@ async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
     #                       )
 
     tg_user = User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
     result = await util_add_item_to_folder(current_folder_id, item)
 
     data = await state.get_data()
@@ -158,7 +156,7 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
     #                       )
 
     tg_user = User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
     result = await util_add_item_to_folder(current_folder_id, item)
 
     data = await state.get_data()
@@ -234,7 +232,7 @@ async def delete_item_request(call: CallbackQuery):
 @dp.message_handler(Text(equals="️🧹 Удалить все записи в папке"))
 async def delete_all_items_handler(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
 
     sent_message = await bot.send_message(message.chat.id, "⌛️",
                                           reply_markup=ReplyKeyboardRemove())
@@ -253,7 +251,7 @@ async def delete_all_items_handler(message: aiogram.types.Message):
 @dp.callback_query_handler(text_contains="delete_all_items_request")
 async def delete_all_items_request(call: CallbackQuery):
     tg_user = User.get_current()
-    current_folder_id = await get_current_folder_id(tg_user.id)
+    current_folder_id = await get_current_folder_id()
 
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
@@ -302,6 +300,7 @@ async def edit_item_title_handler(message: aiogram.types.Message):
                                                  f"Придумайте новый заголовок:",
                                                  reply_markup=inline_markup)
 
+    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
@@ -333,6 +332,7 @@ async def edit_item_text_handler(message: aiogram.types.Message):
                                                  f"Напишите новый текст:",
                                                  reply_markup=inline_markup)
 
+    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
@@ -377,7 +377,7 @@ async def on_edit_item(edit_text, state: FSMContext):
 @dp.callback_query_handler(text_contains="cancel_edit_item",
                            state=[states.Item.EditTitle, states.Item.EditText])
 async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
-    tg_user = aiogram.types.User.get_current()
+    tg_user = User.get_current()
     data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
     item_id = data.get('item_id')
     edit_item_messages = data.get('edit_item_messages')
@@ -431,7 +431,7 @@ async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     await asyncio.sleep(0.5)
 
     folder_id = get_folder_id(movement_item_id)
-    await set_current_folder(tg_user.id, folder_id)
+    await set_current_folder_id(folder_id)
     await show_folders(folder_id)
     await asyncio.sleep(0.3)
     await show_item(movement_item_id)
@@ -446,7 +446,7 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
     data['movement_item_id'] = None
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
-    folder_id = await get_current_folder_id(tg_user.id)
+    folder_id = await get_current_folder_id()
     new_movement_item_id = await util_move_item(movement_item_id, folder_id)
     if new_movement_item_id:
         movement_item_id = new_movement_item_id
@@ -475,5 +475,5 @@ async def search_item_handler(message: aiogram.types.Message):
         item_id = data.get('item_id')
         if item_id:
             current_folder = get_folder_id(item_id)
-            await set_current_folder(User.get_current().id, current_folder)
+            await set_current_folder_id(current_folder)
             await show_item(item_id)
