@@ -19,6 +19,19 @@ async def util_get_user_folders(folder_id=ROOT_FOLDER_ID):
     return target_folders
 
 
+async def util_get_user_folders_count(folder_id=ROOT_FOLDER_ID):
+    folders_in_folder = await util_get_user_folders(folder_id)
+    return len(folders_in_folder)
+
+
+async def util_get_user_folders_deep_count(folder_id=ROOT_FOLDER_ID):
+    folders_in_folder = await util_get_user_folders(folder_id)
+    deep_count = len(folders_in_folder)
+    for sub_folder_id in folders_in_folder:
+        deep_count += await util_get_user_folders_deep_count(sub_folder_id)
+    return deep_count
+
+
 async def util_add_new_folder(new_folder_name, parent_folder_id):
     tg_user = User.get_current()
     result = await add_new_folder(tg_user.id, new_folder_name, parent_folder_id)
