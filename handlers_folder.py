@@ -11,7 +11,7 @@ from aiogram.utils.exceptions import MessageNotModified
 
 import states
 from button_manager import general_buttons_folder, create_general_reply_markup, general_buttons_folder_show_all, \
-    general_buttons_movement_item
+    general_buttons_movement_item, general_buttons_statistic_folder
 from firebase import ROOT_FOLDER_ID
 from firebase_item_reader import get_folder_id
 
@@ -19,6 +19,7 @@ from load_all import dp, bot
 from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
     is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info, get_parent_folder_id, get_current_folder_id, \
     set_current_folder_id
+from utils_folders import get_folder_statistic
 from utils_folders_db import util_delete_folder, util_get_user_folders, util_add_new_folder, util_rename_folder, \
     get_folder_name, get_folder_path_names, get_sub_folder_names
 from utils_items import show_all_items
@@ -64,7 +65,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
 
     data = await dp.storage.get_data(user=tg_user, chat=chat)
 
-    #если это перемещение записи
+    # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
     movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
 
@@ -114,7 +115,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
 
     folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
-    #load_message = await bot.send_message(chat.id, f"⌛️")
+    # load_message = await bot.send_message(chat.id, f"⌛️")
 
     if current_folder_page > 0:
         items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=current_item_page)
@@ -122,7 +123,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
             for row in items_inline_markup.inline_keyboard:
                 folders_inline_markup.add(*row)
             await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
-        #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+        # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
         folders_message.reply_markup = folders_inline_markup
 
     data = await dp.storage.get_data(user=tg_user, chat=chat)
@@ -163,8 +164,8 @@ async def show_all_folders(current_folder_id=None):
 
     folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
-    #load_message = await bot.send_message(chat.id, f"⌛️")
-    #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+    # load_message = await bot.send_message(chat.id, f"⌛️")
+    # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
     data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['current_keyboard'] = markup
     data['page_folders'] = str(new_page_folders)
@@ -244,7 +245,8 @@ async def new_folder(message: aiogram.types.Message, state: FSMContext):
     current_folder_id = await get_current_folder_id()
     result = await util_add_new_folder(new_folder_name, current_folder_id)
     if result:
-        sent_message = await bot.send_message(message.chat.id, text=f"Новая папка '{new_folder_name}' успешно создана ✅")
+        sent_message = await bot.send_message(message.chat.id,
+                                              text=f"Новая папка '{new_folder_name}' успешно создана ✅")
     else:
         sent_message = await bot.send_message(message.chat.id,
                                               text=f"Не удалось создать папку ❌")
@@ -273,7 +275,7 @@ async def edit_folder(message: aiogram.types.Message, state: FSMContext):
     else:
         sent_message = await bot.send_message(message.chat.id, "Что то пошло не так при редактировании папки ❌")
 
-    #await dp.storage.reset_data(chat=message.chat, user=tg_user)
+    # await dp.storage.reset_data(chat=message.chat, user=tg_user)
     await state.reset_data()
     await state.reset_state()
     await show_folders()
@@ -354,12 +356,13 @@ async def go_to_page_folders(call: CallbackQuery):
         chat = Chat.get_current()
         data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
         current_folder_id = await get_current_folder_id()
-        folders_page_info = await get_page_info(current_folder_id, 'folders', page) #get_folders_page_info(current_folder_id, page)
+        folders_page_info = await get_page_info(current_folder_id, 'folders',
+                                                page)  # get_folders_page_info(current_folder_id, page)
         new_page_folders = folders_page_info.get('page_folders')
 
         folders_message = data.get('folders_message')
 
-        #current_folder_id = await get_current_folder_id()
+        # current_folder_id = await get_current_folder_id()
         user_folders = await util_get_user_folders(current_folder_id)
 
         folder_buttons = [
@@ -401,7 +404,7 @@ async def go_to_page_items(call: CallbackQuery):
 
         folders_message = data.get('folders_message')
 
-        #current_folder_id = await get_current_folder_id()
+        # current_folder_id = await get_current_folder_id()
 
         items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=page)
         inline_markup = folders_message.reply_markup
@@ -423,3 +426,31 @@ async def go_to_page_items(call: CallbackQuery):
         data['folders_message'] = folders_message
         data['page_items'] = str(new_page_items)
         await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
+
+@dp.message_handler(Text(equals="️📊 Статистика"))
+async def statistic_folder_handler(message: aiogram.types.Message):
+    current_folder_id = await get_current_folder_id()
+    folder_name = await get_folder_name(current_folder_id)
+    dict_folder_statistic = await get_folder_statistic(current_folder_id)
+    folders_count = dict_folder_statistic['folders_count']
+    items_count = dict_folder_statistic['items_count']
+    deep_folders_count = dict_folder_statistic['deep_folders_count']
+    deep_items_count = dict_folder_statistic['deep_items_count']
+    statistic_text = (f"<u>Количество папок</u> 🗂️: <b>{folders_count}</b>\n"
+                      f"<u>Количество записей</u> 📄: <b>{items_count}</b>\n\n"
+                      f"<b>С учетом вложенных папок:</b>\n"
+                      f"<u>Всего папок</u> 🗂️: <b>{deep_folders_count}</b>\n"
+                      f"<u>Всего записей</u> 📄: <b>{deep_items_count}</b>")
+
+    general_buttons = general_buttons_statistic_folder[:]
+    markup = create_general_reply_markup(general_buttons)
+    await bot.send_message(message.chat.id, f"📊 <b>Статистика папки</b>\n"
+                                            f"🗂️ {folder_name}:\n\n"
+                                            f"{statistic_text}",
+                           reply_markup=markup)
+
+    tg_user = User.get_current()
+    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
+    data['current_keyboard'] = markup
+    await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
