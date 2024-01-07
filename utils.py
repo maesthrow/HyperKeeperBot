@@ -112,7 +112,7 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1, s
 
         item_button_text = item.title or item.get_short_title()
         if item:
-            buttons.append([InlineKeyboardButton(f"{smile_item}\n{item_button_text}", callback_data=f"item_{item_id}")])
+            buttons.append([InlineKeyboardButton(f"{smile_item} {item_button_text}", callback_data=f"item_{item_id}")])
 
     # Создаем разметку и отправляем сообщение с кнопками для каждой item
     items_inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)

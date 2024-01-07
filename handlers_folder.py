@@ -346,6 +346,11 @@ async def on_delete_folder(message: aiogram.types.Message):
                            reply_markup=inline_markup)
 
 
+@dp.message_handler(Text(equals="🗑 Удалить папку"))
+async def delete_handler(message: aiogram.types.Message):
+    await on_delete_folder(message)
+
+
 @dp.callback_query_handler(text_contains="go_to_page_folders")
 async def go_to_page_folders(call: CallbackQuery):
     #match = re.match(r"go_to_page_folders_(\d+)", call.data)

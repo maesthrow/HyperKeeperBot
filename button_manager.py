@@ -26,7 +26,7 @@ general_buttons_movement_item = [
     ]
 
 general_buttons_search_items = [
-        [KeyboardButton("🫡 Завершить поиск")],
+        [KeyboardButton("🫡 Завершить режим поиска 🔍️")],
     ]
 
 skip_enter_item_title_button = InlineKeyboardButton("Без заголовка", callback_data="skip_enter_item_title")
