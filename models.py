@@ -56,15 +56,15 @@ class Item:
 
         return short_title
 
-    def select_search_text(self, search_text):
-        self.title = get_selected_search_text(self.title, search_text)
-        self.text = get_selected_search_text(self.text, search_text)
+    def select_search_text(self, search_text: str, left_teg: str = '<b><i><u>', right_teg: str = '</u></i></b>'):
+        self.title = get_selected_search_text(self.title, search_text, left_teg, right_teg)
+        self.text = get_selected_search_text(self.text, search_text, left_teg, right_teg)
 
     def __str__(self):
         return f"{self.title} ({self.date_created.strftime('%Y-%m-%d %H:%M:%S')})"
 
 
-def get_selected_search_text(text, search_text):
+def get_selected_search_text(text: str, search_text: str, left_teg: str = '<b><i><u>', right_teg: str = '</u></i></b>'):
     # Ищем все вхождения search_text в тексте
     if text:
         start_index = text.lower().find(search_text.lower())
@@ -76,7 +76,7 @@ def get_selected_search_text(text, search_text):
         prefix = text[:start_index]
 
         # Формируем подстроку с тегами <u> </u>
-        underlined_text = f'<b><u>{text[start_index: start_index + len(search_text)]}</u></b>'
+        underlined_text = f'{left_teg}{text[start_index: start_index + len(search_text)]}{right_teg}'
 
         # Формируем подстроку после первого вхождения
         suffix = text[start_index + len(search_text):]

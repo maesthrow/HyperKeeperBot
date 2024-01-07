@@ -58,7 +58,7 @@ async def show_item(item_id):
 
         search_mode_buttons = [
             [KeyboardButton("️🗂️ Перейти к папке")],
-            [KeyboardButton("️↩️ Назад к результатам поиска 🔍")],
+            [KeyboardButton("️↩️ Вернуться к результатам поиска 🔎")],
             [KeyboardButton("🫡 Завершить режим поиска 🔍️")]
         ]
         buttons.extend(search_mode_buttons)
@@ -90,7 +90,7 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(folder_id)
 
 
-@dp.message_handler(Text(equals="️↩️ Назад к результатам поиска 🔍"))
+@dp.message_handler(Text(equals="️↩️ Вернуться к результатам поиска 🔎"))
 async def back_to_search_results(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=Chat.get_current(), user=User.get_current())
     await show_search_results(data['dict_search_data'])

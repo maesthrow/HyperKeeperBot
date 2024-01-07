@@ -12,10 +12,10 @@ from handlers_folder import show_folders
 from load_all import dp, bot
 from utils import get_current_folder_id
 from utils_folders_db import get_folder_path_names
-from utils_items import get_all_search_items
-
+from utils_items import get_all_search_items, get_word_items_by_count
 
 cancel_enter_search_text_button = InlineKeyboardButton("Отменить", callback_data="cancel_enter_search_text")
+
 
 @dp.message_handler(Text(equals="🔍 Поиск"))
 async def search_item_handler(message: aiogram.types.Message):
@@ -69,11 +69,14 @@ async def show_search_results(dict_search_data):
     chat = Chat.get_current()
 
     level_folder_path_names = await get_folder_path_names(source_folder_id)
-    await bot.send_message(chat.id, f"⬇️ <b>РЕЗУЛЬТАТЫ ПОИСКА</b> 🔍️\n\n"
-                                                  f"<u>Уровень (включая вложенные папки)</u>:\n"
-                                                  f"🗂️ <b>{level_folder_path_names[:-1]}</b>\n\n"
-                                                  f"<u>Запрос</u>: "
-                                                  f"<b>'{search_text}'</b>",
+    searched_items_count = len(dict_inline_markups)
+    word_items_by_count = get_word_items_by_count(searched_items_count)
+    await bot.send_message(chat.id, f"⬇️ <b>РЕЗУЛЬТАТЫ ПОИСКА</b> 🔎\n\n"
+                                    f"<u>Найдено</u>: <b>{searched_items_count}</b> {word_items_by_count}\n\n"
+                                    f"<u>Уровень (включая вложенные папки)</u>:\n"
+                                    f"🗂️ <b>{level_folder_path_names[:-1]}</b>\n\n"
+                                    f"<u>Запрос</u>: "
+                                    f"<b>'{search_text}'</b>",
                            reply_markup=markup)
     if len(dict_inline_markups) > 0:
         for sub_folder_id, inline_markup in dict_inline_markups.items():

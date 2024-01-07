@@ -222,7 +222,6 @@ async def get_enter_folder_name(message: aiogram.types.Message):
                                reply_markup=inline_markup)
         return None
 
-    tg_user = aiogram.types.User.get_current()
     current_folder_id = await get_current_folder_id()
     parent_folder_id = get_parent_folder_id(current_folder_id)
     sub_folders_names = await get_sub_folder_names(parent_folder_id)
@@ -242,7 +241,6 @@ async def new_folder(message: aiogram.types.Message, state: FSMContext):
     if not new_folder_name:
         return
 
-    tg_user = User.get_current()
     current_folder_id = await get_current_folder_id()
     result = await util_add_new_folder(new_folder_name, current_folder_id)
     if result:
@@ -287,8 +285,6 @@ async def edit_folder(message: aiogram.types.Message, state: FSMContext):
 @dp.callback_query_handler(text_contains="cancel_enter_folder_name",
                            state=[states.Folder.NewName, states.Folder.EditName])
 async def cancel_create_new_folder(call: CallbackQuery, state: FSMContext):
-    tg_user = User.get_current()
-    #await dp.storage.reset_data(chat=call.message.chat, user=tg_user)
     await state.reset_data()
     await state.reset_state()
     await show_folders()
@@ -310,13 +306,11 @@ async def create_new_folder(message: aiogram.types.Message):
 
 @dp.message_handler(Text(equals="✏️ Переименовать папку"))
 async def edit_folder_handler(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
     current_folder_id = await get_current_folder_id()
     await edit_this_folder(message, current_folder_id)
 
 
 async def on_delete_folder(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
     # Извлекаем из callback_data идентификатор папки, который прикреплен к кнопке
     folder_id = await get_current_folder_id()
     folder_name = await get_folder_name(folder_id)
@@ -351,7 +345,6 @@ async def delete_handler(message: aiogram.types.Message):
 
 @dp.callback_query_handler(text_contains="go_to_page_folders")
 async def go_to_page_folders(call: CallbackQuery):
-    #match = re.match(r"go_to_page_folders_(\d+)", call.data)
     match = re.match(r"(\d+)", call.data.split('_')[-1])
 
     if match:
@@ -394,7 +387,6 @@ async def go_to_page_folders(call: CallbackQuery):
 
 @dp.callback_query_handler(text_contains="go_to_page_items")
 async def go_to_page_items(call: CallbackQuery):
-    #match = re.match(r"go_to_page_items_(\d+)", call.data)
     match = re.match(r"(\d+)", call.data.split('_')[-1])
 
     if match:

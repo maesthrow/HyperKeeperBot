@@ -48,3 +48,13 @@ async def get_search_items(folder_id, search_text, dict_inline_markups):
     sub_folders = await get_sub_folders(folder_id)
     for sub_folder_id in sub_folders:
         await get_search_items(sub_folder_id, search_text, dict_inline_markups)
+
+
+def get_word_items_by_count(count: int) -> str:
+    if count % 10 == 1 and count % 100 != 11:
+        return "запись"
+    elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
+        return "записи"
+    else:
+        return "записей"
+
