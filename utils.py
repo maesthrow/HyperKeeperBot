@@ -44,22 +44,27 @@ async def get_environment():
     return environment
 
 
-async def get_current_folder_id():
-    """Устанавливает новый идентификатор текущей папки для пользователя."""
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
-    current_folder_id = data['current_folder']
-    return current_folder_id
-
-
 async def set_current_folder_id(folder_id=ROOT_FOLDER_ID):
+    print(f"set folder_id {folder_id}")
     """Устанавливает новый идентификатор текущей папки для пользователя."""
     tg_user = User.get_current()
     chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
-    data['current_folder'] = folder_id
+    data['current_folder_id'] = folder_id
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
+
+async def get_current_folder_id(tg_user=None, chat=None):
+    """Устанавливает новый идентификатор текущей папки для пользователя."""
+    if tg_user is None and chat is None:
+        tg_user = User.get_current()
+        chat = Chat.get_current()
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    current_folder_id = data.get('current_folder_id')
+    print(f"get folder_id {current_folder_id}")
+    if not current_folder_id:
+        current_folder_id = ROOT_FOLDER_ID
+    return current_folder_id
 
 
 async def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback_data):

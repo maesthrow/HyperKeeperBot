@@ -126,6 +126,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
         #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
         folders_message.reply_markup = folders_inline_markup
 
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['current_keyboard'] = markup
     data['folders_message'] = folders_message
     data['page_folders'] = str(new_page_folders)
@@ -181,7 +182,7 @@ async def to_folder(call: CallbackQuery, callback_data: dict):
 # Используем обработчик CallbackQuery для навигации по папкам
 @dp.message_handler(Text(equals="↩️ Назад"))
 async def back_to_folders(message: aiogram.types.Message):
-    folder_id = await get_current_folder_id()
+    folder_id = await get_current_folder_id(User.get_current(), Chat.get_current())
     back_to_folder_id = get_parent_folder_id(folder_id)
     await to_folder(call=CallbackQuery(), callback_data={"folder_id": back_to_folder_id})
 
@@ -366,7 +367,7 @@ async def go_to_page_folders(call: CallbackQuery):
 
         folders_message = data.get('folders_message')
 
-        current_folder_id = await get_current_folder_id()
+        #current_folder_id = await get_current_folder_id()
         user_folders = await util_get_user_folders(current_folder_id)
 
         folder_buttons = [
@@ -409,7 +410,7 @@ async def go_to_page_items(call: CallbackQuery):
 
         folders_message = data.get('folders_message')
 
-        current_folder_id = await get_current_folder_id()
+        #current_folder_id = await get_current_folder_id()
 
         items_inline_markup = await get_inline_markup_items_in_folder(current_folder_id, current_page=page)
         inline_markup = folders_message.reply_markup

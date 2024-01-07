@@ -89,9 +89,15 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
 
     #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
     folders_message.reply_markup = folders_inline_markup
-    await dp.storage.update_data(user=tg_user, chat=chat,
-                                 data={'current_keyboard': markup, 'folders_message': folders_message,
-                                       'page_folders': str(1), 'page_items': str(1)})
+
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+    data['current_keyboard'] = markup
+    data['folders_message'] = folders_message
+    data['page_folders'] = str(1)
+    data['page_items'] = str(1)
+    data['item_id'] = None
+    data['dict_search_data'] = None
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
 
 @dp.callback_query_handler(text_contains="show_all")

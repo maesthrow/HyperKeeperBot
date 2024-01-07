@@ -71,6 +71,7 @@ async def show_item(item_id):
     bot_message = await bot.send_message(tg_user.id, item_content, reply_markup=markup)
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
 
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['bot_message'] = bot_message
     data['item_id'] = item_id
     data['current_keyboard'] = markup
@@ -299,6 +300,7 @@ async def edit_item_title_handler(message: aiogram.types.Message):
                                                  f"Придумайте новый заголовок:",
                                                  reply_markup=inline_markup)
 
+    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
@@ -330,6 +332,7 @@ async def edit_item_text_handler(message: aiogram.types.Message):
                                                  f"Напишите новый текст:",
                                                  reply_markup=inline_markup)
 
+    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
