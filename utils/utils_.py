@@ -9,11 +9,11 @@ from enums.enums import Environment
 from firebase.firebase_folder_reader import get_folder_data
 from firebase.firebase_item_reader import get_folder_items, get_item
 from load_all import dp
-from utils.utils_data import get_folders_collection
+from utils.utils_data import get_folders_collection, get_from_user_collection
 
 folder_callback = CallbackData("folder", "folder_id")
-folders_on_page_count = 4
-items_on_page_count = 4
+#folders_on_page_count = 4
+#items_on_page_count = 4
 separator = 'из'
 smile_folder = '🗂️'
 smile_item = '📄'
@@ -109,6 +109,10 @@ async def get_inline_markup_folders(folder_buttons, current_page):
     inline_markup = InlineKeyboardMarkup(row_width=3)
 
     sorted_buttons = sorted(folder_buttons, key=lambda x: x.text)
+
+    settings = await get_from_user_collection('settings')
+    folders_on_page_count = settings.get('folders_on_page_count', 4)
+
     if current_page > 0:
         buttons = sorted_buttons[current_page * folders_on_page_count - folders_on_page_count:
                                  current_page * folders_on_page_count]
@@ -137,6 +141,9 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1, s
     list_items_id = []
     for item_id in folder_items:
         list_items_id.append(item_id)
+
+    settings = await get_from_user_collection('settings')
+    items_on_page_count = settings.get('items_on_page_count', 4)
 
     if current_page > 0:
         current_items = list_items_id[current_page * items_on_page_count - items_on_page_count:

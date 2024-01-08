@@ -20,6 +20,8 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_items import show_all_items
 
+import handlers.handlers_settings
+
 
 # Используем фильтр CommandStart для команды /start
 @dp.message_handler(CommandStart())
@@ -128,7 +130,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
         await movement_item_handler(message, current_folder_id)
         return
 
-    dict_search_data = data['dict_search_data']
+    dict_search_data = data.get('dict_search_data', None)
     if dict_search_data:
         await message.reply('Завершите режим поиска 🔍 для добавления новой записи.')
         return
