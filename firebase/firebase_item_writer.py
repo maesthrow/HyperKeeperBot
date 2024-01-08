@@ -1,5 +1,5 @@
-from firebase.firebase_ import set_user_data
 from firebase.firebase_item_reader import get_folder_id, get_item
+from firebase.firebase_collection_folders import set_user_folders_data
 from models.item_model import Item
 from utils.utils_data import get_folders_collection, set_folders_collection
 
@@ -35,7 +35,7 @@ async def add_item_to_folder(tg_user_id, folder_id, item: Item):
         target_folder["items"][new_item_id] = item_dict
 
         # Обновляем данные пользователя
-        await set_user_data(tg_user_id, {"folders": folders_collection})
+        await set_user_folders_data(tg_user_id, {"folders": folders_collection})
 
         return new_item_id  # Успешно добавлено
     else:
@@ -64,7 +64,7 @@ async def delete_item(tg_user_id, item_id):
     if item_id in target_folder["items"]:
         del target_folder["items"][item_id]
         # Обновляем данные пользователя
-        await set_user_data(tg_user_id, {"folders": folders_collection})
+        await set_user_folders_data(tg_user_id, {"folders": folders_collection})
 
         return True  # Успешно переименовано
     else:
@@ -92,7 +92,7 @@ async def delete_all_items_in_folder(tg_user_id, folder_id):
     if target_folder:
         target_folder["items"].clear()
         # Обновляем данные пользователя
-        await set_user_data(tg_user_id, {"folders": folders_collection})
+        await set_user_folders_data(tg_user_id, {"folders": folders_collection})
 
         return True  # Успешно переименовано
     else:
@@ -122,7 +122,7 @@ async def edit_item(tg_user_id, item_id, item: Item):
         item_dict = item.to_dict()
         target_folder["items"][item_id] = item_dict
         # Обновляем данные пользователя
-        await set_user_data(tg_user_id, {"folders": folders_collection})
+        await set_user_folders_data(tg_user_id, {"folders": folders_collection})
 
         return True  # Успешно переименовано
     else:
