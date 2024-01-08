@@ -1,4 +1,4 @@
-from firebase.firebase_ import ROOT_FOLDER_ID
+from firebase.firebase_collection_folders import ROOT_FOLDER_ID
 from utils.utils_data import get_folders_collection
 
 

@@ -5,11 +5,12 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command, CommandStart, Text
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton
 
+from firebase.firebase_collection_folders import add_user_folders, ROOT_FOLDER_ID
+from firebase.firebase_collection_users import add_user
 from handlers import states
 from handlers.handlers_item import movement_item_handler
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item
-from firebase.firebase_ import add_user, ROOT_FOLDER_ID
 from firebase.firebase_folder_reader import get_folders_in_folder
 from firebase.firebase_item_reader import get_folder_id
 from handlers.handlers_folder import create_folder_button, show_all_folders, show_folders
@@ -29,6 +30,7 @@ async def start(message: aiogram.types.Message, state: FSMContext):
     chat_id = message.from_user.id
     tg_user = aiogram.types.User.get_current()
     await add_user(tg_user)
+    await add_user_folders(tg_user)
 
     bot_username = (await bot.me).username
 

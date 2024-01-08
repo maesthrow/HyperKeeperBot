@@ -1,6 +1,7 @@
 from aiogram.types import User, Chat
 
-from firebase.firebase_ import get_user_folders_collection, ROOT_FOLDER_ID
+from firebase.firebase_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection
+from firebase.firebase_collection_users import get_user_collection
 from load_all import dp
 
 
@@ -47,5 +48,30 @@ async def set_folders_collection(folders_collection=None):
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     data['dict_search_data'] = None
     data['folders_collection'] = folders_collection
+
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
+
+async def get_from_user_collection(collection_name: str):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    collection = data.get(f'{collection_name}_collection', None)
+
+    if not collection:
+        collection = await get_user_collection(tg_user.id, collection_name)
+        await set_folders_collection(collection)
+
+    return collection
+
+
+async def set_to_user_collection(collection_name: str, collection=None):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    if not collection:
+        collection = await get_user_collection(tg_user.id, collection_name)
+
+    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data[f'{collection}_collection'] = collection
 
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)

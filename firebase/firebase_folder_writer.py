@@ -1,4 +1,5 @@
-from firebase.firebase_ import set_user_data
+from firebase.firebase_collection_folders import set_user_folders_data
+from firebase.firebase_collection_users import set_user_data
 from utils.utils_data import get_folders_collection
 
 
@@ -32,7 +33,7 @@ async def add_new_folder(tg_user_id, new_folder_name, parent_folder_id):
     target_folders[new_folder_id] = new_folder_data
 
     # Обновляем данные пользователя
-    await set_user_data(tg_user_id, {"folders": folders_collection})
+    await set_user_folders_data(tg_user_id, {"folders": folders_collection})
 
     # Возвращаем новый идентификатор папки с учетом уровня вложенности
     return new_folder_id
