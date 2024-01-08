@@ -1,5 +1,5 @@
 from firebase.firebase_folder_reader import get_folder_data
-from models import Item
+from models.item_model import Item
 
 
 # Функция для извлечения последнего числа из ключа

@@ -14,7 +14,7 @@ from firebase.firebase_folder_reader import get_folders_in_folder
 from firebase.firebase_item_reader import get_folder_id
 from handlers.handlers_folder import create_folder_button, show_all_folders, show_folders
 from load_all import dp, bot
-from models import Item
+from models.item_model import Item
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_items import show_all_items

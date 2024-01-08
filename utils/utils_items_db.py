@@ -1,7 +1,7 @@
 from aiogram.types import User
 
 from firebase.firebase_item_writer import add_item_to_folder, delete_item, delete_all_items_in_folder, edit_item, move_item
-from models import Item
+from models.item_model import Item
 from utils.utils_folders_db import set_folders_collection
 
 

@@ -1,6 +1,6 @@
 from firebase.firebase_ import set_user_data
 from firebase.firebase_item_reader import get_folder_id, get_item
-from models import Item
+from models.item_model import Item
 from utils.utils_data import get_folders_collection, set_folders_collection
 
 
