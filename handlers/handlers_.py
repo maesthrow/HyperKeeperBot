@@ -130,7 +130,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
         await movement_item_handler(message, current_folder_id)
         return
 
-    dict_search_data = data['dict_search_data']
+    dict_search_data = data.get('dict_search_data', None)
     if dict_search_data:
         await message.reply('Завершите режим поиска 🔍 для добавления новой записи.')
         return

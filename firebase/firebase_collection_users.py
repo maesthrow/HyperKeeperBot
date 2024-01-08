@@ -39,3 +39,10 @@ async def get_user_collection(tg_user_id, collection_name: str):
     collection = user_data.get(f"{collection_name}", {})
     return collection
 
+
+async def set_user_collection(tg_user_id, collection_name: str, collection):
+    """Возвращает папки пользователя по идентификатору."""
+    user_data = await get_user_data(tg_user_id)
+    user_data[collection_name] = collection
+    await set_user_data(tg_user_id, user_data)
+
