@@ -5,20 +5,19 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command, CommandStart, Text
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton
 
-import handlers_item
-import states
-from button_manager import create_general_reply_markup, general_buttons_folder, skip_enter_item_title_button, \
-    cancel_add_new_item_button, general_buttons_movement_item
-from firebase import add_user
-from firebase_folder_reader import ROOT_FOLDER_ID
-from firebase_item_reader import get_folder_id
-from handlers_folder import create_folder_button, show_all_folders, show_folders
+from handlers import states
+from handlers.handlers_item import movement_item_handler
+from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
+    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item
+from firebase.firebase_ import add_user, ROOT_FOLDER_ID
+from firebase.firebase_folder_reader import get_folders_in_folder
+from firebase.firebase_item_reader import get_folder_id
+from handlers.handlers_folder import create_folder_button, show_all_folders, show_folders
 from load_all import dp, bot
 from models import Item
-from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, set_current_folder_id, \
-    get_current_folder_id
-from utils_folders_db import util_get_user_folders, get_folder_path_names
-from utils_items import show_all_items
+from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names
+from utils.utils_data import set_current_folder_id, get_current_folder_id
+from utils.utils_items import show_all_items
 
 
 # Используем фильтр CommandStart для команды /start
@@ -49,7 +48,7 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
 
     tg_user = User.get_current()
     chat = Chat.get_current()
-    user_folders = await util_get_user_folders()
+    user_folders = await get_folders_in_folder()
 
     data = await dp.storage.get_data(user=tg_user, chat=chat)
 
@@ -124,7 +123,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     movement_item_id = data.get('movement_item_id')
     if movement_item_id:
         current_folder_id = await get_current_folder_id()
-        await handlers_item.movement_item_handler(message, current_folder_id)
+        await movement_item_handler(message, current_folder_id)
         return
 
     dict_search_data = data['dict_search_data']

@@ -1,16 +1,16 @@
 import math
 
-import aiogram
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, User, Chat
 from aiogram.utils.callback_data import CallbackData
 
-from button_manager import check_button_exists
-from enums import Environment
-from firebase import ROOT_FOLDER_ID
-from firebase_item_reader import get_folder_items, get_item
+from utils.utils_button_manager import check_button_exists
+from enums.enums import Environment
+from firebase.firebase_ import ROOT_FOLDER_ID
+from firebase.firebase_folder_reader import get_folder_data
+from firebase.firebase_item_reader import get_folder_items, get_item
 from load_all import dp
+from utils.utils_data import get_folders_collection
 
-invalid_chars = r'/\:,.*?"<>|'
 folder_callback = CallbackData("folder", "folder_id")
 folders_on_page_count = 4
 items_on_page_count = 4
@@ -19,17 +19,55 @@ smile_folder = '🗂️'
 smile_item = '📄'
 
 
-def is_valid_folder_name(name):
-    return all(char not in invalid_chars for char in name)
+async def get_sub_folders(folder_id):
+    folders = await get_folder_data(folder_id)
+    return folders.get("folders", {})
 
 
-def clean_folder_name(name):
-    cleaned_name = ''.join(char if char not in invalid_chars and char not in '\n\r' else ' ' for char in name)
-    return cleaned_name
+async def get_sub_folder_names(folder_id):
+    """Возвращает список всех folder_id внутри указанной папки."""
+    folders_collection = await get_folders_collection()
+
+    # Разбиваем идентификатор папки на части
+    folder_ids = folder_id.split('/')
+
+    # Инициализируем переменные для навигации по папкам
+    target_folders = folders_collection
+    folder_id_with_path = None
+
+    # Проходим по уровням вложенности папки
+    for folder_part in folder_ids:
+        folder_id_with_path = f"{folder_id_with_path}/{folder_part}" if folder_id_with_path else folder_part
+        target_folder = target_folders.get(folder_id_with_path, {})
+        target_folders = target_folder.get("folders", {})
+
+    # Получаем все folder_id внутри указанной папки
+    sub_folder_ids = list(target_folders.keys())
+    sub_folder_names = [await get_folder_name(sub_folder_id) for sub_folder_id in sub_folder_ids]
+
+    return sub_folder_names
 
 
-def get_parent_folder_id(folder_id):
-    return folder_id.rsplit('/', 1)[0]
+async def get_folder_name(folder_id=ROOT_FOLDER_ID):
+    """Возвращает имя папки по её идентификатору."""
+    folder_data = await get_folder_data(folder_id)
+    return folder_data.get("name", "")
+
+
+async def get_folder_path_names(folder_id=ROOT_FOLDER_ID):
+    """Возвращает имена папок по пути к папке."""
+    folders_collection = await get_folders_collection()
+    folder_ids = folder_id.split('/')
+    target_folders = folders_collection
+    folder_id_with_path = None
+    path_names = None
+    for folder_id in folder_ids:
+        folder_id_with_path = f"{folder_id_with_path}/{folder_id}" if folder_id_with_path else folder_id
+        target_folder = target_folders.get(folder_id_with_path, {})
+        target_folder_name = target_folder.get("name", "")
+        path_names = f"{path_names} > {target_folder_name}" if path_names else target_folder_name
+        target_folders = target_folder.get("folders", {})
+    return f"{path_names}:"
 
 
 async def get_environment():
@@ -42,27 +80,6 @@ async def get_environment():
         if check_button_exists(keyboard, tmp_environment.value):
             environment = tmp_environment
     return environment
-
-
-async def set_current_folder_id(folder_id=ROOT_FOLDER_ID):
-    """Устанавливает новый идентификатор текущей папки для пользователя."""
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
-    data['current_folder_id'] = folder_id
-    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
-
-
-async def get_current_folder_id(tg_user=None, chat=None):
-    """Устанавливает новый идентификатор текущей папки для пользователя."""
-    if tg_user is None and chat is None:
-        tg_user = User.get_current()
-        chat = Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
-    current_folder_id = data.get('current_folder_id')
-    if not current_folder_id:
-        current_folder_id = ROOT_FOLDER_ID
-    return current_folder_id
 
 
 async def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback_data):
@@ -115,7 +132,6 @@ async def get_inline_markup_folders(folder_buttons, current_page):
 
 
 async def get_inline_markup_items_in_folder(current_folder_id, current_page=1, search_text=None):
-
     # Получаем записи из коллекции items для текущей папки
     folder_items = await get_folder_items(current_folder_id, search_text)
     list_items_id = []
@@ -175,35 +191,11 @@ async def get_level_folders(folder_id):
     return len(folder_id.split('/')) - 1
 
 
-async def get_folders_page_info(folder_id, current_page=None):
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
-
-    page_folders = data.get('page_folders')
-    level = await get_level_folders(folder_id)
-    list_pages = page_folders.split('/')
-    if not current_page:
-        current_page = list_pages[level] if level < len(list_pages) else '1'
-    else:
-        current_page = str(current_page)
-    new_page_folders = list_pages[:level + 1] if level + 1 < len(list_pages) else list_pages
-    if level + 1 > len(new_page_folders):
-        new_page_folders.append(current_page)
-    else:
-        new_page_folders[-1] = current_page
-    new_page_folders = '/'.join(new_page_folders)
-
-    folders_page_info = {'current_page': int(current_page), 'page_folders': new_page_folders}
-    return folders_page_info
-
-
 async def get_page_info(folder_id, entities_key, current_page=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     pf = data.get('page_folders')
-
 
     page_entities = data.get(f'page_{entities_key}')
     level = await get_level_folders(folder_id)
@@ -221,4 +213,3 @@ async def get_page_info(folder_id, entities_key, current_page=None):
 
     page_info = {f'current_page_{entities_key}': int(current_page), f'page_{entities_key}': new_page_entities}
     return page_info
-

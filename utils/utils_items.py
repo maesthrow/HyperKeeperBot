@@ -1,9 +1,9 @@
-from aiogram.types import User, Chat
+from aiogram.types import User, Chat, InlineKeyboardMarkup
 
-from button_manager import general_buttons_items_show_all, create_general_reply_markup
+from utils.utils_button_manager import general_buttons_items_show_all, create_general_reply_markup
 from load_all import bot, dp
-from utils import get_page_info, get_inline_markup_items_in_folder, get_current_folder_id
-from utils_folders_db import get_folder_path_names, get_sub_folders
+from utils.utils_ import get_page_info, get_inline_markup_items_in_folder, get_folder_path_names, get_sub_folders
+from utils.utils_data import get_current_folder_id
 
 
 async def show_all_items(current_folder_id=None):
@@ -50,11 +50,16 @@ async def get_search_items(folder_id, search_text, dict_inline_markups):
         await get_search_items(sub_folder_id, search_text, dict_inline_markups)
 
 
-def get_word_items_by_count(count: int) -> str:
-    if count % 10 == 1 and count % 100 != 11:
-        return "запись"
-    elif 2 <= count % 10 <= 4 and (count % 100 < 10 or count % 100 >= 20):
-        return "записи"
-    else:
-        return "записей"
+def get_items_count_in_markups(dict_inline_markups: dict) -> int:
+    total_items_count = 0
+
+    for key, value in dict_inline_markups.items():
+        inline_markup: InlineKeyboardMarkup = value
+
+        # Подсчет кнопок в каждой строке клавиатуры
+        for row in inline_markup.inline_keyboard:
+            total_items_count += len(row)
+
+    return total_items_count
+
 

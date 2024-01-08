@@ -50,4 +50,11 @@ async def set_user_data(tg_user_id, data):
     db.collection("users").document(str(tg_user_id)).update(data)
 
 
+async def get_user_folders_collection(tg_user_id):
+    """Возвращает папки пользователя по идентификатору."""
+    user_data = await get_user_data(tg_user_id)
+    folders_collection = user_data.get("folders", {})
+    return folders_collection
+
+
 

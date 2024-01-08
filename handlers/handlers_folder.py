@@ -9,27 +9,29 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQu
     KeyboardButton, User, Chat
 from aiogram.utils.exceptions import MessageNotModified
 
-import states
-from button_manager import general_buttons_folder, create_general_reply_markup, general_buttons_folder_show_all, \
-    general_buttons_movement_item, general_buttons_statistic_folder
-from firebase import ROOT_FOLDER_ID
-from firebase_item_reader import get_folder_id
+from handlers import states
+from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
+                                        general_buttons_folder_show_all, general_buttons_movement_item, \
+                                        general_buttons_statistic_folder)
+from firebase.firebase_ import ROOT_FOLDER_ID
+from firebase.firebase_folder_reader import get_folders_in_folder
+from firebase.firebase_item_reader import get_folder_id
 
 from load_all import dp, bot
-from utils import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, create_folder_button, \
-    is_valid_folder_name, invalid_chars, clean_folder_name, get_page_info, get_parent_folder_id, get_current_folder_id, \
-    set_current_folder_id
-from utils_folders import get_folder_statistic
-from utils_folders_db import util_delete_folder, util_get_user_folders, util_add_new_folder, util_rename_folder, \
-    get_folder_name, get_folder_path_names, get_sub_folder_names
-from utils_items import show_all_items
+from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, \
+    create_folder_button, \
+    get_page_info, get_folder_name, get_sub_folder_names, get_folder_path_names
+from utils.utils_data import get_current_folder_id, set_current_folder_id
+from utils.utils_folders import get_folder_statistic, \
+    get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
+from utils.utils_folders_db import util_delete_folder, util_add_new_folder, util_rename_folder
+from utils.utils_items import show_all_items
 
 cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_data=f"cancel_enter_folder_name")
 
 
 @dp.callback_query_handler(text_contains="delete_folder_request")
 async def delete_folder_request(call: CallbackQuery):
-    tg_user = User.get_current()
     current_folder_id = await get_current_folder_id()
 
     folder_id = (call.data.replace("delete_folder_request_", "")
@@ -73,7 +75,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None)
         current_folder_id = await get_current_folder_id()
 
     await set_current_folder_id(current_folder_id)
-    user_folders = await util_get_user_folders(current_folder_id)
+    user_folders = await get_folders_in_folder(current_folder_id)
 
     folder_buttons = [
         await create_folder_button(folder_id, folder_data.get("name"))
@@ -140,7 +142,7 @@ async def show_all_folders(current_folder_id=None):
     if not current_folder_id:
         current_folder_id = await get_current_folder_id()
 
-    user_folders = await util_get_user_folders(current_folder_id)
+    user_folders = await get_folders_in_folder(current_folder_id)
 
     folder_buttons = [
         await create_folder_button(folder_id, folder_data.get("name"))
@@ -363,7 +365,7 @@ async def go_to_page_folders(call: CallbackQuery):
         folders_message = data.get('folders_message')
 
         # current_folder_id = await get_current_folder_id()
-        user_folders = await util_get_user_folders(current_folder_id)
+        user_folders = await get_folders_in_folder(current_folder_id)
 
         folder_buttons = [
             await create_folder_button(folder_id, folder_data.get("name"))

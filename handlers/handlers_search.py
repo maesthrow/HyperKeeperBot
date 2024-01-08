@@ -2,17 +2,17 @@ import asyncio
 
 import aiogram
 from aiogram.dispatcher import FSMContext
-from aiogram.types import User, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Chat, \
-    ParseMode
+from aiogram.types import User, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Chat
 from aiogram.dispatcher.filters import Text
 
-import states
-from button_manager import create_general_reply_markup, general_buttons_search_items
-from handlers_folder import show_folders
+from handlers import states
+from utils.utils_button_manager import create_general_reply_markup, general_buttons_search_items
+from handlers.handlers_folder import show_folders
 from load_all import dp, bot
-from utils import get_current_folder_id
-from utils_folders_db import get_folder_path_names
-from utils_items import get_all_search_items, get_word_items_by_count
+from utils.utils_ import get_folder_path_names
+from utils.utils_data import get_current_folder_id
+from utils.utils_items import get_all_search_items, get_items_count_in_markups
+from utils.utils_statistic import get_word_items_by_count
 
 cancel_enter_search_text_button = InlineKeyboardButton("Отменить", callback_data="cancel_enter_search_text")
 
@@ -69,7 +69,7 @@ async def show_search_results(dict_search_data):
     chat = Chat.get_current()
 
     level_folder_path_names = await get_folder_path_names(source_folder_id)
-    searched_items_count = len(dict_inline_markups)
+    searched_items_count = get_items_count_in_markups(dict_inline_markups)
     word_items_by_count = get_word_items_by_count(searched_items_count)
     await bot.send_message(chat.id, f"⬇️ <b>РЕЗУЛЬТАТЫ ПОИСКА</b> 🔎\n\n"
                                     f"<u>Найдено</u>: <b>{searched_items_count}</b> {word_items_by_count}\n\n"

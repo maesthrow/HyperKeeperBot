@@ -1,7 +1,5 @@
 from aiogram.utils import executor
-
-# from database import create_db
-from load_all import bot, setup_bot_commands
+from load_all import bot, setup_bot_commands, dp
 
 
 async def on_shutdown(dp):
@@ -17,6 +15,6 @@ async def on_startup(dp):
 
 if __name__ == '__main__':
     #from admin_panel import dp
-    from handlers import dp
+    from handlers.handlers_ import dp
 
     executor.start_polling(dp, on_shutdown=on_shutdown, on_startup=on_startup)

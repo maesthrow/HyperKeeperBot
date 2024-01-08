@@ -1,10 +1,7 @@
-import asyncio
-
-from firebase import get_user_data, set_user_data
-from firebase_folder_writer import set_folders_collection
-from firebase_item_reader import get_folder_id, get_item
+from firebase.firebase_ import set_user_data
+from firebase.firebase_item_reader import get_folder_id, get_item
 from models import Item
-from utils_folders_db import get_folders_collection
+from utils.utils_data import get_folders_collection, set_folders_collection
 
 
 async def add_item_to_folder(tg_user_id, folder_id, item: Item):
