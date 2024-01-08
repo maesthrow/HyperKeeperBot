@@ -60,7 +60,7 @@ async def get_from_user_collection(collection_name: str):
 
     if not collection:
         collection = await get_user_collection(tg_user.id, collection_name)
-        await set_folders_collection(collection)
+        await set_to_user_collection(collection)
 
     return collection
 
