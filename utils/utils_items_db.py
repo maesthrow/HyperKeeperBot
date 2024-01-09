@@ -10,7 +10,7 @@ async def util_add_item_to_folder(folder_id, item: Item):
     new_item_id = await add_item_to_folder(tg_user.id, folder_id, item)
     if new_item_id:
         await set_folders_collection()
-    return new_item_id is not None
+    return new_item_id
 
 
 async def util_delete_item(item_id):

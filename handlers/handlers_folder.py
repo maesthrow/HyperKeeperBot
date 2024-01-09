@@ -33,6 +33,7 @@ back_to_up_level_folder_button = InlineKeyboardButton("↩️ Назад", callb
 
 # Определяем функцию для обработки отображения папок
 async def show_folders(current_folder_id=None, page_folder=None, page_item=None, need_to_resend=False):
+    storage_message: aiogram.types.Message
     tg_user = User.get_current()
     chat = Chat.get_current()
 
@@ -59,7 +60,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
             general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
-    if current_folder_id != ROOT_FOLDER_ID:
+    if True: #current_folder_id != ROOT_FOLDER_ID:
         if not movement_item_id:
             general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
         # general_buttons.append([KeyboardButton("↩️ Назад")])
@@ -107,6 +108,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
                                         )
         else:
             await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+             # storage_message.edit_reply_markup(ReplyKeyboardRemove())
             folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                                      reply_markup=folders_inline_markup)
     except:
