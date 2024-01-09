@@ -74,6 +74,7 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
             general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
+        general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
 
     markup = create_general_reply_markup(general_buttons)
 

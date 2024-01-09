@@ -18,7 +18,8 @@ from handlers.handlers_search import show_search_results
 from load_all import dp, bot
 from models.item_model import Item
 from utils.utils_data import get_current_folder_id, set_current_folder_id
-from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, util_edit_item, \
+from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
+    util_edit_item, \
     util_move_item
 
 cancel_edit_item_button = InlineKeyboardButton("Отменить", callback_data=f"cancel_edit_item")
@@ -88,7 +89,7 @@ async def show_item(item_id):
 @dp.message_handler(Text(equals="️↩️ Назад к папке"))
 async def back_to_folder(message: aiogram.types.Message):
     folder_id = await get_current_folder_id()
-    await show_folders(folder_id)
+    await show_folders(folder_id, need_to_resend=True)
 
 
 @dp.message_handler(Text(equals="️↩️ Вернуться к результатам поиска 🔎"))
@@ -104,7 +105,7 @@ async def back_to_folder(message: aiogram.types.Message):
     folder_id = get_folder_id(item_id)
     data['dict_search_data'] = None
     await dp.storage.update_data(user=User.get_current(), chat=Chat.get_current(), data=data)
-    await show_folders(folder_id)
+    await show_folders(folder_id, need_to_resend=True)
 
 
 @dp.callback_query_handler(text_contains="cancel_add_new_item", state=states.Item.NewStepTitle)
@@ -124,30 +125,7 @@ async def cancel_add_new_item(call: CallbackQuery, state: FSMContext):
 async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
-    # await bot.send_message(call.message.chat.id,
-    #                       f"Новая запись:\n{item.title}\n{item.text}"
-    #                       )
-
-    tg_user = User.get_current()
-    current_folder_id = await get_current_folder_id()
-    result = await util_add_item_to_folder(current_folder_id, item)
-
-    data = await state.get_data()
-    add_item_messages = data.get('add_item_messages')
-    if add_item_messages:
-        for message in add_item_messages:
-            await bot.delete_message(message.chat.id, message.message_id)
-    await asyncio.sleep(0.4)
-
-    if result:
-        await bot.send_message(call.message.chat.id, "Новая запись успешно добавлена ✅")
-    else:
-        await bot.send_message(call.message.chat.id, "Не получилось добавить запись ❌")
-    await asyncio.sleep(0.4)
-
-    await state.reset_data()
-    await state.reset_state()
-    await show_folders(need_to_resend=True)
+    await on_add_new_item(item, call.message, state)
 
 
 @dp.message_handler(state=states.Item.NewStepTitle)
@@ -155,33 +133,31 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
     item.title = message.text
-    # await state.update_data(item=item)
-    # data = await state.get_data()
-    # item = data.get('item')
-    # await bot.send_message(message.chat.id,
-    #                       f"Новая запись:\n{item.title}\n{item.text}"
-    #                       )
+    await on_add_new_item(item, message, state)
 
-    tg_user = User.get_current()
+
+async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSMContext):
     current_folder_id = await get_current_folder_id()
-    result = await util_add_item_to_folder(current_folder_id, item)
+    new_item_id = await util_add_item_to_folder(current_folder_id, item)
 
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
     if add_item_messages:
-        for message in add_item_messages:
-            await bot.delete_message(message.chat.id, message.message_id)
-    await asyncio.sleep(0.4)
-
-    if result:
-        await bot.send_message(message.chat.id, "Новая запись успешно добавлена ✅")
-    else:
-        await bot.send_message(message.chat.id, "Не получилось добавить запись ❌")
+        for message_del in add_item_messages:
+            await bot.delete_message(message_del.chat.id, message_del.message_id)
     await asyncio.sleep(0.4)
 
     await state.reset_data()
     await state.reset_state()
-    await show_folders(need_to_resend=True)
+
+    if new_item_id:
+        await bot.send_message(message.chat.id, "Новая запись успешно добавлена ✅")
+        # await asyncio.sleep(0.4)
+        await show_item(new_item_id)
+    else:
+        await bot.send_message(message.chat.id, "Не получилось добавить запись ❌")
+        # await asyncio.sleep(0.4)
+        await show_folders(need_to_resend=True)
 
 
 @dp.message_handler(Text(equals="🗑 Удалить"))
@@ -238,20 +214,21 @@ async def delete_item_request(call: CallbackQuery):
 
 @dp.message_handler(Text(equals="️🧹 Удалить все записи в папке"))
 async def delete_all_items_handler(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
     current_folder_id = await get_current_folder_id()
 
     sent_message = await bot.send_message(message.chat.id, "⌛️",
-                                          reply_markup=ReplyKeyboardRemove())
+                                              reply_markup=ReplyKeyboardRemove())
 
-    inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
-                                                              callback_data=f"delete_all_items_request_{current_folder_id}")
+    inline_markup = await get_inline_markup_for_accept_cancel(
+        text_accept="Да, удалить", text_cancel="Не удалять",
+        callback_data=f"delete_all_items_request_{current_folder_id}")
 
     # await asyncio.sleep(0.5)
-
+    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     await bot.send_message(message.chat.id,
                            f"Действительно хотите удалить все записи в этой папке?",
                            reply_markup=inline_markup)
+
     await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
 
 
@@ -276,10 +253,10 @@ async def delete_all_items_request(call: CallbackQuery):
         else:
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить записи.'", show_alert=True)
-        await show_folders()
+        await show_folders(need_to_resend=True)
     except MessageNotModified:
         await call.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
-        await show_folders()
+        await show_folders(need_to_resend=True)
 
 
 @dp.message_handler(Text(equals="️✏️ Редактировать заголовок"))
