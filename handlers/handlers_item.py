@@ -147,7 +147,7 @@ async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
 
     await state.reset_data()
     await state.reset_state()
-    await show_folders()
+    await show_folders(need_to_resend=True)
 
 
 @dp.message_handler(state=states.Item.NewStepTitle)
@@ -181,7 +181,7 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
 
     await state.reset_data()
     await state.reset_state()
-    await show_folders()
+    await show_folders(need_to_resend=True)
 
 
 @dp.message_handler(Text(equals="🗑 Удалить"))
@@ -230,10 +230,10 @@ async def delete_item_request(call: CallbackQuery):
         else:
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить запись.'", show_alert=True)
-        await show_folders()
+        await show_folders(need_to_resend=True)
     except MessageNotModified:
         await call.answer(text=f"Что то пошло не так при удалении записи.", show_alert=True)
-        await show_folders()
+        await show_folders(need_to_resend=True)
 
 
 @dp.message_handler(Text(equals="️🧹 Удалить все записи в папке"))
