@@ -1,3 +1,5 @@
+import aiogram
+
 from firebase.firebase_folder_reader import get_folders_count_in_folder, get_user_folders_deep_count
 from utils.utils_statistic import util_get_items_count, util_get_items_deep_count
 
@@ -15,6 +17,10 @@ def clean_folder_name(name):
 
 def get_parent_folder_id(folder_id):
     return folder_id.rsplit('/', 1)[0]
+
+
+def is_storage_message(message: aiogram.types.Message):
+    return message.text.startswith("🗂️ Хранилище")
 
 
 async def get_folder_statistic(folder_id) -> dict:
