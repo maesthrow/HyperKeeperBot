@@ -17,8 +17,14 @@ from utils.utils_statistic import get_word_items_by_count
 cancel_enter_search_text_button = InlineKeyboardButton("Отменить", callback_data="cancel_enter_search_text")
 
 
-@dp.message_handler(Text(equals="🔍 Поиск"))
+@dp.message_handler(Text(equals="🔍 Поиск") | Text(equals="🔄 Новый поиск 🔍️"))
 async def search_item_handler(message: aiogram.types.Message):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+    data['dict_search_data'] = None
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
     await bot.send_message(message.chat.id, "🔍", reply_markup=ReplyKeyboardRemove())
     await asyncio.sleep(0.3)
     buttons = [[cancel_enter_search_text_button]]
@@ -31,22 +37,28 @@ async def search_item_handler(message: aiogram.types.Message):
 async def get_search_text(message: aiogram.types.Message, state: FSMContext):
     tg_user = User.get_current()
     chat = Chat.get_current()
+
+    wait_message = await bot.send_message(chat.id, f"⌛️")
+
     folder_id = await get_current_folder_id()
     dict_inline_markups = await get_all_search_items(folder_id, search_text=message.text)
 
     dict_search_data = {
         'source_folder_id': folder_id, 'search_text': message.text, 'dict_inline_markups': dict_inline_markups
     }
+
     await show_search_results(dict_search_data)
+    await bot.delete_message(chat.id, wait_message.message_id)
 
     if len(dict_inline_markups) > 0:
         data = await dp.storage.get_data(user=tg_user, chat=chat)
         data['dict_search_data'] = dict_search_data
         await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
-    else:
-        await asyncio.sleep(1)
-        await show_folders()
+    # else:
+    #     await asyncio.sleep(0.5)
+    #     await search_item_handler(message)
+    # await show_folders()
 
     await state.reset_state()
 
@@ -80,7 +92,7 @@ async def show_search_results(dict_search_data):
                            reply_markup=markup)
     if len(dict_inline_markups) > 0:
         for sub_folder_id, inline_markup in dict_inline_markups.items():
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.2)
             folder_path_names = await get_folder_path_names(sub_folder_id)
             await bot.send_message(Chat.get_current().id, f"🗂️ {folder_path_names}",
                                    reply_markup=inline_markup)
@@ -91,7 +103,7 @@ async def show_search_results(dict_search_data):
 
 @dp.callback_query_handler(text_contains="cancel_enter_search_text", state=states.Item.Search)
 async def cancel_enter_search_text(call: CallbackQuery, state: FSMContext):
-    await call.message.answer("⌛️")
+    # await call.message.answer("⌛️")
     await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
     await state.reset_state()
     await show_folders()

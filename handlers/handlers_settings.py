@@ -1,4 +1,3 @@
-import asyncio
 import copy
 
 import aiogram

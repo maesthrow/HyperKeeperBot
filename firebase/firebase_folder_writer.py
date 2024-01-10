@@ -57,12 +57,12 @@ async def delete_folder(tg_user_id, folder_id):
         target_folders = target_folder.get("folders", {})
 
     # Удаляем папку из родительской папки
-    folder_to_delete = folder_ids[-1]
+    #folder_to_delete = folder_ids[-1]
     if folder_id in target_folders:
         del target_folders[folder_id]
 
         # Обновляем данные пользователя
-        await set_user_data(tg_user_id, {"folders": folders_collection})
+        await set_user_folders_data(tg_user_id, {"folders": folders_collection})
 
         return True  # Успешно удалено
     else:
@@ -94,7 +94,7 @@ async def rename_folder(tg_user_id, folder_id, folder_new_name):
         folder_to_rename["name"] = folder_new_name
 
         # Обновляем данные пользователя
-        await set_user_data(tg_user_id, {"folders": folders_collection})
+        await set_user_folders_data(tg_user_id, {"folders": folders_collection})
 
         return True  # Успешно переименовано
     else:

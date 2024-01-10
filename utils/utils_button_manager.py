@@ -26,6 +26,7 @@ general_buttons_movement_item = [
     ]
 
 general_buttons_search_items = [
+        [KeyboardButton("🔄 Новый поиск 🔍️")],
         [KeyboardButton("🫡 Завершить режим поиска 🔍️")],
     ]
 
@@ -33,6 +34,7 @@ general_buttons_statistic_folder = [
         [KeyboardButton("️↩️ Назад к папке")],
     ]
 
+ok_info_button = InlineKeyboardButton("👌 Понятно", callback_data="ok_info")
 skip_enter_item_title_button = InlineKeyboardButton("Без заголовка", callback_data="skip_enter_item_title")
 cancel_add_new_item_button = InlineKeyboardButton("Не добавлять запись", callback_data="cancel_add_new_item")
 

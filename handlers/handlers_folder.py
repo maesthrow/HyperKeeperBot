@@ -10,17 +10,17 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQu
 from aiogram.utils.exceptions import MessageNotModified
 
 from firebase.firebase_collection_folders import ROOT_FOLDER_ID
-from handlers import states
-from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
-                                        general_buttons_folder_show_all, general_buttons_movement_item, \
-                                        general_buttons_statistic_folder)
 from firebase.firebase_folder_reader import get_folders_in_folder
 from firebase.firebase_item_reader import get_folder_id
-
+from handlers import states
+from handlers.message_manager import send_ok_info_message
 from load_all import dp, bot
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, folder_callback, \
     create_folder_button, \
     get_page_info, get_folder_name, get_sub_folder_names, get_folder_path_names
+from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
+                                        general_buttons_folder_show_all, general_buttons_movement_item, \
+                                        general_buttons_statistic_folder)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_folders import get_folder_statistic, \
     get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name, is_storage_message
@@ -60,7 +60,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
             general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
-    if True: #current_folder_id != ROOT_FOLDER_ID:
+    if True:  # current_folder_id != ROOT_FOLDER_ID:
         if not movement_item_id:
             general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
         # general_buttons.append([KeyboardButton("↩️ Назад")])
@@ -99,7 +99,8 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
         # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
 
     try:
-        if is_storage_message(folders_message) and not need_to_resend:
+        #if is_storage_message(folders_message) and not need_to_resend:
+        if not need_to_resend:
             # Изменение существующего сообщения
             await bot.edit_message_text(chat_id=folders_message.chat.id,
                                         message_id=folders_message.message_id,
@@ -108,7 +109,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
                                         )
         else:
             await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
-             # storage_message.edit_reply_markup(ReplyKeyboardRemove())
+            # storage_message.edit_reply_markup(ReplyKeyboardRemove())
             folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                                      reply_markup=folders_inline_markup)
     except:
@@ -186,7 +187,7 @@ async def back_to_folders(message: aiogram.types.Message):
 
 @dp.callback_query_handler(text_contains="delete_folder_request")
 async def delete_folder_request(call: CallbackQuery):
-    current_folder_id = await get_current_folder_id()
+    # current_folder_id = await get_current_folder_id()
 
     folder_id = (call.data.replace("delete_folder_request_", "")
                  .replace("_accept", "")
@@ -195,7 +196,7 @@ async def delete_folder_request(call: CallbackQuery):
 
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        await to_folder(call=CallbackQuery(), callback_data={"folder_id": current_folder_id})
+        # await to_folder(call=CallbackQuery(), callback_data={"folder_id": folder_id})
         return
 
     try:
@@ -227,7 +228,8 @@ async def edit_this_folder(message: aiogram.types.Message, folder_id):
 
     await bot.send_message(message.chat.id, f"<b>Переименовать папку</b> 📁\n'{folder_name}'",
                            reply_markup=inline_markup)
-    await bot.send_message(message.chat.id, "Придумайте новое название папки:", reply_markup=ReplyKeyboardRemove())
+    await bot.send_message(message.chat.id,
+                           "Придумайте новое название папки:", reply_markup=ReplyKeyboardRemove())
 
     await states.Folder.EditName.set()
 
@@ -305,7 +307,7 @@ async def edit_folder(message: aiogram.types.Message, state: FSMContext):
     # await dp.storage.reset_data(chat=message.chat, user=tg_user)
     await state.reset_data()
     await state.reset_state()
-    await show_folders()
+    await show_folders(need_to_resend=True)
 
     # await asyncio.sleep(1)
     # await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
@@ -314,9 +316,11 @@ async def edit_folder(message: aiogram.types.Message, state: FSMContext):
 @dp.callback_query_handler(text_contains="cancel_enter_folder_name",
                            state=[states.Folder.NewName, states.Folder.EditName])
 async def cancel_create_new_folder(call: CallbackQuery, state: FSMContext):
-    await state.reset_data()
     await state.reset_state()
+    await bot.delete_message(call.message.chat.id, call.message.message_id)
     await show_folders()
+
+
 
 
 @dp.message_handler(Text(contains="Новая папка"))
@@ -336,16 +340,19 @@ async def create_new_folder(message: aiogram.types.Message):
 @dp.message_handler(Text(equals="✏️ Переименовать папку"))
 async def edit_folder_handler(message: aiogram.types.Message):
     current_folder_id = await get_current_folder_id()
+    if current_folder_id == ROOT_FOLDER_ID:
+        await asyncio.sleep(0.3)
+        await send_ok_info_message("Нельзя переименовать корневую папку 🚫")
+        await bot.delete_message(message.chat.id, message.message_id)
+        return
+
     await edit_this_folder(message, current_folder_id)
+    await bot.delete_message(message.chat.id, message.message_id)
 
 
 async def on_delete_folder(message: aiogram.types.Message):
-    # Извлекаем из callback_data идентификатор папки, который прикреплен к кнопке
     folder_id = await get_current_folder_id()
     folder_name = await get_folder_name(folder_id)
-
-    sent_message = await bot.send_message(message.chat.id, "<b>Подготовка к удалению папки</b>",
-                                          reply_markup=ReplyKeyboardRemove())
 
     inline_markup = InlineKeyboardMarkup(
         row_width=2,
@@ -360,8 +367,6 @@ async def on_delete_folder(message: aiogram.types.Message):
         ]
     )
 
-    await asyncio.sleep(0.5)
-    await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
     await bot.send_message(message.chat.id,
                            f"Хотите удалить папку 📁 '{folder_name}' и все ее содержимое?",
                            reply_markup=inline_markup)
@@ -369,7 +374,15 @@ async def on_delete_folder(message: aiogram.types.Message):
 
 @dp.message_handler(Text(equals="🗑 Удалить папку"))
 async def delete_handler(message: aiogram.types.Message):
+    current_folder_id = await get_current_folder_id()
+    if current_folder_id == ROOT_FOLDER_ID:
+        await asyncio.sleep(0.3)
+        await send_ok_info_message("Нельзя удалить корневую папку 🚫")
+        await bot.delete_message(message.chat.id, message.message_id)
+        return
+
     await on_delete_folder(message)
+    await bot.delete_message(message.chat.id, message.message_id)
 
 
 @dp.callback_query_handler(text_contains="go_to_page_folders")

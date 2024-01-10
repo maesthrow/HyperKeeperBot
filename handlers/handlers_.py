@@ -10,7 +10,7 @@ from firebase.firebase_collection_users import add_user
 from handlers import states
 from handlers.handlers_item import movement_item_handler
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
-    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item
+    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, ok_info_button
 from firebase.firebase_folder_reader import get_folders_in_folder
 from firebase.firebase_item_reader import get_folder_id
 from handlers.handlers_folder import create_folder_button, show_all_folders, show_folders
@@ -85,14 +85,14 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
 
-    #load_message = await bot.send_message(chat.id, f"⌛️")
+    # load_message = await bot.send_message(chat.id, f"⌛️")
     items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID, 1)
     if items_inline_markup.inline_keyboard:
         for row in items_inline_markup.inline_keyboard:
             folders_inline_markup.add(*row)
         await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
-    #await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
+    # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
     folders_message.reply_markup = folders_inline_markup
 
     data = await dp.storage.get_data(user=tg_user, chat=chat)
@@ -121,6 +121,9 @@ async def back_to_folder(message: aiogram.types.Message):
 
 @dp.message_handler(~Command(["start", "storage"]))
 async def any_message(message: aiogram.types.Message, state: FSMContext):
+    if message.text == "🔄 Новый поиск 🔍️":
+        return
+
     tg_user = User.get_current()
 
     data = await dp.storage.get_data(user=tg_user, chat=message.chat)
@@ -137,7 +140,6 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
         await message.reply('Завершите режим поиска 🔍 для добавления новой записи.')
         return
 
-
     buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     add_item_message_1 = await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌",
@@ -150,7 +152,4 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     await state.update_data(item=item, add_item_messages=(add_item_message_1, add_item_message_2))
 
     await states.Item.NewStepTitle.set()
-
-
-
 

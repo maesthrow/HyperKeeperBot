@@ -59,8 +59,8 @@ async def show_item(item_id):
         buttons.pop(len(buttons) - 1)
 
         search_mode_buttons = [
-            [KeyboardButton("️🗂️ Перейти к папке")],
-            [KeyboardButton("️↩️ Вернуться к результатам поиска 🔎")],
+            [KeyboardButton("️🗂️ Перейти к папке текущей записи")],
+            [KeyboardButton("️↩️ К результатам поиска 🔎"), KeyboardButton("🔄 Новый поиск 🔍️")],
             [KeyboardButton("🫡 Завершить режим поиска 🔍️")]
         ]
         buttons.extend(search_mode_buttons)
@@ -92,13 +92,13 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(folder_id, need_to_resend=True)
 
 
-@dp.message_handler(Text(equals="️↩️ Вернуться к результатам поиска 🔎"))
+@dp.message_handler(Text(equals="️↩️ К результатам поиска 🔎"))
 async def back_to_search_results(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=Chat.get_current(), user=User.get_current())
     await show_search_results(data['dict_search_data'])
 
 
-@dp.message_handler(Text(equals="️🗂️ Перейти к папке"))
+@dp.message_handler(Text(equals="️🗂️ Перейти к папке текущей записи"))
 async def back_to_folder(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=Chat.get_current(), user=User.get_current())
     item_id = data['item_id']
@@ -216,8 +216,7 @@ async def delete_item_request(call: CallbackQuery):
 async def delete_all_items_handler(message: aiogram.types.Message):
     current_folder_id = await get_current_folder_id()
 
-    sent_message = await bot.send_message(message.chat.id, "⌛️",
-                                              reply_markup=ReplyKeyboardRemove())
+    sent_message = await bot.send_message(message.chat.id, "⌛️") #, reply_markup=ReplyKeyboardRemove())
 
     inline_markup = await get_inline_markup_for_accept_cancel(
         text_accept="Да, удалить", text_cancel="Не удалять",
@@ -239,7 +238,7 @@ async def delete_all_items_request(call: CallbackQuery):
 
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        await show_folders()
+        #await show_folders()
         return
 
     try:
@@ -249,14 +248,14 @@ async def delete_all_items_request(call: CallbackQuery):
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
             # await call.answer(f"Запись удалена") #всплывающее сообщение сверху
-            await call.answer(text=f"Все записи в папке удалены.", show_alert=True)
+            #await call.answer(text=f"Все записи в папке удалены.", show_alert=True)
         else:
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить записи.'", show_alert=True)
-        await show_folders(need_to_resend=True)
+        await show_folders(need_to_resend=False)
     except MessageNotModified:
         await call.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
-        await show_folders(need_to_resend=True)
+        await show_folders(need_to_resend=False)
 
 
 @dp.message_handler(Text(equals="️✏️ Редактировать заголовок"))
