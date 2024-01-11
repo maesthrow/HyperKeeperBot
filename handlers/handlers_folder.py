@@ -99,7 +99,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
         # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
 
     try:
-        #if is_storage_message(folders_message) and not need_to_resend:
+        # if is_storage_message(folders_message) and not need_to_resend:
         if not need_to_resend:
             # Изменение существующего сообщения
             await bot.edit_message_text(chat_id=folders_message.chat.id,
@@ -125,7 +125,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
 
-async def show_all_folders(current_folder_id=None):
+async def show_all_folders(current_folder_id=None, need_resend=False):
     tg_user = User.get_current()
     chat = Chat.get_current()
     if not current_folder_id:
@@ -145,7 +145,7 @@ async def show_all_folders(current_folder_id=None):
     markup = create_general_reply_markup(general_buttons)
 
     current_folder_path_names = await get_folder_path_names(current_folder_id)
-    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+
 
     folders_page_info = await get_page_info(current_folder_id, 'folders', 0)
     current_folder_page = folders_page_info.get('current_page_folders')
@@ -153,11 +153,30 @@ async def show_all_folders(current_folder_id=None):
 
     folders_inline_markup = await get_inline_markup_folders(folder_buttons, current_folder_page)
 
-    folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+
+    if not need_resend:
+        folders_message = data.get('folders_message', None)
+        if folders_message:
+            try:
+                await bot.edit_message_text(chat_id=folders_message.chat.id,
+                                            message_id=folders_message.message_id,
+                                            text=f"🗂️ <b>{current_folder_path_names}</b>",
+                                            reply_markup=folders_inline_markup,
+                                            )
+            except:
+                await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+                folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
+                                                         reply_markup=folders_inline_markup)
+    else:
+        await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+        folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
+
+    data['folders_message'] = folders_message
     # load_message = await bot.send_message(chat.id, f"⌛️")
     # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
+    #data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['current_keyboard'] = markup
     data['page_folders'] = str(new_page_folders)
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
@@ -205,14 +224,25 @@ async def delete_folder_request(call: CallbackQuery):
         if result:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
-            await call.answer(text=f"Папка '{folder_name}' удалена", show_alert=True)
+            # await call.answer(text=f"Папка '{folder_name}' удалена", show_alert=True)
+            result_message = await bot.send_message(call.message.chat.id, f"Папка '{folder_name}' удалена ☑️")
+            await asyncio.sleep(0.5)
             parent_folder_id = get_parent_folder_id(folder_id)
             await to_folder(call=CallbackQuery(), callback_data={"folder_id": parent_folder_id})
+            await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
         else:
             # Отправляем ответ в виде всплывающего уведомления
-            await call.answer(text=f"Не получилось удалить папку '{folder_name}'", show_alert=True)
+            # await call.answer(text=f"Не получилось удалить папку '{folder_name}'", show_alert=True)
+            result_message = await bot.send_message(call.message.chat.id,
+                                                    f"Не получилось удалить папку '{folder_name}'")
+            await asyncio.sleep(0.5)
+            await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
     except MessageNotModified:
-        await call.answer(text=f"Что то пошло не так при удалении папки", show_alert=True)
+        # await call.answer(text=f"Что то пошло не так при удалении папки", show_alert=True)
+        result_message = await bot.send_message(call.message.chat.id,
+                                                f"Что то пошло не так при удалении папки")
+        await asyncio.sleep(0.5)
+        await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
 
 
 async def edit_this_folder(message: aiogram.types.Message, folder_id):
@@ -319,8 +349,6 @@ async def cancel_create_new_folder(call: CallbackQuery, state: FSMContext):
     await state.reset_state()
     await bot.delete_message(call.message.chat.id, call.message.message_id)
     await show_folders()
-
-
 
 
 @dp.message_handler(Text(contains="Новая папка"))
