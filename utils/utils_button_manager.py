@@ -22,7 +22,8 @@ general_buttons_item = [
     ]
 
 general_buttons_movement_item = [
-        [KeyboardButton("️🔄 Оставить в исходной папке")],
+        [KeyboardButton("🔀 Переместить в текущую папку")],
+        [KeyboardButton("️🚫 Отменить перемещение")],
     ]
 
 general_buttons_search_items = [

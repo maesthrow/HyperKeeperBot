@@ -37,12 +37,6 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
     tg_user = User.get_current()
     chat = Chat.get_current()
 
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
-
-    # если это перемещение записи
-    movement_item_id = data.get('movement_item_id')
-    movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
-
     if not current_folder_id:
         current_folder_id = await get_current_folder_id()
 
@@ -54,10 +48,16 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
         for folder_id, folder_data in user_folders.items()
     ]
 
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+
+    # если это перемещение записи
+    movement_item_id = data.get('movement_item_id')
+    # movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
+
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
-        if movement_item_initial_folder_id != current_folder_id:
-            general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
+        # if movement_item_initial_folder_id != current_folder_id:
+        #     general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
     if True:  # current_folder_id != ROOT_FOLDER_ID:

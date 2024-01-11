@@ -400,7 +400,7 @@ async def movement_item_handler(message: aiogram.types.Message, folder_id=None):
     await show_folders(folder_id)
 
 
-@dp.message_handler(Text(equals="️🔄 Оставить в исходной папке"))
+@dp.message_handler(Text(equals="️🚫 Отменить перемещение"))
 async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     tg_user = User.get_current()
 
@@ -409,14 +409,14 @@ async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     data['movement_item_id'] = None
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
-    message_text = f"Перемещение записи отменено 🔄"
+    message_text = f"Перемещение записи отменено 🚫"
     await bot.send_message(message.chat.id, message_text)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.4)
 
     folder_id = get_folder_id(movement_item_id)
     await set_current_folder_id(folder_id)
     await show_folders(folder_id)
-    await asyncio.sleep(0.3)
+    await asyncio.sleep(0.2)
     await show_item(movement_item_id)
 
 
@@ -439,9 +439,9 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
         message_text = f"Не удалось переместить запись ❌"
 
     await bot.send_message(message.chat.id, message_text)
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.4)
     await show_folders(folder_id)
-    await asyncio.sleep(0.3)
+    await asyncio.sleep(0.2)
     await show_item(movement_item_id)
 
 
