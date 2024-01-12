@@ -108,15 +108,15 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
 @dp.callback_query_handler(text_contains="show_all")
 async def show_all_entities_handler(call: CallbackQuery):
     if 'folders' in call.data:
-        await show_all_folders()
+        await show_all_folders(need_resend=True)
     elif 'items' in call.data:
         await show_all_items()
 
 
-@dp.message_handler(Text(equals="️↩️ Назад к общему виду папки"))
+@dp.message_handler(Text(equals="↪️ Перейти к общему виду папки 🗂️📄"))
 async def back_to_folder(message: aiogram.types.Message):
     folder_id = await get_current_folder_id()
-    await show_folders(folder_id, page_folder=1, page_item=1)
+    await show_folders(folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
 @dp.message_handler(~Command(["start", "storage"]))
