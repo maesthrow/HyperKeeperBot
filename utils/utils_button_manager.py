@@ -12,7 +12,7 @@ general_buttons_folder_show_all = [
 general_buttons_items_show_all = [
         [KeyboardButton("🔍 Поиск"), KeyboardButton("️📊 Статистика")],
         [KeyboardButton("️🧹 Удалить все записи в папке")],
-        [KeyboardButton("️↩️ Назад к общему виду папки")]
+        [KeyboardButton("↪️ Перейти к общему виду папки 🗂️📄")]
     ]
 
 general_buttons_item = [
@@ -53,6 +53,16 @@ def check_button_exists(keyboard: ReplyKeyboardMarkup, button_text: str) -> bool
         return False
     for row in keyboard.keyboard:
         for button in row:
-            if button.text == button_text:
+            if button.text.lower() == button_text.lower():
+                return True
+    return False
+
+
+def check_button_exists_part_of_text(keyboard: ReplyKeyboardMarkup, button_text: str) -> bool:
+    if not keyboard:
+        return False
+    for row in keyboard.keyboard:
+        for button in row:
+            if button_text.lower() in button.text.lower():
                 return True
     return False

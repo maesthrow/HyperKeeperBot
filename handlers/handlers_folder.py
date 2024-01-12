@@ -20,7 +20,8 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
     get_page_info, get_folder_name, get_sub_folder_names, get_folder_path_names
 from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
-                                        general_buttons_statistic_folder)
+                                        general_buttons_statistic_folder, check_button_exists,
+                                        check_button_exists_part_of_text)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_folders import get_folder_statistic, \
     get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name, is_storage_message
@@ -71,7 +72,7 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
     new_page_folders = folders_page_info.get('page_folders')
 
     if current_folder_page == 0:
-        await show_all_folders()
+        await show_all_folders(need_resend=need_to_resend)
         return
 
     items_page_info = await get_page_info(current_folder_id, 'items', page_item)
@@ -98,6 +99,11 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
             # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
         # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
 
+    if await is_only_folders_mode_keyboard() and current_folder_page > 0:
+        need_to_resend = True
+
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+
     try:
         # if is_storage_message(folders_message) and not need_to_resend:
         if not need_to_resend:
@@ -112,13 +118,13 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
             # storage_message.edit_reply_markup(ReplyKeyboardRemove())
             folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                                      reply_markup=folders_inline_markup)
+            data['current_keyboard'] = markup
     except:
         await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
         folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                                  reply_markup=folders_inline_markup)
+        data['current_keyboard'] = markup
 
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
-    data['current_keyboard'] = markup
     data['folders_message'] = folders_message
     data['page_folders'] = str(new_page_folders)
     data['page_items'] = str(new_page_items)
@@ -141,17 +147,21 @@ async def show_all_folders(current_folder_id=None, need_resend=False):
     general_buttons = general_buttons_folder_show_all[:]
     if current_folder_id != ROOT_FOLDER_ID:
         general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
-    general_buttons.append([KeyboardButton("️↩️ Назад к общему виду папки")])
+    general_buttons.append([KeyboardButton("↪️ Перейти к общему виду папки 🗂️📄")])
     markup = create_general_reply_markup(general_buttons)
 
     current_folder_path_names = await get_folder_path_names(current_folder_id)
-
 
     folders_page_info = await get_page_info(current_folder_id, 'folders', 0)
     current_folder_page = folders_page_info.get('current_page_folders')
     new_page_folders = folders_page_info.get('page_folders')
 
     folders_inline_markup = await get_inline_markup_folders(folder_buttons, current_folder_page)
+    if current_folder_id != ROOT_FOLDER_ID:
+        folders_inline_markup.add(back_to_up_level_folder_button)
+
+    if not await is_only_folders_mode_keyboard():
+        need_resend = True
 
     data = await dp.storage.get_data(user=tg_user, chat=chat)
 
@@ -168,18 +178,30 @@ async def show_all_folders(current_folder_id=None, need_resend=False):
                 await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
                 folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                                          reply_markup=folders_inline_markup)
+                data['folders_message'] = folders_message
+                data['current_keyboard'] = markup
+                data['page_folders'] = str(new_page_folders)
+                await dp.storage.update_data(user=tg_user, chat=chat, data=data)
     else:
         await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
         folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
 
     data['folders_message'] = folders_message
-    # load_message = await bot.send_message(chat.id, f"⌛️")
-    # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
-    #data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['current_keyboard'] = markup
     data['page_folders'] = str(new_page_folders)
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
+
+async def is_only_folders_mode_keyboard():
+    tg_user = User.get_current()
+    chat = Chat.get_current()
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+    current_keyboard = data.get('current_keyboard', None)
+    if current_keyboard:
+        return check_button_exists_part_of_text(current_keyboard, "к общему виду папки")
+    return False
+
 
 
 # Используем обработчик CallbackQuery для навигации по папкам

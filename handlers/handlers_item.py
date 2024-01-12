@@ -257,21 +257,29 @@ async def delete_all_items_request(call: CallbackQuery):
         #await show_folders()
         return
 
+    result_message = None
+
     try:
         # Вызываем метод для удаления папки
         result = await util_delete_all_items_in_folder(current_folder_id)
         if result:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-            # Отправляем ответ в виде всплывающего уведомления
             # await call.answer(f"Запись удалена") #всплывающее сообщение сверху
-            #await call.answer(text=f"Все записи в папке удалены.", show_alert=True)
+            result_message = await bot.send_message(call.message.chat.id,
+                                   f"Все записи в папке удалены ☑️")
         else:
+            await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить записи.'", show_alert=True)
         await show_folders(need_to_resend=False)
     except MessageNotModified:
+        await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         await call.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
         await show_folders(need_to_resend=False)
+
+    if result_message:
+        await asyncio.sleep(0.7)
+        await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
 
 
 @dp.message_handler(Text(equals="️✏️ Редактировать заголовок"))

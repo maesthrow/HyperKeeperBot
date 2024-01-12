@@ -89,6 +89,5 @@ def get_selected_search_text(text: str, search_text: str, left_teg: str = '<b><i
             start_index = text.lower().find(search_text.lower(), start_index + len(underlined_text))
         else:
             start_index = -1
-        print(text)
 
     return text

@@ -113,7 +113,7 @@ async def show_all_entities_handler(call: CallbackQuery):
         await show_all_items()
 
 
-@dp.message_handler(Text(equals="️↩️ Назад к общему виду папки"))
+@dp.message_handler(Text(equals="↪️ Перейти к общему виду папки 🗂️📄"))
 async def back_to_folder(message: aiogram.types.Message):
     folder_id = await get_current_folder_id()
     await show_folders(folder_id, page_folder=1, page_item=1, need_to_resend=True)
