@@ -212,7 +212,7 @@ async def close_settings_handler(callback_query: aiogram.types.CallbackQuery):
 
 
 def get_inline_markup_with_selected_current_setting(inline_keyboard, current_value):
-    print(f"current_value {current_value}")
+    #print(f"current_value {current_value}")
     for row in inline_keyboard:
         for button in row:
             if button.text.replace(CURRENT_LABEL, "").strip() == current_value:

@@ -21,6 +21,7 @@ from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_items import show_all_items
 
 import handlers.handlers_settings
+import handlers.handlers_files
 
 
 # Используем фильтр CommandStart для команды /start
@@ -119,7 +120,7 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@dp.message_handler(~Command(["start", "storage"]))
+@dp.message_handler(~Command(["start", "storage"]), content_types=['text', 'document', 'photo'])
 async def any_message(message: aiogram.types.Message, state: FSMContext):
     if message.text == "🔄 Новый поиск 🔍️":
         return
@@ -147,9 +148,22 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     await asyncio.sleep(0.8)
     add_item_message_2 = await bot.send_message(message.chat.id, "Добавьте заголовок:",
                                                 reply_markup=inline_markup)
-    item = Item(message.text)
+
+    if message.content_type == aiogram.types.ContentType.TEXT:
+        item = Item(message.text)
+    elif message.content_type == aiogram.types.ContentType.PHOTO:
+        file_id = message.photo[-1].file_id
+        await bot.send_photo(chat_id=message.chat.id, photo=file_id, caption=message.caption)
+        return
+    elif message.content_type == aiogram.types.ContentType.DOCUMENT:
+        print(message.document.file_name)
+        await message.answer(await message.document.get_file())
+        return
 
     await state.update_data(item=item, add_item_messages=(add_item_message_1, add_item_message_2))
 
     await states.Item.NewStepTitle.set()
+
+
+
 
