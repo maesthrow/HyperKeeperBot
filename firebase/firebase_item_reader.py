@@ -26,7 +26,9 @@ async def get_folder_items(folder_id, text_search=None):
         filtered_items = items
 
     # Сортировка по title или text
-    sorted_items = dict(sorted(filtered_items.items(), key=lambda x: x[1]["title"] or x[1]["text"]))
+    sorted_items = dict(sorted(filtered_items.items(),
+                               key=lambda x: x[1]["title"] if x[1]["title"] is not None else x[1]["text"]))
+
 
     return sorted_items
 

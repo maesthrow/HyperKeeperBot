@@ -5,9 +5,10 @@ from bs4 import BeautifulSoup
 
 
 class Item:
-    def __init__(self, text, title=None, date_created=None, date_modified=None):
+    def __init__(self, text: str, title=None, media: dict = None, date_created=None, date_modified=None):
         self.title = title
         self.text = text
+        self.media = media
         self.date_created = date_created or datetime.now()
         self.date_modified = date_modified or self.date_created
 
@@ -15,6 +16,7 @@ class Item:
         return {
             "title": self.title,
             "text": self.text,
+            "media": self.media,
             "date_created": self.date_created,
             "date_modified": self.date_modified
         }

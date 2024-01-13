@@ -13,3 +13,7 @@ class Item(StatesGroup):
     EditTitle = State()
     EditText = State()
     Search = State()
+
+
+class FileProcess(State):
+    pass
