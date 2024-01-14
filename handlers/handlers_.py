@@ -3,8 +3,10 @@ from typing import List
 
 import aiogram
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Command, CommandStart, Text, MediaGroupFilter
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton
+from aiogram.dispatcher.filters import Text, MediaGroupFilter
+from aiogram.dispatcher.filters import Command, CommandStart
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton, \
+    ContentType
 from aiogram_media_group import media_group_handler
 
 from firebase.firebase_collection_folders import add_user_folders, ROOT_FOLDER_ID
@@ -122,105 +124,134 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@dp.message_handler(~Command(["start", "storage"]), content_types=['text', 'document'])
+@dp.message_handler(~Command(["start", "storage"]), content_types=['text'])
 async def any_message(message: aiogram.types.Message, state: FSMContext):
-    if message.text == "🔄 Новый поиск 🔍️":
+    if not await is_message_allowed_new_item(message):
         return
 
-    tg_user = User.get_current()
+    add_item_messages = []
 
-    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
+    buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
+    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+    add_item_messages.append(
+        await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌",
+                                                reply_markup=ReplyKeyboardRemove())
+    )
+    await asyncio.sleep(0.7)
+    add_item_messages.append(
+        await bot.send_message(message.chat.id, "Добавьте заголовок:",
+                                                reply_markup=inline_markup)
+    )
+
+    #if message.content_type == aiogram.types.ContentType.TEXT:
+    item = Item(message.text)
+
+    await state.update_data(item=item, add_item_messages=add_item_messages)
+
+    await states.Item.NewStepTitle.set()
+
+
+@dp.message_handler(MediaGroupFilter(is_media_group=True),
+                    content_types=['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker'])
+@media_group_handler
+async def album_handler(messages: List[aiogram.types.Message], state: FSMContext):
+    await media_files_handler(messages, state)
+
+
+@dp.message_handler(content_types=['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker'])
+async def file_handler(message: aiogram.types.Message, state: FSMContext):
+    await media_files_handler([message], state)
+
+
+async def media_files_handler(messages: List[aiogram.types.Message], state: FSMContext):
+    if not await is_message_allowed_new_item(messages[0]):
+        return
+
+    add_item_messages = []
+
+    buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
+    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+    add_item_messages.append(
+        await bot.send_message(messages[0].chat.id, "Сейчас сохраним Вашу новую запись 👌",
+                               reply_markup=ReplyKeyboardRemove())
+    )
+    await asyncio.sleep(0.7)
+    add_item_messages.append(
+        await bot.send_message(messages[0].chat.id, "Добавьте заголовок:",
+                               reply_markup=inline_markup)
+    )
+
+    new_item: Item = Item("")
+    for message in messages:
+        new_item = await get_new_item_from_state_data(message, state)
+        file_id = get_file_id(message)
+        if file_id:
+            new_item.media[message.content_type].append(file_id)
+    if new_item.text == "":
+        new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
+
+    await state.update_data(item=new_item, add_item_messages=add_item_messages)
+    await states.Item.NewStepTitle.set()
+
+
+def get_file_id(message: aiogram.types.Message):
+    content_type = message.content_type
+    file_id = None
+    if content_type == 'photo':
+        file_id = message.photo[-1].file_id
+    elif content_type == 'video':
+        file_id = message.video.file_id
+    elif content_type == 'audio':
+        file_id = message.audio.file_id
+    elif content_type == 'document':
+        file_id = message.document.file_id
+    elif content_type == 'voice':
+        file_id = message.voice.file_id
+    elif content_type == 'video_note':
+        file_id = message.video_note.file_id
+    # elif content_type == 'location':
+    #     file_id = message.location
+    # elif content_type == 'contact':
+    #     file_id = message.contact
+    elif content_type == 'sticker':
+        file_id = message.sticker.file_id
+    return file_id
+
+
+async def get_new_item_from_state_data(message: aiogram.types.Message, state: FSMContext):
+    #data = await dp.storage.get_data(user=message.from_user, chat=message.chat)
+    data = await state.get_data()
+    new_item: Item = data.get('item', None)
+    if new_item:
+        if new_item.text == "" and message.caption:
+            new_item.text = message.caption
+    else:
+        if message.caption:
+            message_text = message.caption
+        else:
+            message_text = ""
+        new_item = Item(message_text)
+
+    await state.update_data(item=new_item)
+    return new_item
+
+
+async def is_message_allowed_new_item(message: aiogram.types.Message):
+    if message.text == "🔄 Новый поиск 🔍️":
+        return False
+
+    data = await dp.storage.get_data(user=message.from_user, chat=message.chat)
 
     # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
     if movement_item_id:
         current_folder_id = await get_current_folder_id()
         await movement_item_handler(message, current_folder_id)
-        return
+        return False
 
     dict_search_data = data.get('dict_search_data', None)
     if dict_search_data:
         await message.reply('Завершите режим поиска 🔍 для добавления новой записи.')
-        return
+        return False
 
-    current_state = await state.get_state()
-    if not current_state or current_state != 'processing_media':
-
-        buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
-        inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
-        add_item_message_1 = await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌",
-                                                    reply_markup=ReplyKeyboardRemove())
-        await asyncio.sleep(0.7)
-        add_item_message_2 = await bot.send_message(message.chat.id, "Добавьте заголовок:",
-                                                    reply_markup=inline_markup)
-
-    if message.content_type == aiogram.types.ContentType.TEXT:
-        item = Item(message.text)
-    elif message.content_type == aiogram.types.ContentType.PHOTO:
-        media_group_id = message.media_group_id
-        if message.media_group_id:
-            chat_history = await bot.get_chat_history(chat_id=message.chat.id, limit=100)
-
-            # Фильтруем сообщения с тем же media_group_id от конкретного пользователя
-            user_media_group_messages = [msg for msg in chat_history if
-                                         msg.media_group_id == media_group_id and msg.from_user.id == message.from_user.id]
-
-            # Выводим количество сообщений с тем же media_group_id от этого пользователя
-            print(
-                f"Количество сообщений с media_group_id {media_group_id} "
-                f"от пользователя {message.from_user.id}: {len(user_media_group_messages)}")
-
-            await state.set_data({"message_media_group_id": message.media_group_id})
-            #media_group = await message.get_media_group(message.chat.id, message.media_group_id)
-
-            # for media_message in media_group:
-            #     for photo in media_message.photo:
-            #         # Обрабатываем каждую фотографию
-            #         file_id = photo.file_id
-            #         file_info = await bot.get_file(file_id)
-            #         file_path = file_info.file_path
-            #         print(f"file_info {file_info}")
-
-
-        # if not current_state:
-        #     await state.set_state(state="processing_media")
-        #     #await state.set_data({"message_media_group_id": message.media_group_id.})
-        # print(f"message.message_id {message.message_id}")
-        #
-        # print(len(message.photo))
-        # for id in message.photo:
-        #     print(id)
-        file_id = message.photo[-1].file_id
-        if message.caption:
-            message_text = message.caption
-        else:
-            message_text = "⬇️"
-        item = Item(message_text)
-        media = {"photo": [file_id]}
-        item.media = media
-        #await bot.send_photo(chat_id=message.chat.id, photo=file_id, caption=message.caption)
-        #return
-
-    elif message.content_type == aiogram.types.ContentType.DOCUMENT:
-        print(message.document.file_name)
-        await message.answer(await message.document.get_file())
-        return
-
-    await state.update_data(item=item, add_item_messages=(add_item_message_1, add_item_message_2))
-
-    await states.Item.NewStepTitle.set()
-
-
-
-@dp.message_handler(MediaGroupFilter(is_media_group=True), content_types=aiogram.types.ContentType.PHOTO)
-@media_group_handler
-async def album_handler(messages: List[aiogram.types.Message]):
-    for message in messages:
-        print(message)
-        for photo in message.photo:
-            file_id = photo.file_id
-            file_info = await bot.get_file(file_id)
-            file_path = file_info.file_path
-            print(f"file_info {file_info}")
-            await bot.send_ph
-
+    return True

@@ -13,7 +13,7 @@ logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(
 storage = MemoryStorage()
 
 bot = Bot(token=str(TOKEN), parse_mode="HTML")
-dp = Dispatcher(bot, storage=storage)
+dp = Dispatcher(bot=bot, storage=storage)
 
 
 async def setup_bot_commands():

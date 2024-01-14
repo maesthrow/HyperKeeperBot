@@ -12,6 +12,7 @@ from aiogram.utils.exceptions import MessageNotModified
 from enums.enums import Environment
 from handlers import states
 from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_selected_current_setting
+from utils.MediaGroupBuilder import MediaGroupBuilder
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_item
 from firebase.firebase_item_reader import get_item, get_folder_id
@@ -78,13 +79,33 @@ async def show_item(item_id):
     markup = create_general_reply_markup(buttons)
 
     if item.title:
-        item_content = f"📄 <b>{item.title}</b>\n\n{item.text}"
+        item_body = f"📄 <b>{item.title}</b>\n\n{item.text}"
     else:
-        item_content = f"📄\n\n{item.text}"
+        item_body = f"📄\n\n{item.text}"
 
-    bot_message = await bot.send_message(tg_user.id, item_content, reply_markup=markup)
+    bot_message = await bot.send_message(tg_user.id, item_body, reply_markup=markup)
+
+    media_files = item.get_all_media_values()
+    if len(media_files) > 0:
+        media_group_builder = MediaGroupBuilder()
+        voice_builder = MediaGroupBuilder()
+        for content_type, files in item.media.items():
+            for file_id in files:
+                if content_type != 'voice':
+                    media_group_builder.add(content_type, file_id)
+                elif content_type == 'voice':
+                    voice_builder.add_voice(file_id)
+
+        media_group = media_group_builder.build()
+        voice_group = voice_builder.build()
+        if len(media_group) > 0:
+            await bot.send_media_group(chat_id=chat.id, media=media_group)
+        if len(voice_group) > 0:
+            for voice in voice_group:
+                await bot.send_voice(chat_id=chat.id, voice=voice)
+
+
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
-
     data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['bot_message'] = bot_message
     data['item_id'] = item_id

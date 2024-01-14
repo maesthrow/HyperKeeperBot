@@ -1,5 +1,4 @@
 import aiogram
-from aiogram.dispatcher import FSMContext
 
 from load_all import dp
 from aiogram.dispatcher.filters import Command

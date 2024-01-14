@@ -2,8 +2,8 @@ import asyncio
 
 import aiogram
 from aiogram.dispatcher import FSMContext
-from aiogram.types import User, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Chat
 from aiogram.dispatcher.filters import Text
+from aiogram.types import User, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Chat
 
 from handlers import states
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_search_items

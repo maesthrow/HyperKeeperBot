@@ -1,4 +1,5 @@
 from aiogram.utils import executor
+
 from load_all import bot, setup_bot_commands, dp
 
 

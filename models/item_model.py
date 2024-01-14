@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 import requests
 import re
@@ -5,10 +6,25 @@ from bs4 import BeautifulSoup
 
 
 class Item:
+    default_media = {
+        "photo": [],
+        "video": [],
+        "audio": [],
+        "document": [],
+        "voice": [],
+        "video_note": [],
+        "location": [],
+        "contact": [],
+        "sticker": [],
+    }
+
     def __init__(self, text: str, title=None, media: dict = None, date_created=None, date_modified=None):
         self.title = title
         self.text = text
-        self.media = media
+        if not media:
+            self.media = copy.deepcopy(self.default_media)
+        else:
+            self.media = media
         self.date_created = date_created or datetime.now()
         self.date_modified = date_modified or self.date_created
 
@@ -21,8 +37,14 @@ class Item:
             "date_modified": self.date_modified
         }
 
+    def get_all_media_values(self):
+        all_values = []
+        for key, value in self.media.items():
+            all_values.extend(value)
+        return all_values
+
     def get_short_title(self):
-        return self.text.splitlines()[0]
+        return self.text.splitlines()[0] if self.text is not "" else ""
 
     def get_short_parse_title(self):
         urls = re.findall(r'https?://[^\s]+', self.text)

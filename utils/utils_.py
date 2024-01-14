@@ -202,11 +202,13 @@ async def get_page_info(folder_id, entities_key, current_page=None):
     tg_user = User.get_current()
     chat = Chat.get_current()
     data = await dp.storage.get_data(chat=chat, user=tg_user)
-    pf = data.get('page_folders')
 
     page_entities = data.get(f'page_{entities_key}')
     level = await get_level_folders(folder_id)
-    list_pages = page_entities.split('/')
+    if page_entities:
+        list_pages = page_entities.split('/')
+    else:
+        list_pages = []
     if current_page is None:
         current_page = list_pages[level] if level < len(list_pages) else '1'
     else:

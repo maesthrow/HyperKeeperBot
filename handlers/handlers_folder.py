@@ -7,7 +7,8 @@ from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, \
     KeyboardButton, User, Chat
-from aiogram.utils.exceptions import MessageNotModified
+
+#from aiogram.utils.exceptions import MessageNotModified
 
 from firebase.firebase_collection_folders import ROOT_FOLDER_ID
 from firebase.firebase_folder_reader import get_folders_in_folder
@@ -259,7 +260,7 @@ async def delete_folder_request(call: CallbackQuery):
                                                     f"Не получилось удалить папку '{folder_name}'")
             await asyncio.sleep(0.5)
             await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
-    except MessageNotModified:
+    except  :
         # await call.answer(text=f"Что то пошло не так при удалении папки", show_alert=True)
         result_message = await bot.send_message(call.message.chat.id,
                                                 f"Что то пошло не так при удалении папки")
