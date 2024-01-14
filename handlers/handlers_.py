@@ -116,6 +116,7 @@ async def show_all_entities_handler(call: CallbackQuery):
         await show_all_folders(need_resend=True)
     elif 'items' in call.data:
         await show_all_items()
+    await call.answer()
 
 
 @dp.message_handler(Text(equals="↪️ Перейти к общему виду папки 🗂️📄"))
@@ -135,15 +136,15 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     add_item_messages.append(
         await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌",
-                                                reply_markup=ReplyKeyboardRemove())
+                               reply_markup=ReplyKeyboardRemove())
     )
     await asyncio.sleep(0.7)
     add_item_messages.append(
         await bot.send_message(message.chat.id, "Добавьте заголовок:",
-                                                reply_markup=inline_markup)
+                               reply_markup=inline_markup)
     )
 
-    #if message.content_type == aiogram.types.ContentType.TEXT:
+    # if message.content_type == aiogram.types.ContentType.TEXT:
     item = Item(message.text)
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
@@ -154,32 +155,41 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
 @dp.message_handler(MediaGroupFilter(is_media_group=True),
                     content_types=['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker'])
 @media_group_handler
-async def album_handler(messages: List[aiogram.types.Message], state: FSMContext):
-    await media_files_handler(messages, state)
+async def media_files_handler(messages: List[aiogram.types.Message], state: FSMContext):
+    data = await state.get_data()
+    add_item_messages = data.get('add_item_messages', None)
+    if not add_item_messages:
+        need_pre_save_message = True
+    else:
+        need_pre_save_message = False
+    await files_in_message_handler(messages, state, need_pre_save_message=need_pre_save_message)
 
 
 @dp.message_handler(content_types=['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker'])
-async def file_handler(message: aiogram.types.Message, state: FSMContext):
-    await media_files_handler([message], state)
+async def media_file_handler(message: aiogram.types.Message, state: FSMContext):
+    await files_in_message_handler([message], state)
 
 
-async def media_files_handler(messages: List[aiogram.types.Message], state: FSMContext):
+async def files_in_message_handler(messages: List[aiogram.types.Message], state: FSMContext, need_pre_save_message=True):
     if not await is_message_allowed_new_item(messages[0]):
         return
 
-    add_item_messages = []
+    if need_pre_save_message:
+        await state.update_data(add_item_messages="sample_add_item_messages")
 
-    buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
-    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
-    add_item_messages.append(
-        await bot.send_message(messages[0].chat.id, "Сейчас сохраним Вашу новую запись 👌",
-                               reply_markup=ReplyKeyboardRemove())
-    )
-    await asyncio.sleep(0.7)
-    add_item_messages.append(
-        await bot.send_message(messages[0].chat.id, "Добавьте заголовок:",
-                               reply_markup=inline_markup)
-    )
+    add_item_messages = []
+    if need_pre_save_message:
+        buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
+        inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+        add_item_messages.append(
+            await bot.send_message(messages[0].chat.id, "Сейчас сохраним Вашу новую запись 👌",
+                                   reply_markup=ReplyKeyboardRemove())
+        )
+        await asyncio.sleep(0.7)
+        add_item_messages.append(
+            await bot.send_message(messages[0].chat.id, "Добавьте заголовок:",
+                                   reply_markup=inline_markup)
+        )
 
     new_item: Item = Item("")
     for message in messages:
@@ -187,10 +197,13 @@ async def media_files_handler(messages: List[aiogram.types.Message], state: FSMC
         file_id = get_file_id(message)
         if file_id:
             new_item.media[message.content_type].append(file_id)
-    if new_item.text == "":
-        new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
+    # if new_item.text == "":
+    #     new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
 
-    await state.update_data(item=new_item, add_item_messages=add_item_messages)
+    if need_pre_save_message:
+        await state.update_data(item=new_item, add_item_messages=add_item_messages)
+    else:
+        await state.update_data(item=new_item)
     await states.Item.NewStepTitle.set()
 
 
@@ -219,7 +232,7 @@ def get_file_id(message: aiogram.types.Message):
 
 
 async def get_new_item_from_state_data(message: aiogram.types.Message, state: FSMContext):
-    #data = await dp.storage.get_data(user=message.from_user, chat=message.chat)
+    # data = await dp.storage.get_data(user=message.from_user, chat=message.chat)
     data = await state.get_data()
     new_item: Item = data.get('item', None)
     if new_item:

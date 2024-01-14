@@ -26,6 +26,12 @@ from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util
     util_move_item
 
 cancel_edit_item_button = InlineKeyboardButton("❌ Отменить", callback_data=f"cancel_edit_item")
+
+choose_edit_item_content_buttons = [
+    InlineKeyboardButton("📝 Текст", callback_data=f"edit_content_text"),
+    InlineKeyboardButton("📸 Медиафайлы", callback_data=f"edit_content_media")
+]
+
 choose_type_edit_item_buttons = [
     InlineKeyboardButton("➕ Добавить", callback_data=f"new_text_type_add"),
     InlineKeyboardButton("🔄 Перезаписать", callback_data=f"new_text_type_rewrite")
@@ -44,11 +50,13 @@ async def show_item_button(callback_query: CallbackQuery):
     if movement_item_id:
         current_folder_id = await get_current_folder_id()
         await movement_item_handler(callback_query.message, current_folder_id)
+        await callback_query.answer()
         return
 
     # Получаем item_id из callback_data
     item_id = callback_query.data.split('_')[1]
     await show_item(item_id)
+    await callback_query.answer()
 
 
 async def show_item(item_id):
@@ -57,9 +65,6 @@ async def show_item(item_id):
     item = await get_item(item_id)
 
     data = await dp.storage.get_data(chat=chat, user=tg_user)
-
-    # ВСПЛЫВАЮЩЕЕ СООБЩЕНИЕ!!!
-    # await callback_query.answer(f"{item.title}\n{item.text}")
 
     buttons = general_buttons_item[:]
     if data['dict_search_data']:
@@ -88,22 +93,33 @@ async def show_item(item_id):
     media_files = item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builder = MediaGroupBuilder()
+        media_group_builders = [media_group_builder]
         voice_builder = MediaGroupBuilder()
+        voice_builders = [voice_builder]
         for content_type, files in item.media.items():
             for file_id in files:
-                if content_type != 'voice':
-                    media_group_builder.add(content_type, file_id)
-                elif content_type == 'voice':
+                if content_type == 'voice':
+                    if len(voice_builder.media_group) >= 10:
+                        voice_builder = MediaGroupBuilder()
+                        voice_builders.append(voice_builder)
                     voice_builder.add_voice(file_id)
+                else:
+                    if len(media_group_builder.media_group) >= 10:
+                        media_group_builder = MediaGroupBuilder()
+                        media_group_builders.append(media_group_builder)
+                    media_group_builder.add(content_type, file_id)
 
-        media_group = media_group_builder.build()
-        voice_group = voice_builder.build()
-        if len(media_group) > 0:
-            await bot.send_media_group(chat_id=chat.id, media=media_group)
-        if len(voice_group) > 0:
-            for voice in voice_group:
-                await bot.send_voice(chat_id=chat.id, voice=voice)
-
+        for mg_builder in media_group_builders:
+            media_group = mg_builder.build()
+            if len(media_group) > 0:
+                await asyncio.sleep(0.25)
+                await bot.send_media_group(chat_id=chat.id, media=media_group)
+        for v_builder in voice_builders:
+            voices = v_builder.build()
+            if len(voices) > 0:
+                for voice in voices:
+                    await asyncio.sleep(0.25)
+                    await bot.send_voice(chat_id=chat.id, voice=voice)
 
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
     data = await dp.storage.get_data(user=tg_user, chat=chat)
@@ -152,6 +168,7 @@ async def cancel_add_new_item(call: CallbackQuery, state: FSMContext):
     await state.reset_data()
     await state.reset_state()
     await show_folders()
+    await call.answer()
 
 
 @dp.callback_query_handler(text_contains="skip_enter_item_title", state=states.Item.NewStepTitle)
@@ -159,6 +176,7 @@ async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
     await on_add_new_item(item, call.message, state)
+    await call.answer()
 
 
 @dp.message_handler(state=states.Item.NewStepTitle)
@@ -179,7 +197,7 @@ async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSM
         for message_del in add_item_messages:
             await bot.delete_message(message_del.chat.id, message_del.message_id)
             await asyncio.sleep(0.2)
-    #await asyncio.sleep(0.4)
+    # await asyncio.sleep(0.4)
 
     await state.reset_data()
     await state.reset_state()
@@ -228,7 +246,8 @@ async def delete_item_request(call: CallbackQuery):
 
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        #await show_item(item_id)
+        # await show_item(item_id)
+        await call.answer()
         return
 
     try:
@@ -238,7 +257,7 @@ async def delete_item_request(call: CallbackQuery):
             await bot.send_message(call.message.chat.id,
                                    f"Запись удалена ☑️")  # , reply_markup=inline_markup)
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-            #await call.answer(text=f"Запись удалена ☑️", show_alert=True)
+            # await call.answer(text=f"Запись удалена ☑️", show_alert=True)
 
             await asyncio.sleep(0.4)
             folder_id = await get_current_folder_id()
@@ -252,14 +271,16 @@ async def delete_item_request(call: CallbackQuery):
 
     except MessageNotModified:
         await call.answer(text=f"Что то пошло не так при удалении записи.", show_alert=True)
-        #await show_folders(need_to_resend=True)
+        # await show_folders(need_to_resend=True)
+
+    await call.answer()
 
 
 @dp.message_handler(Text(equals="️🧹 Удалить все записи в папке"))
 async def delete_all_items_handler(message: aiogram.types.Message):
     current_folder_id = await get_current_folder_id()
 
-    sent_message = await bot.send_message(message.chat.id, "⌛️") #, reply_markup=ReplyKeyboardRemove())
+    sent_message = await bot.send_message(message.chat.id, "⌛️")  # , reply_markup=ReplyKeyboardRemove())
 
     inline_markup = await get_inline_markup_for_accept_cancel(
         text_accept="Да, удалить", text_cancel="Не удалять",
@@ -281,7 +302,8 @@ async def delete_all_items_request(call: CallbackQuery):
 
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        #await show_folders()
+        # await show_folders()
+        await call.answer()
         return
 
     result_message = None
@@ -293,7 +315,7 @@ async def delete_all_items_request(call: CallbackQuery):
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # await call.answer(f"Запись удалена") #всплывающее сообщение сверху
             result_message = await bot.send_message(call.message.chat.id,
-                                   f"Все записи в папке удалены ☑️")
+                                                    f"Все записи в папке удалены ☑️")
         else:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
@@ -307,6 +329,8 @@ async def delete_all_items_request(call: CallbackQuery):
     if result_message:
         await asyncio.sleep(0.7)
         await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
+
+    await call.answer()
 
 
 @dp.message_handler(Text(equals="️✏️ Редактировать заголовок"))
@@ -341,13 +365,39 @@ async def edit_item_title_handler(message: aiogram.types.Message):
     await states.Item.EditTitle.set()
 
 
-@dp.message_handler(Text(equals="️📝 Редактировать содержимое"))
-async def edit_item_text_handler(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
-    data = await dp.storage.get_data(chat=message.chat, user=tg_user)
+@dp.message_handler(Text(equals="️📄 Редактировать содержимое"))
+async def edit_item_content_handler(message: aiogram.types.Message):
+    data = await dp.storage.get_data(chat=message.chat, user=message.from_user)
     item_id = data.get('item_id')
-
     item: Item = await get_item(item_id)
+    if len(item.get_all_media_values()) > 0:
+        buttons = [choose_edit_item_content_buttons]
+        inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=buttons)
+        await bot.send_message(message.chat.id,
+                                   f"Что будете редактировать?",
+                                   reply_markup=inline_markup)
+
+    else:
+        await edit_item_text_handler(message, item)
+
+
+@dp.callback_query_handler(text_contains="edit_content")
+async def choose_edit_content_item(call: CallbackQuery, state: FSMContext):
+    await call.answer()
+    if "text" in call.data:
+        tg_user = User.get_current()
+        data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
+        item_id = data.get('item_id')
+        item: Item = await get_item(item_id)
+        await edit_item_text_handler(call.message, item)
+        await bot.delete_message(call.message.chat.id, call.message.message_id)
+    else:
+        pass
+
+
+async def edit_item_text_handler(message: aiogram.types.Message, item: Item):
+    tg_user = User.get_current()
+
     if item.text and item.text != "":
         item_text = item.text
     else:
@@ -355,14 +405,14 @@ async def edit_item_text_handler(message: aiogram.types.Message):
 
     edit_item_messages = []
     edit_item_messages.append(
-        await bot.send_message(message.chat.id, f"Текущее содержимое:",
-                                                 reply_markup=ReplyKeyboardRemove())
+        await bot.send_message(message.chat.id, f"<b>Текущее содержимое:</b>",
+                               reply_markup=ReplyKeyboardRemove())
     )
     edit_item_messages.append(
         await bot.send_message(message.chat.id, f"{item_text}")
     )
 
-    await asyncio.sleep(0.3)
+    await asyncio.sleep(0.2)
 
     buttons = copy.deepcopy([choose_type_edit_item_buttons])
     button_add: InlineKeyboardButton = buttons[0][0]
@@ -372,17 +422,18 @@ async def edit_item_text_handler(message: aiogram.types.Message):
 
     edit_item_messages.append(
         await bot.send_message(message.chat.id,
-                                                 f"Выберите способ редактирования:",
-                                                 reply_markup=inline_markup)
+                               f"<b>Выберите способ редактирования:</b>",
+                               reply_markup=inline_markup)
     )
 
     buttons = [[cancel_edit_item_button]]
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
 
+    await asyncio.sleep(0.2)
     edit_item_messages.append(
         await bot.send_message(message.chat.id,
-                                                 f"Введите новое содержимое:",
-                                                 reply_markup=inline_markup)
+                               f"<b>Введите новое содержимое:</b>",
+                               reply_markup=inline_markup)
     )
 
     data = await dp.storage.get_data(user=tg_user, chat=message.chat)
@@ -404,14 +455,17 @@ async def choose_type_edit_text_item(call: CallbackQuery, state: FSMContext):
 
     new_inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=new_buttons)
 
-    data = await dp.storage.get_data(chat=call.message.chat, user=User.get_current())
-    choose_message: aiogram.types.Message = data.get('edit_item_messages')[2]
+    tg_user = User.get_current()
+    data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
+    edit_item_messages = data.get('edit_item_messages')
+    choose_message: aiogram.types.Message = edit_item_messages[2]
     await bot.edit_message_text(chat_id=choose_message.chat.id,
                                 message_id=choose_message.message_id,
                                 text=choose_message.text,
                                 reply_markup=new_inline_markup,
                                 )
     await state.set_data({"type_edit_text": call.data})
+    await call.answer()
 
 
 @dp.message_handler(state=[states.Item.EditTitle, states.Item.EditText])
@@ -434,7 +488,7 @@ async def on_edit_item(edit_text, state: FSMContext):
         data = await state.get_data()
         type_edit_text = data.get('type_edit_text', None)
         if type_edit_text == 'new_text_type_add' or type_edit_text is None:
-            item.text = f"{item.text}\n{edit_text}"
+            item.text = f"{item.text}\n{edit_text}" if item.text != "" else f"{edit_text}"
         else:
             item.text = edit_text
         message_success_text = "Новое содержимое сохранено ✅"
@@ -469,12 +523,14 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
     await dp.storage.update_data(user=tg_user, chat=call.message.chat, data=data)
     await state.reset_state()
     await show_item(item_id)
+    await call.answer()
 
 
 @dp.callback_query_handler(text_contains="add_none_title_item",
                            state=states.Item.EditTitle)
 async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
     await on_edit_item(None, state)
+    await call.answer()
 
 
 @dp.message_handler(Text(equals="️🔀 Переместить"))

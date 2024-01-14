@@ -107,3 +107,4 @@ async def cancel_enter_search_text(call: CallbackQuery, state: FSMContext):
     await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
     await state.reset_state()
     await show_folders()
+    await call.answer()

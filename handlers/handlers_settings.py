@@ -79,6 +79,7 @@ async def settings_count_folders_on_page_handler(callback_query: aiogram.types.C
                                 text=new_text,
                                 reply_markup=new_inline_markup,
                                 )
+    await callback_query.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: 'settings_count_folders_' in callback_query.data)
@@ -102,6 +103,7 @@ async def choose_count_folders_handler(callback_query: aiogram.types.CallbackQue
     settings = await get_from_user_collection('settings')
     settings["folders_on_page_count"] = int(folders_on_page_count)
     await set_to_user_collection('settings', settings)
+    await callback_query.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'settings_count_items_on_page')
@@ -122,6 +124,7 @@ async def settings_count_items_on_page_handler(callback_query: aiogram.types.Cal
                                 text=new_text,
                                 reply_markup=new_inline_markup,
                                 )
+    await callback_query.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: 'settings_count_items_' in callback_query.data)
@@ -145,6 +148,7 @@ async def choose_count_items_handler(callback_query: aiogram.types.CallbackQuery
     settings = await get_from_user_collection('settings')
     settings["items_on_page_count"] = int(items_on_page_count)
     await set_to_user_collection('settings', settings)
+    await callback_query.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'settings_language')
@@ -166,6 +170,7 @@ async def settings_language_handler(callback_query: aiogram.types.CallbackQuery)
                                 text=new_text,
                                 reply_markup=new_inline_markup,
                                 )
+    await callback_query.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: 'settings_language_' in callback_query.data)
@@ -190,6 +195,7 @@ async def choose_language_handler(callback_query: aiogram.types.CallbackQuery):
     settings = await get_from_user_collection('settings')
     settings["language"] = language
     await set_to_user_collection('settings', settings)
+    await callback_query.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'settings_back')
@@ -204,11 +210,13 @@ async def back_settings_handler(callback_query: aiogram.types.CallbackQuery):
                                 text=new_text,
                                 reply_markup=new_inline_markup
                                 )
+    await callback_query.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'settings_close')
 async def close_settings_handler(callback_query: aiogram.types.CallbackQuery):
     await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
+    await callback_query.answer()
 
 
 def get_inline_markup_with_selected_current_setting(inline_keyboard, current_value):

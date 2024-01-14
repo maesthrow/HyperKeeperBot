@@ -8,11 +8,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, \
     KeyboardButton, User, Chat
 
-#from aiogram.utils.exceptions import MessageNotModified
-
 from firebase.firebase_collection_folders import ROOT_FOLDER_ID
 from firebase.firebase_folder_reader import get_folders_in_folder
-from firebase.firebase_item_reader import get_folder_id
 from handlers import states
 from handlers.message_manager import send_ok_info_message
 from load_all import dp, bot
@@ -21,13 +18,14 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
     get_page_info, get_folder_name, get_sub_folder_names, get_folder_path_names
 from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
-                                        general_buttons_statistic_folder, check_button_exists,
-                                        check_button_exists_part_of_text)
+                                        general_buttons_statistic_folder, check_button_exists_part_of_text)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_folders import get_folder_statistic, \
-    get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name, is_storage_message
+    get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
 from utils.utils_folders_db import util_delete_folder, util_add_new_folder, util_rename_folder
 from utils.utils_items import show_all_items
+
+# from aiogram.utils.exceptions import MessageNotModified
 
 cancel_enter_folder_name_button = InlineKeyboardButton("Отмена", callback_data=f"cancel_enter_folder_name")
 back_to_up_level_folder_button = InlineKeyboardButton("↩️ Назад", callback_data="back_to_up_level_folder")
@@ -210,6 +208,7 @@ async def is_only_folders_mode_keyboard():
 async def to_folder(call: CallbackQuery, callback_data: dict):
     folder_id = callback_data["folder_id"]
     await show_folders(folder_id)
+    await call.answer()
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'back_to_up_level_folder')
@@ -239,6 +238,7 @@ async def delete_folder_request(call: CallbackQuery):
     if "cancel" in call.data:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         # await to_folder(call=CallbackQuery(), callback_data={"folder_id": folder_id})
+        await call.answer()
         return
 
     try:
@@ -266,6 +266,8 @@ async def delete_folder_request(call: CallbackQuery):
                                                 f"Что то пошло не так при удалении папки")
         await asyncio.sleep(0.5)
         await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
+
+    await call.answer()
 
 
 async def edit_this_folder(message: aiogram.types.Message, folder_id):
@@ -372,6 +374,7 @@ async def cancel_create_new_folder(call: CallbackQuery, state: FSMContext):
     await state.reset_state()
     await bot.delete_message(call.message.chat.id, call.message.message_id)
     await show_folders()
+    await call.answer()
 
 
 @dp.message_handler(Text(contains="Новая папка"))
@@ -480,6 +483,8 @@ async def go_to_page_folders(call: CallbackQuery):
         data['page_folders'] = str(new_page_folders)
         await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
+    await call.answer()
+
 
 @dp.callback_query_handler(text_contains="go_to_page_items")
 async def go_to_page_items(call: CallbackQuery):
@@ -519,6 +524,8 @@ async def go_to_page_items(call: CallbackQuery):
         data['folders_message'] = folders_message
         data['page_items'] = str(new_page_items)
         await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+
+    await call.answer()
 
 
 @dp.message_handler(Text(equals="️📊 Статистика"))
