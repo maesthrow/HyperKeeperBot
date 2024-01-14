@@ -46,7 +46,7 @@ class MediaGroupBuilder:
 
     def add_video_note(self, file_id):
         self.check_caption()
-        media = types.VideoNote(media=file_id, caption=self.caption)
+        media = file_id
         self.media_group.append(media)
 
     def add_location(self, latitude, longitude):

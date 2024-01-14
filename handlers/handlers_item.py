@@ -96,6 +96,8 @@ async def show_item(item_id):
         media_group_builders = [media_group_builder]
         voice_builder = MediaGroupBuilder()
         voice_builders = [voice_builder]
+        video_note_builder = MediaGroupBuilder()
+        video_note_builders = [video_note_builder]
         for content_type, files in item.media.items():
             for file_id in files:
                 if content_type == 'voice':
@@ -103,6 +105,11 @@ async def show_item(item_id):
                         voice_builder = MediaGroupBuilder()
                         voice_builders.append(voice_builder)
                     voice_builder.add_voice(file_id)
+                elif content_type == 'video_note':
+                    if len(video_note_builder.media_group) >= 10:
+                        video_note_builder = MediaGroupBuilder()
+                        video_note_builders.append(video_note_builder)
+                    video_note_builder.add_video_note(file_id)
                 else:
                     if len(media_group_builder.media_group) >= 10:
                         media_group_builder = MediaGroupBuilder()
@@ -120,6 +127,12 @@ async def show_item(item_id):
                 for voice in voices:
                     await asyncio.sleep(0.25)
                     await bot.send_voice(chat_id=chat.id, voice=voice)
+        for vn_builder in video_note_builders:
+            video_notes = vn_builder.build()
+            if len(video_notes) > 0:
+                for video_note in video_notes:
+                    await asyncio.sleep(0.25)
+                    await bot.send_video_note(chat_id=chat.id, video_note=video_note)
 
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
     data = await dp.storage.get_data(user=tg_user, chat=chat)
