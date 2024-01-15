@@ -36,7 +36,7 @@ choose_type_edit_item_buttons = [
     InlineKeyboardButton("➕ Добавить", callback_data=f"new_text_type_add"),
     InlineKeyboardButton("🔄 Перезаписать", callback_data=f"new_text_type_rewrite")
 ]
-add_none_title_item_button = InlineKeyboardButton("Пустой заголовок", callback_data=f"add_none_title_item")
+add_none_title_item_button = InlineKeyboardButton("🪧 Пустой заголовок", callback_data=f"add_none_title_item")
 
 
 # Обработчик для ответа на нажатие кнопки
@@ -346,7 +346,7 @@ async def delete_all_items_request(call: CallbackQuery):
     await call.answer()
 
 
-@dp.message_handler(Text(equals="️✏️ Редактировать заголовок"))
+@dp.message_handler(Text(equals="️✏️ Заголовок"))
 async def edit_item_title_handler(message: aiogram.types.Message):
     tg_user = aiogram.types.User.get_current()
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
@@ -378,20 +378,21 @@ async def edit_item_title_handler(message: aiogram.types.Message):
     await states.Item.EditTitle.set()
 
 
-@dp.message_handler(Text(equals="️📄 Редактировать содержимое"))
+@dp.message_handler(Text(equals="️📝 Текст"))
 async def edit_item_content_handler(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=message.chat, user=message.from_user)
     item_id = data.get('item_id')
     item: Item = await get_item(item_id)
-    if len(item.get_all_media_values()) > 0:
-        buttons = [choose_edit_item_content_buttons]
-        inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=buttons)
-        await bot.send_message(message.chat.id,
-                                   f"Что будете редактировать?",
-                                   reply_markup=inline_markup)
-
-    else:
-        await edit_item_text_handler(message, item)
+    await edit_item_text_handler(message, item)
+    # if len(item.get_all_media_values()) > 0:
+    #     buttons = [choose_edit_item_content_buttons]
+    #     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=buttons)
+    #     await bot.send_message(message.chat.id,
+    #                                f"Что будете редактировать?",
+    #                                reply_markup=inline_markup)
+    #
+    # else:
+    #     await edit_item_text_handler(message, item)
 
 
 @dp.callback_query_handler(text_contains="edit_content")
@@ -418,7 +419,7 @@ async def edit_item_text_handler(message: aiogram.types.Message, item: Item):
 
     edit_item_messages = []
     edit_item_messages.append(
-        await bot.send_message(message.chat.id, f"<b>Текущее содержимое:</b>",
+        await bot.send_message(message.chat.id, f"<b>Текущий текст:</b>",
                                reply_markup=ReplyKeyboardRemove())
     )
     edit_item_messages.append(
@@ -445,7 +446,7 @@ async def edit_item_text_handler(message: aiogram.types.Message, item: Item):
     await asyncio.sleep(0.2)
     edit_item_messages.append(
         await bot.send_message(message.chat.id,
-                               f"<b>Введите новое содержимое:</b>",
+                               f"<b>Введите новый текст:</b>",
                                reply_markup=inline_markup)
     )
 
@@ -504,7 +505,7 @@ async def on_edit_item(edit_text, state: FSMContext):
             item.text = f"{item.text}\n{edit_text}" if item.text != "" else f"{edit_text}"
         else:
             item.text = edit_text
-        message_success_text = "Новое содержимое сохранено ✅"
+        message_success_text = "Новый текст сохранен ✅"
         message_failure_text = "Что то пошло не так при сохранении текста ❌"
 
     item.date_modified = datetime.now()

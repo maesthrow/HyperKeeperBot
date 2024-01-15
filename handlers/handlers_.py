@@ -3,29 +3,25 @@ from typing import List
 
 import aiogram
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text, MediaGroupFilter
 from aiogram.dispatcher.filters import Command, CommandStart
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton, \
-    ContentType
+from aiogram.dispatcher.filters import Text, MediaGroupFilter
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton
 from aiogram_media_group import media_group_handler
 
 from firebase.firebase_collection_folders import add_user_folders, ROOT_FOLDER_ID
 from firebase.firebase_collection_users import add_user
-from handlers import states
-from handlers.handlers_item import movement_item_handler
-from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
-    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, ok_info_button
 from firebase.firebase_folder_reader import get_folders_in_folder
 from firebase.firebase_item_reader import get_folder_id
+from handlers import states
 from handlers.handlers_folder import create_folder_button, show_all_folders, show_folders
+from handlers.handlers_item import movement_item_handler
 from load_all import dp, bot
 from models.item_model import Item
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names
+from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
+    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_items import show_all_items
-
-import handlers.handlers_settings
-import handlers.handlers_files
 
 
 # Используем фильтр CommandStart для команды /start
@@ -41,11 +37,11 @@ async def start(message: aiogram.types.Message, state: FSMContext):
 
     bot_username = (await bot.me).username
 
-    text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля Вас создано персональное хранилище, "
+    text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
             f"которое доступно с помощью команды /storage\n\n"
-            f"Управляйте вашими данными 💼, создавайте папки 🗂️ и записи 📄, "
+            f"Управляйте вашими данными 🗃️, создавайте папки 🗂️ и записи 📄, сохраняйте медиафайлы 📸, "
             f"используя кнопки и подсказки на клавиатуре📱\n\n"
-            f"Для доступа ко всем функциям бота жмите на кнопку Меню рядом с полем ввода сообщения ↙️\n\n"
+            f"Для доступа ко всем функциям бота жмите на кнопку 'Меню' рядом с полем ввода сообщения ↙️\n\n"
             f"Приятного использования! ☺️")
     await bot.send_message(chat_id, text, reply_markup=ReplyKeyboardRemove())
 

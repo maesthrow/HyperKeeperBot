@@ -203,19 +203,29 @@ async def is_only_folders_mode_keyboard():
 
 
 
-# Используем обработчик CallbackQuery для навигации по папкам
+#Используем обработчик CallbackQuery для навигации по папкам
 @dp.callback_query_handler(folder_callback.filter())
 async def to_folder(call: CallbackQuery, callback_data: dict):
     folder_id = callback_data["folder_id"]
     await show_folders(folder_id)
-    await call.answer()
+    try:
+        await call.answer()
+    except:
+        pass
+
 
 
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'back_to_up_level_folder')
-async def back_to_folders(message: aiogram.types.Message):
+async def back_to_folders(callback_query: CallbackQuery):
     folder_id = await get_current_folder_id(User.get_current(), Chat.get_current())
     back_to_folder_id = get_parent_folder_id(folder_id)
-    await to_folder(call=CallbackQuery(), callback_data={"folder_id": back_to_folder_id})
+    await show_folders(back_to_folder_id)
+    await callback_query.answer()
+    #await to_folder(call=callback_query, callback_data={"folder_id": back_to_folder_id})
+    # try:
+    #     await callback_query.answer()
+    # except:
+    #     pass
 
 
 # Используем обработчик CallbackQuery для навигации по папкам
@@ -251,7 +261,7 @@ async def delete_folder_request(call: CallbackQuery):
             result_message = await bot.send_message(call.message.chat.id, f"Папка '{folder_name}' удалена ☑️")
             await asyncio.sleep(0.5)
             parent_folder_id = get_parent_folder_id(folder_id)
-            await to_folder(call=CallbackQuery(), callback_data={"folder_id": parent_folder_id})
+            await to_folder(call=call, callback_data={"folder_id": parent_folder_id})
             await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
         else:
             # Отправляем ответ в виде всплывающего уведомления

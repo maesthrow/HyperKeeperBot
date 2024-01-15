@@ -16,7 +16,7 @@ general_buttons_items_show_all = [
     ]
 
 general_buttons_item = [
-        [KeyboardButton("️✏️ Редактировать заголовок"), KeyboardButton("️📄 Редактировать содержимое")],
+        [KeyboardButton("️✏️ Заголовок"), KeyboardButton("️📝 Текст"), KeyboardButton("️🗃️ Файлы и медиа")],
         [KeyboardButton("️🔀 Переместить"), KeyboardButton("🗑 Удалить")],
         [KeyboardButton("️↩️ Назад к папке")],
     ]
@@ -42,7 +42,7 @@ cancel_add_new_item_button = InlineKeyboardButton("Не добавлять за�
 
 # Определяем функцию для создания разметки ответа для общего использования
 def create_general_reply_markup(buttons):
-    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup = ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     for sub_buttons in buttons:
         markup.add(*sub_buttons)
     return markup
