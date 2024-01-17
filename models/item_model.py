@@ -4,6 +4,7 @@ import requests
 import re
 from bs4 import BeautifulSoup
 
+invisible_char = "\u00A0"
 
 class Item:
     default_media = {
@@ -43,8 +44,19 @@ class Item:
             all_values.extend(value)
         return all_values
 
-    def get_short_title(self):
-        return self.text.splitlines()[0] if self.text is not "" else ""
+    def get_title(self):
+        title = self.title or ""
+        length = len(title)
+        if length < 70:
+            for i in range(70 - length):
+                title += ' '
+            title += f"\n{invisible_char}"
+        return title
+
+    def get_inline_title(self):
+        return self.title if self.title and self.title != "" \
+            else (self.text.splitlines()[0] if self.text is not ""
+                  else "")
 
     def get_short_parse_title(self):
         urls = re.findall(r'https?://[^\s]+', self.text)

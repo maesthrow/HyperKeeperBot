@@ -2,23 +2,27 @@ import asyncio
 import copy
 from datetime import datetime
 
+import handlers.handlers_inline_query
+import handlers.handlers_item_inline_buttons
 import aiogram
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, User, Chat, \
-    KeyboardButton
+    KeyboardButton, InputTextMessageContent
 from aiogram.utils.exceptions import MessageNotModified
 
+import load_all
 from enums.enums import Environment
 from handlers import states
 from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_selected_current_setting
 from utils.MediaGroupBuilder import MediaGroupBuilder
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
-from utils.utils_button_manager import create_general_reply_markup, general_buttons_item
+from utils.utils_button_manager import create_general_reply_markup, general_buttons_item, item_inline_buttons, \
+    hide_item_files_button
 from firebase.firebase_item_reader import get_item, get_folder_id
 from handlers.handlers_folder import show_folders
 from handlers.handlers_search import show_search_results
-from load_all import dp, bot
+from load_all import dp, bot, current_item
 from models.item_model import Item
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -63,33 +67,54 @@ async def show_item(item_id):
     tg_user = aiogram.types.User.get_current()
     chat = aiogram.types.Chat.get_current()
     item = await get_item(item_id)
+    #data = await dp.storage.get_data(chat=chat, user=tg_user)
 
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    # buttons = general_buttons_item[:]
+    # if data['dict_search_data']:
+    #     buttons.pop(len(buttons) - 1)
+    #
+    #     search_mode_buttons = [
+    #         [KeyboardButton("️🗂️ Перейти к папке текущей записи")],
+    #         [KeyboardButton("️↩️ К результатам поиска 🔎"), KeyboardButton("🔄 Новый поиск 🔍️")],
+    #         [KeyboardButton("🫡 Завершить режим поиска 🔍️")]
+    #     ]
+    #     buttons.extend(search_mode_buttons)
+    #
+    #     search_text = data['dict_search_data'].get('search_text', None)
+    #     if search_text:
+    #         item.select_search_text(search_text)
+    #
+    # markup = create_general_reply_markup(buttons)
 
-    buttons = general_buttons_item[:]
-    if data['dict_search_data']:
-        buttons.pop(len(buttons) - 1)
+    item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
+    # print(item.title)
+    # if item.title:
+    #     item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
+    # else:
+    #     item_body = f"📄\n\n{item.text}"
 
-        search_mode_buttons = [
-            [KeyboardButton("️🗂️ Перейти к папке текущей записи")],
-            [KeyboardButton("️↩️ К результатам поиска 🔎"), KeyboardButton("🔄 Новый поиск 🔍️")],
-            [KeyboardButton("🫡 Завершить режим поиска 🔍️")]
-        ]
-        buttons.extend(search_mode_buttons)
+    item_inlines = copy.deepcopy(item_inline_buttons)
+    item_inlines[0][0].switch_inline_query = item.get_inline_title()
+    if len(item.get_all_media_values()) == 0:
+        item_inlines[-1].remove(hide_item_files_button)
+    inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
+    bot_message = await bot.send_message(tg_user.id, item_body, reply_markup=inline_markup)
 
-        search_text = data['dict_search_data'].get('search_text', None)
-        if search_text:
-            item.select_search_text(search_text)
+    await show_item_files(item)
 
-    markup = create_general_reply_markup(buttons)
+    # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
+    data = await dp.storage.get_data(user=tg_user, chat=chat)
+    data['bot_message'] = bot_message
+    data['item_id'] = item_id
+    data['current_item'] = item
+    #data['current_keyboard'] = markup
+    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+    load_all.current_item[tg_user.id] = item
 
-    if item.title:
-        item_body = f"📄 <b>{item.title}</b>\n\n{item.text}"
-    else:
-        item_body = f"📄\n\n{item.text}"
 
-    bot_message = await bot.send_message(tg_user.id, item_body, reply_markup=markup)
-
+async def show_item_files(item: Item):
+    tg_user = User.get_current()
+    chat = Chat.get_current()
     media_files = item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builder = MediaGroupBuilder()
@@ -116,30 +141,34 @@ async def show_item(item_id):
                         media_group_builders.append(media_group_builder)
                     media_group_builder.add(content_type, file_id)
 
+        item_files_messages = []
+
         for mg_builder in media_group_builders:
             media_group = mg_builder.build()
             if len(media_group) > 0:
                 await asyncio.sleep(0.25)
-                await bot.send_media_group(chat_id=chat.id, media=media_group)
+                item_files_messages.append(
+                    await bot.send_media_group(chat_id=chat.id, media=media_group)
+                )
         for v_builder in voice_builders:
             voices = v_builder.build()
             if len(voices) > 0:
                 for voice in voices:
                     await asyncio.sleep(0.25)
-                    await bot.send_voice(chat_id=chat.id, voice=voice)
+                    item_files_messages.append(
+                        await bot.send_voice(chat_id=chat.id, voice=voice)
+                    )
         for vn_builder in video_note_builders:
             video_notes = vn_builder.build()
             if len(video_notes) > 0:
                 for video_note in video_notes:
                     await asyncio.sleep(0.25)
-                    await bot.send_video_note(chat_id=chat.id, video_note=video_note)
-
-    # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
-    data['bot_message'] = bot_message
-    data['item_id'] = item_id
-    data['current_keyboard'] = markup
-    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+                    item_files_messages.append(
+                        await bot.send_video_note(chat_id=chat.id, video_note=video_note)
+                    )
+        data = await dp.storage.get_data(user=tg_user, chat=chat)
+        data['item_files_messages'] = item_files_messages
+        await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
 
 @dp.message_handler(Text(equals="️↩️ Назад к папке"))

@@ -35,10 +35,37 @@ general_buttons_statistic_folder = [
         [KeyboardButton("️↩️ Назад к папке")],
     ]
 
+
 ok_info_button = InlineKeyboardButton("👌 Понятно", callback_data="ok_info")
 skip_enter_item_title_button = InlineKeyboardButton("Без заголовка", callback_data="skip_enter_item_title")
 cancel_add_new_item_button = InlineKeyboardButton("Не добавлять запись", callback_data="cancel_add_new_item")
 
+
+repost_item_button = InlineKeyboardButton("Поделиться", switch_inline_query="none")
+show_item_files_button = InlineKeyboardButton("Показать файлы »", callback_data="show_item_files")
+hide_item_files_button = InlineKeyboardButton("« Скрыть файлы", callback_data="hide_item_files")
+item_inline_buttons = [
+        [
+            repost_item_button,
+            InlineKeyboardButton("🔀 Переместить", callback_data="move_item"),
+        ],
+        [
+            InlineKeyboardButton("📝 Редактировать", callback_data="edit_item"),
+            InlineKeyboardButton("🗑 Удалить", callback_data="delete_item"),
+        ],
+
+        [
+            InlineKeyboardButton("❌ Закрыть", callback_data="close_item"),
+            hide_item_files_button,
+            #InlineKeyboardButton("Показать файлы »", callback_data="skip_enter_item_title"),
+        ]
+]
+
+        # [
+        #     InlineKeyboardButton("✏️ Заголовок", callback_data="skip_enter_item_title"),
+        #     InlineKeyboardButton("📝 Текст", callback_data="skip_enter_item_title"),
+        #     InlineKeyboardButton("🗃️ Файлы", callback_data="skip_enter_item_title"),
+        # ],
 
 # Определяем функцию для создания разметки ответа для общего использования
 def create_general_reply_markup(buttons):

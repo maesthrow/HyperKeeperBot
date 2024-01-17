@@ -158,7 +158,7 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1, s
         if search_text:
             item.select_search_text(search_text, '[', ']')
 
-        item_button_text = item.title or item.get_short_title()
+        item_button_text = item.title or item.get_inline_title()
         if item:
             buttons.append([InlineKeyboardButton(f"{smile_item} {item_button_text}", callback_data=f"item_{item_id}")])
 

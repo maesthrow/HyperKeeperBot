@@ -55,6 +55,10 @@ settings_languages_buttons.append([back_to_settings_button])
 
 @dp.message_handler(commands=["settings"])
 async def search_item_handler(message: aiogram.types.Message):
+    await bot.delete_message(
+        chat_id=message.chat.id,
+        message_id=message.message_id,
+    )
     pre_message = await bot.send_message(message.chat.id, "⌛️", reply_markup=ReplyKeyboardRemove())
     await bot.delete_message(chat_id=pre_message.chat.id, message_id=pre_message.message_id)
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=settings_buttons)
