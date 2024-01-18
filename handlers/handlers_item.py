@@ -25,6 +25,7 @@ from handlers.handlers_search import show_search_results
 from load_all import dp, bot, current_item
 from models.item_model import Item
 from utils.utils_data import get_current_folder_id, set_current_folder_id
+from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
     util_edit_item, \
     util_move_item
@@ -86,7 +87,7 @@ async def show_item(item_id):
     #
     # markup = create_general_reply_markup(buttons)
 
-    item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
+    #item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
     # print(item.title)
     # if item.title:
     #     item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
@@ -98,7 +99,7 @@ async def show_item(item_id):
     if len(item.get_all_media_values()) == 0:
         item_inlines[-1].remove(hide_item_files_button)
     inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
-    bot_message = await bot.send_message(tg_user.id, item_body, reply_markup=inline_markup)
+    bot_message = await bot.send_message(tg_user.id, item.get_body(), reply_markup=inline_markup)
 
     await show_item_files(item)
 
@@ -107,68 +108,10 @@ async def show_item(item_id):
     data['bot_message'] = bot_message
     data['item_id'] = item_id
     data['current_item'] = item
+    data['current_inline_markup'] = inline_markup
     #data['current_keyboard'] = markup
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
     load_all.current_item[tg_user.id] = item
-
-
-async def show_item_files(item: Item):
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    media_files = item.get_all_media_values()
-    if len(media_files) > 0:
-        media_group_builder = MediaGroupBuilder()
-        media_group_builders = [media_group_builder]
-        voice_builder = MediaGroupBuilder()
-        voice_builders = [voice_builder]
-        video_note_builder = MediaGroupBuilder()
-        video_note_builders = [video_note_builder]
-        for content_type, files in item.media.items():
-            for file_id in files:
-                if content_type == 'voice':
-                    if len(voice_builder.media_group) >= 10:
-                        voice_builder = MediaGroupBuilder()
-                        voice_builders.append(voice_builder)
-                    voice_builder.add_voice(file_id)
-                elif content_type == 'video_note':
-                    if len(video_note_builder.media_group) >= 10:
-                        video_note_builder = MediaGroupBuilder()
-                        video_note_builders.append(video_note_builder)
-                    video_note_builder.add_video_note(file_id)
-                else:
-                    if len(media_group_builder.media_group) >= 10:
-                        media_group_builder = MediaGroupBuilder()
-                        media_group_builders.append(media_group_builder)
-                    media_group_builder.add(content_type, file_id)
-
-        item_files_messages = []
-
-        for mg_builder in media_group_builders:
-            media_group = mg_builder.build()
-            if len(media_group) > 0:
-                await asyncio.sleep(0.25)
-                item_files_messages.append(
-                    await bot.send_media_group(chat_id=chat.id, media=media_group)
-                )
-        for v_builder in voice_builders:
-            voices = v_builder.build()
-            if len(voices) > 0:
-                for voice in voices:
-                    await asyncio.sleep(0.25)
-                    item_files_messages.append(
-                        await bot.send_voice(chat_id=chat.id, voice=voice)
-                    )
-        for vn_builder in video_note_builders:
-            video_notes = vn_builder.build()
-            if len(video_notes) > 0:
-                for video_note in video_notes:
-                    await asyncio.sleep(0.25)
-                    item_files_messages.append(
-                        await bot.send_video_note(chat_id=chat.id, video_note=video_note)
-                    )
-        data = await dp.storage.get_data(user=tg_user, chat=chat)
-        data['item_files_messages'] = item_files_messages
-        await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
 
 @dp.message_handler(Text(equals="️↩️ Назад к папке"))
@@ -227,6 +170,7 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
     item = data.get('item')
     item.title = message.text
     await on_add_new_item(item, message, state)
+    await bot.delete_message(message.chat.id, message.message_id)
 
 
 async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSMContext):
@@ -245,8 +189,10 @@ async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSM
     await state.reset_state()
 
     if new_item_id:
-        await bot.send_message(message.chat.id, "Новая запись успешно добавлена ✅")
-        await asyncio.sleep(0.5)
+        accept_add_item_message = await bot.send_message(message.chat.id, "Новая запись успешно добавлена ✅")
+        data['accept_add_item_message'] = accept_add_item_message
+        await dp.storage.update_data(user=User.get_current(), chat=Chat.get_current(), data=data)
+        await asyncio.sleep(0.4)
         await show_folders(need_to_resend=False)
         await asyncio.sleep(0.2)
         await show_item(new_item_id)

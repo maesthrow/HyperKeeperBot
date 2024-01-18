@@ -111,7 +111,7 @@ async def show_all_entities_handler(call: CallbackQuery):
     if 'folders' in call.data:
         await show_all_folders(need_resend=True)
     elif 'items' in call.data:
-        await show_all_items()
+        await show_all_items(need_to_resend=True)
     await call.answer()
 
 
@@ -126,13 +126,13 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return
 
-    add_item_messages = []
+    add_item_messages = [message]
 
     buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     add_item_messages.append(
-        await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌",
-                               reply_markup=ReplyKeyboardRemove())
+        await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌")
+                               #reply_markup=ReplyKeyboardRemove())
     )
     await asyncio.sleep(0.7)
     add_item_messages.append(

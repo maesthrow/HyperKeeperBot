@@ -46,9 +46,9 @@ class Item:
 
     def get_title(self):
         title = self.title or ""
-        length = len(title)
-        if length < 70:
-            for i in range(70 - length):
+        need_added_chars = 70 - len(title)
+        if need_added_chars > 0:
+            for i in range(need_added_chars):
                 title += ' '
             title += f"\n{invisible_char}"
         return title
@@ -57,6 +57,10 @@ class Item:
         return self.title if self.title and self.title != "" \
             else (self.text.splitlines()[0] if self.text is not ""
                   else "")
+
+    def get_body(self):
+        return f"📄 <b>{self.get_title()}</b>\n{self.text}"
+
 
     def get_short_parse_title(self):
         urls = re.findall(r'https?://[^\s]+', self.text)
