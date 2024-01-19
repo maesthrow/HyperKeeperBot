@@ -7,7 +7,7 @@ from firebase.firebase_collection_folders import ROOT_FOLDER_ID
 from utils.utils_button_manager import check_button_exists
 from enums.enums import Environment
 from firebase.firebase_folder_reader import get_folder_data
-from firebase.firebase_item_reader import get_folder_items, get_item
+from firebase.firebase_item_reader import get_folder_items, get_item, get_simple_item
 from load_all import dp
 from utils.utils_data import get_folders_collection, get_from_user_collection
 
@@ -122,8 +122,9 @@ async def get_inline_markup_folders(folder_buttons, current_page):
         folder_name_button = button
 
         # Добавляем кнопки на одну строку
-        inline_markup.row(folder_name_button, InlineKeyboardButton(text='', callback_data='empty'),
-                          InlineKeyboardButton(text='', callback_data='empty'))
+        inline_markup.row(folder_name_button)
+        # inline_markup.row(folder_name_button, InlineKeyboardButton(text='', callback_data='empty'),
+        #                   InlineKeyboardButton(text='', callback_data='empty'))
 
     max_folder_num = len(sorted_buttons)
     last_page = math.ceil(max_folder_num / folders_on_page_count)
@@ -153,12 +154,12 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1, s
 
     buttons = []
     for item_id in current_items:
-        item = await get_item(item_id)
+        item = await get_simple_item(item_id)
 
         if search_text:
             item.select_search_text(search_text, '[', ']')
 
-        item_button_text = item.title or item.get_inline_title()
+        item_button_text = await item.get_inline_title()
         if item:
             buttons.append([InlineKeyboardButton(f"{smile_item} {item_button_text}", callback_data=f"item_{item_id}")])
 

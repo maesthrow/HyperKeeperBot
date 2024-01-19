@@ -82,18 +82,19 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     markup = create_general_reply_markup(general_buttons)
 
     current_folder_path_names = await get_folder_path_names()
-    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
     folders_inline_markup = await get_inline_markup_folders(folder_buttons, 1)
+    items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID, 1)
+    if items_inline_markup.inline_keyboard:
+        folders_inline_markup = await get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
+        #await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
-    folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
+    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
+    folders_message = await bot.send_message(chat.id,
+                                             f"🗂️ <b>{current_folder_path_names}</b>",
                                              reply_markup=folders_inline_markup)
 
     # load_message = await bot.send_message(chat.id, f"⌛️")
-    items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID, 1)
-    if items_inline_markup.inline_keyboard:
-        for row in items_inline_markup.inline_keyboard:
-            folders_inline_markup.add(*row)
-        await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
+
 
     # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
     folders_message.reply_markup = folders_inline_markup
@@ -107,6 +108,11 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     data['dict_search_data'] = None
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
+
+async def get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup):
+    for row in items_inline_markup.inline_keyboard:
+        folders_inline_markup.add(*row)
+    return folders_inline_markup
 
 @dp.callback_query_handler(text_contains="show_all")
 async def show_all_entities_handler(call: CallbackQuery):

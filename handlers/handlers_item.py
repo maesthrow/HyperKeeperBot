@@ -21,8 +21,7 @@ from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_sel
 from load_all import dp, bot
 from models.item_model import Item
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
-from utils.utils_button_manager import item_inline_buttons, \
-    hide_item_files_button
+from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, hide_item_files_button
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -64,41 +63,14 @@ async def show_item_button(callback_query: CallbackQuery):
 
 
 async def show_item(item_id):
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current()
+    tg_user = User.get_current()
+    chat = Chat.get_current()
     item = await get_item(item_id)
-    #data = await dp.storage.get_data(chat=chat, user=tg_user)
 
-    # buttons = general_buttons_item[:]
-    # if data['dict_search_data']:
-    #     buttons.pop(len(buttons) - 1)
-    #
-    #     search_mode_buttons = [
-    #         [KeyboardButton("️🗂️ Перейти к папке текущей записи")],
-    #         [KeyboardButton("️↩️ К результатам поиска 🔎"), KeyboardButton("🔄 Новый поиск 🔍️")],
-    #         [KeyboardButton("🫡 Завершить режим поиска 🔍️")]
-    #     ]
-    #     buttons.extend(search_mode_buttons)
-    #
-    #     search_text = data['dict_search_data'].get('search_text', None)
-    #     if search_text:
-    #         item.select_search_text(search_text)
-    #
-    # markup = create_general_reply_markup(buttons)
-
-    #item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
-    # print(item.title)
-    # if item.title:
-    #     item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
-    # else:
-    #     item_body = f"📄\n\n{item.text}"
-
-    item_inlines = copy.deepcopy(item_inline_buttons)
-    item_inlines[0][0].switch_inline_query = item.get_inline_title()
-    if len(item.get_all_media_values()) == 0:
-        item_inlines[-1].remove(hide_item_files_button)
-    inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
-    bot_message = await bot.send_message(tg_user.id, item.get_body(), reply_markup=inline_markup)
+    #item_inlines = await get_item_inlines(item)
+    inline_markup = await get_item_inline_markup(item) #InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
+    message_text = await item.get_body()
+    bot_message = await bot.send_message(chat_id=chat.id, text=message_text, reply_markup=inline_markup)
 
     await show_item_files(item)
 
@@ -111,6 +83,17 @@ async def show_item(item_id):
     #data['current_keyboard'] = markup
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
     load_all.current_item[tg_user.id] = item
+
+
+async def get_item_inline_markup(item: Item):
+    all_media_values = await item.get_all_media_values()
+    if len(all_media_values) == 0:
+        item_inlines = item_inline_buttons
+    else:
+        item_inlines = item_inline_buttons_with_files
+        item_inlines[-1][-1] = hide_item_files_button
+    item_inlines[0][0].switch_inline_query = await item.get_inline_title()
+    return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
 
 @dp.message_handler(Text(equals="️↩️ Назад к папке"))

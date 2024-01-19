@@ -8,7 +8,7 @@ from utils.MediaGroupBuilder import MediaGroupBuilder
 
 
 async def show_item_files(item: Item):
-    media_files = item.get_all_media_values()
+    media_files = await item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builders = [MediaGroupBuilder()]
         voice_builders = [MediaGroupBuilder()]
@@ -71,13 +71,16 @@ async def fill_builders(item: Item, media_group_builders, voice_builders, video_
     for content_type, files in item.media.items():
         for file_id in files:
             if content_type == 'voice':
-                tasks.append(process_voice(file_id, voice_builders))
+                await process_voice(file_id, voice_builders)
+                #tasks.append(process_voice(file_id, voice_builders))
             elif content_type == 'video_note':
-                tasks.append(process_video_note(file_id, video_note_builders))
+                await process_video_note(file_id, video_note_builders)
+                #tasks.append(process_video_note(file_id, video_note_builders))
             else:
-                tasks.append(process_media_group(content_type, file_id, media_group_builders))
+                await process_media_group(content_type, file_id, media_group_builders)
+                #tasks.append(process_media_group(content_type, file_id, media_group_builders))
 
-    await asyncio.gather(*tasks)
+    #await asyncio.gather(*tasks)
 
 
 

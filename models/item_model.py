@@ -38,14 +38,14 @@ class Item:
             "date_modified": self.date_modified
         }
 
-    def get_all_media_values(self):
+    async def get_all_media_values(self):
         all_values = []
         for key, value in self.media.items():
             all_values.extend(value)
         return all_values
 
-    def get_title(self):
-        title = self.title or ""
+    async def get_title(self):
+        title = self.title if self.title else ""
         need_added_chars = 70 - len(title)
         if need_added_chars > 0:
             for i in range(need_added_chars):
@@ -53,13 +53,12 @@ class Item:
             title += f"\n{invisible_char}"
         return title
 
-    def get_inline_title(self):
-        return self.title if self.title and self.title != "" \
-            else (self.text.splitlines()[0] if self.text is not ""
-                  else "")
+    async def get_inline_title(self):
+        return self.title if self.title and self.title != "" else (self.text.splitlines()[0] if self.text and self.text != "" else "")
 
-    def get_body(self):
-        return f"📄 <b>{self.get_title()}</b>\n{self.text}"
+    async def get_body(self):
+        title = await self.get_title()
+        return f"📄 <b>{title}</b>\n{self.text}"
 
 
     def get_short_parse_title(self):

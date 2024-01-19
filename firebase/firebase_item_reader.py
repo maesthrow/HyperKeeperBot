@@ -49,13 +49,22 @@ async def get_item_dict(item_id):
 
 async def get_item(item_id):
     item_dict = await get_item_dict(item_id)
-    try:
+    if "media" in item_dict:
         media = item_dict["media"]
-    except:
+    else:
         media = None
     if item_dict:
         item = Item(text=item_dict["text"], title=item_dict["title"],
                     media=media, date_created=item_dict["date_created"])
+        return item
+
+    return None
+
+
+async def get_simple_item(item_id):
+    item_dict = await get_item_dict(item_id)
+    if item_dict:
+        item = Item(text=item_dict["text"], title=item_dict["title"], date_created=item_dict["date_created"])
         return item
 
     return None

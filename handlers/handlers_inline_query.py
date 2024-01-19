@@ -16,14 +16,11 @@ async def inline_query(query: types.InlineQuery):
     # data = await dp.storage.get_data(user=tg_user, chat=tg_user.id)
     item: Item = load_all.current_item.get(tg_user.id)
     if item:
-        if item.title:
-            item_body = f"📄 <b>{item.get_title()}</b>\n{item.text}"
-        else:
-            item_body = f"📄\n\n{item.text}"
+        item_body = await item.get_body()
     else:
         item_body = "пусто"
-    item_title = item.get_inline_title()
-    file_id = item.get_all_media_values()[0]
+    item_title = await item.get_inline_title()
+    file_id = await item.get_all_media_values()[0]
     input_message_content = types.InputTextMessageContent(item_body, parse_mode=types.ParseMode.HTML)
 
     media = types.MediaGroup()
