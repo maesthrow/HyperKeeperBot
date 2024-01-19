@@ -23,6 +23,8 @@ from utils.utils_button_manager import create_general_reply_markup, general_butt
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_items import show_all_items
 
+import handlers.handlers_item_edit_inline_buttons
+
 
 # Используем фильтр CommandStart для команды /start
 @dp.message_handler(CommandStart())
@@ -163,6 +165,7 @@ async def media_files_handler(messages: List[aiogram.types.Message], state: FSMC
 
 @dp.message_handler(content_types=['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker'])
 async def media_file_handler(message: aiogram.types.Message, state: FSMContext):
+    add_item_messages = [message]
     await files_in_message_handler([message], state)
 
 
@@ -174,6 +177,8 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
         await state.update_data(add_item_messages="sample_add_item_messages")
 
     add_item_messages = []
+    for message in messages:
+        add_item_messages.append(message)
     if need_pre_save_message:
         buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
         inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
@@ -199,7 +204,7 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
     if need_pre_save_message:
         await state.update_data(item=new_item, add_item_messages=add_item_messages)
     else:
-        await state.update_data(item=new_item)
+        await state.update_data(item=new_item, add_item_messages=add_item_messages)
     await states.Item.NewStepTitle.set()
 
 

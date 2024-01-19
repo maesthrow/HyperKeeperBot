@@ -1,5 +1,6 @@
 import logging
 
+import aiohttp
 from aiogram import Bot
 from aiogram import Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -15,6 +16,17 @@ storage = MemoryStorage()
 
 bot = Bot(token=str(TOKEN), parse_mode="HTML")
 dp = Dispatcher(bot=bot, storage=storage)
+
+
+async def setup_bot():
+    session = await bot.get_session()
+
+    # Получение текущего коннектора
+    connector = session.connector
+
+    # Установка таймаута в 30 секунд
+    connector._session_timeout = aiohttp.ClientTimeout(total=30)
+
 
 current_item = {}
 

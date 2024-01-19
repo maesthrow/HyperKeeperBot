@@ -113,16 +113,18 @@ async def show_folders(current_folder_id=None, page_folder=None, page_item=None,
                                         reply_markup=folders_inline_markup,
                                         )
         else:
+            data['current_keyboard'] = markup
             await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
             # storage_message.edit_reply_markup(ReplyKeyboardRemove())
             folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                                      reply_markup=folders_inline_markup)
-            data['current_keyboard'] = markup
+
     except:
+        data['current_keyboard'] = markup
         await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
         folders_message = await bot.send_message(chat.id, f"🗂️ <b>{current_folder_path_names}</b>",
                                                  reply_markup=folders_inline_markup)
-        data['current_keyboard'] = markup
+
 
     data['folders_message'] = folders_message
     data['page_folders'] = str(new_page_folders)

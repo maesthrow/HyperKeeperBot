@@ -1,20 +1,30 @@
 import asyncio
+import copy
+
+import aiogram.types
+
+#import handlers.handlers_item_edit_inline_buttons
 
 from aiogram.types import CallbackQuery, User, Chat, InlineKeyboardMarkup, InlineKeyboardButton
 
+from firebase.firebase_item_reader import get_folder_id
 from handlers.handlers_folder import show_folders
 from load_all import dp, bot
 from models.item_model import Item
-from utils.utils_button_manager import show_item_files_button, hide_item_files_button
+from utils.utils_button_manager import show_item_files_button, hide_item_files_button, item_edit_buttons
 from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
+
 
 delete_question = f"\n\n<b><i>Хотите удалить запись?</i></b>"
 
 
 @dp.callback_query_handler(text="close_item")
-async def close_item_handler(call: CallbackQuery):
+async def close_item_handler(call: CallbackQuery = None, message: aiogram.types.Message = None):
+    if message is None:
+        message = call.message
+
     tg_user = User.get_current()
     chat = Chat.get_current()
     data = await dp.storage.get_data(user=tg_user, chat=chat)
@@ -22,7 +32,7 @@ async def close_item_handler(call: CallbackQuery):
     accept_add_item_message = data.get('accept_add_item_message', None)
     tasks = [
         close_files(item_files_messages),
-        bot.delete_message(call.message.chat.id, call.message.message_id)
+        bot.delete_message(message.chat.id, message.message_id)
     ]
     if accept_add_item_message:
         tasks.insert(0, bot.delete_message(chat_id=chat.id, message_id=accept_add_item_message.message_id))
@@ -32,7 +42,8 @@ async def close_item_handler(call: CallbackQuery):
     data['item_files_messages'] = []
     data['accept_add_item_message'] = None
     await dp.storage.update_data(user=tg_user, chat=chat, data=data)
-    await call.answer()
+    if call:
+        await call.answer()
 
 
 async def get_data():
@@ -120,7 +131,7 @@ async def delete_item_handler(call: CallbackQuery):
     await call.message.edit_text(text=f"{call.message.text}{delete_question}", reply_markup=inline_markup)
 
 
-@dp.callback_query_handler(text="delete_item_no")
+@dp.callback_query_handler(text=["edit_item_back", "delete_item_no"])
 async def cancel_delete_item_handler(call: CallbackQuery):
     data = await get_data()
     item: Item = data.get('current_item', None)
@@ -138,7 +149,7 @@ async def accept_delete_item_handler(call: CallbackQuery):
         result = await util_delete_item(item_id)
         if result:
             await asyncio.gather(
-                close_item_handler(call),
+                close_item_handler(call=call),
                 refresh_folder()
             )
         await call.answer(text=f"Не получилось удалить запись.'", show_alert=True)
@@ -149,3 +160,25 @@ async def accept_delete_item_handler(call: CallbackQuery):
 async def refresh_folder():
     folder_id = await get_current_folder_id()
     await show_folders(current_folder_id=folder_id, need_to_resend=False)
+
+
+@dp.callback_query_handler(text="move_item")
+async def movement_item_handler(call: CallbackQuery, folder_id=None):
+    tg_user = User.get_current()
+
+    data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
+    item_id = data.get('item_id')
+    if not data.get('movement_item_id'):
+        data['movement_item_id'] = item_id
+        await dp.storage.update_data(user=tg_user, chat=call.message.chat, data=data)
+
+    message_text = "❗Вы не завершили перемещение❗\n" if folder_id else ""
+    message_text += f"Выберите папку, в которую хотите переместить запись: ⬇️"
+    await bot.send_message(call.message.chat.id, message_text)
+    await asyncio.sleep(0.5)
+
+    if not folder_id:
+        folder_id = get_folder_id(item_id)
+    await show_folders(folder_id, need_to_resend=True)
+
+

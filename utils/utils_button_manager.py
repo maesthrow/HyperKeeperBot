@@ -57,15 +57,19 @@ item_inline_buttons = [
         [
             InlineKeyboardButton("❌ Закрыть", callback_data="close_item"),
             hide_item_files_button,
-            #InlineKeyboardButton("Показать файлы »", callback_data="skip_enter_item_title"),
         ]
 ]
 
-        # [
-        #     InlineKeyboardButton("✏️ Заголовок", callback_data="skip_enter_item_title"),
-        #     InlineKeyboardButton("📝 Текст", callback_data="skip_enter_item_title"),
-        #     InlineKeyboardButton("🗃️ Файлы", callback_data="skip_enter_item_title"),
-        # ],
+item_edit_buttons = [
+        [
+            InlineKeyboardButton("✏️ Заголовок", callback_data="edit_item_title"),
+            InlineKeyboardButton("📝 Текст", callback_data="edit_item_text"),
+            InlineKeyboardButton("🗃️ Файлы", callback_data="edit_item_files"),
+        ],
+        [
+            InlineKeyboardButton("↩️ Назад", callback_data="edit_item_back")
+        ]
+]
 
 # Определяем функцию для создания разметки ответа для общего использования
 def create_general_reply_markup(buttons):

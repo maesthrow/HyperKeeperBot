@@ -1,6 +1,6 @@
 from aiogram.utils import executor
 
-from load_all import bot, setup_bot_commands, dp
+from load_all import bot, setup_bot_commands, dp, setup_bot
 
 
 async def on_shutdown(dp):
@@ -10,6 +10,7 @@ async def on_shutdown(dp):
 
 async def on_startup(dp):
     #await create_db()
+    await setup_bot()
     await setup_bot_commands()
     #await bot.send_message(admin_id, "Я запущен!")
 

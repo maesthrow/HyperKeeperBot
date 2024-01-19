@@ -7,23 +7,22 @@ import handlers.handlers_item_inline_buttons
 import aiogram
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, User, Chat, \
-    KeyboardButton, InputTextMessageContent
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, User, Chat
 from aiogram.utils.exceptions import MessageNotModified
 
 import load_all
 from enums.enums import Environment
-from handlers import states
-from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_selected_current_setting
-from utils.MediaGroupBuilder import MediaGroupBuilder
-from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
-from utils.utils_button_manager import create_general_reply_markup, general_buttons_item, item_inline_buttons, \
-    hide_item_files_button
 from firebase.firebase_item_reader import get_item, get_folder_id
+from handlers import states
+from handlers.handlers_edit_item_title import on_edit_item
 from handlers.handlers_folder import show_folders
 from handlers.handlers_search import show_search_results
-from load_all import dp, bot, current_item
+from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_selected_current_setting
+from load_all import dp, bot
 from models.item_model import Item
+from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
+from utils.utils_button_manager import item_inline_buttons, \
+    hide_item_files_button
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -321,36 +320,38 @@ async def delete_all_items_request(call: CallbackQuery):
     await call.answer()
 
 
-@dp.message_handler(Text(equals="️✏️ Заголовок"))
-async def edit_item_title_handler(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
-    data = await dp.storage.get_data(chat=message.chat, user=tg_user)
-    item_id = data.get('item_id')
+# @dp.message_handler(Text(equals="️✏️ Заголовок"))
+# async def edit_item_title_handler(message: aiogram.types.Message):
+#     tg_user = aiogram.types.User.get_current()
+#     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
+#     item_id = data.get('item_id')
+#
+#     item: Item = await get_item(item_id)
+#     if item.title and item.title != "":
+#         item_title = f"<b>{item.title}</b>"
+#     else:
+#         item_title = "[пусто]"
+#
+#     edit_item_message_1 = await bot.send_message(message.chat.id, f"Текущий заголовок:",
+#                                                  reply_markup=ReplyKeyboardRemove())
+#     edit_item_message_2 = await bot.send_message(message.chat.id, f"{item_title}")
+#
+#     await asyncio.sleep(0.5)
+#
+#     buttons = [[add_none_title_item_button, cancel_edit_item_button]]
+#     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=buttons)
+#
+#     edit_item_message_3 = await bot.send_message(message.chat.id,
+#                                                  f"Придумайте новый заголовок:",
+#                                                  reply_markup=inline_markup)
+#
+#     data = await dp.storage.get_data(user=tg_user, chat=message.chat)
+#     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
+#     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
+#
+#     await states.Item.EditTitle.set()
 
-    item: Item = await get_item(item_id)
-    if item.title and item.title != "":
-        item_title = f"<b>{item.title}</b>"
-    else:
-        item_title = "[пусто]"
 
-    edit_item_message_1 = await bot.send_message(message.chat.id, f"Текущий заголовок:",
-                                                 reply_markup=ReplyKeyboardRemove())
-    edit_item_message_2 = await bot.send_message(message.chat.id, f"{item_title}")
-
-    await asyncio.sleep(0.5)
-
-    buttons = [[add_none_title_item_button, cancel_edit_item_button]]
-    inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=buttons)
-
-    edit_item_message_3 = await bot.send_message(message.chat.id,
-                                                 f"Придумайте новый заголовок:",
-                                                 reply_markup=inline_markup)
-
-    data = await dp.storage.get_data(user=tg_user, chat=message.chat)
-    data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
-    await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
-
-    await states.Item.EditTitle.set()
 
 
 @dp.message_handler(Text(equals="️📝 Текст"))
@@ -459,42 +460,15 @@ async def choose_type_edit_text_item(call: CallbackQuery, state: FSMContext):
 
 @dp.message_handler(state=[states.Item.EditTitle, states.Item.EditText])
 async def edit_item_handler(message: aiogram.types.Message, state: FSMContext):
-    await on_edit_item(message.text, state)
-
-
-async def on_edit_item(edit_text, state: FSMContext):
-    tg_user = aiogram.types.User.get_current()
-    chat = aiogram.types.Chat.get_current(())
+    tg_user = User.get_current()
+    chat = Chat.get_current(())
     data = await dp.storage.get_data(chat=chat, user=tg_user)
     item_id = data.get('item_id')
-    item: Item = await get_item(item_id)
-    current_state = await state.get_state()
-    if current_state == states.Item.EditTitle.state:
-        item.title = edit_text
-        message_success_text = "Новый заголовок сохранен ✅"
-        message_failure_text = "Что то пошло не так при сохранении заголовка ❌"
-    else:
-        data = await state.get_data()
-        type_edit_text = data.get('type_edit_text', None)
-        if type_edit_text == 'new_text_type_add' or type_edit_text is None:
-            item.text = f"{item.text}\n{edit_text}" if item.text != "" else f"{edit_text}"
-        else:
-            item.text = edit_text
-        message_success_text = "Новый текст сохранен ✅"
-        message_failure_text = "Что то пошло не так при сохранении текста ❌"
-
-    item.date_modified = datetime.now()
-
-    result = await util_edit_item(item_id, item)
-    if result:
-        sent_message = await bot.send_message(chat.id, message_success_text)
-    else:
-        sent_message = await bot.send_message(chat.id, message_failure_text)
-
-    await asyncio.sleep(0.4)
-
-    await state.reset_state()
+    await on_edit_item(message.text, state)
     await show_item(item_id)
+
+
+
 
 
 @dp.callback_query_handler(text_contains="cancel_edit_item",
@@ -533,7 +507,7 @@ async def movement_item_handler(message: aiogram.types.Message, folder_id=None):
         await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
     message_text = "❗Вы не завершили перемещение❗\n" if folder_id else ""
-    message_text += f"Выберите папку, в которую хотите переместить запись ⬇️"
+    message_text += f"Выберите папку, в которую хотите переместить запись: ⬇️"
     await bot.send_message(message.chat.id, message_text)
     await asyncio.sleep(0.5)
 
@@ -551,13 +525,13 @@ async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     data['movement_item_id'] = None
     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 
-    message_text = f"Перемещение записи отменено 🚫"
+    message_text = f"Перемещение записи отменено 🔀🚫"
     await bot.send_message(message.chat.id, message_text)
     await asyncio.sleep(0.4)
 
     folder_id = get_folder_id(movement_item_id)
     await set_current_folder_id(folder_id)
-    await show_folders(folder_id)
+    await show_folders(folder_id, need_to_resend=True)
     await asyncio.sleep(0.2)
     await show_item(movement_item_id)
 
@@ -575,14 +549,14 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
     new_movement_item_id = await util_move_item(movement_item_id, folder_id)
     if new_movement_item_id:
         movement_item_id = new_movement_item_id
-        message_text = f"Запись была перемещена ✅"
+        message_text = f"Запись была перемещена 🔀✅"
     else:
         folder_id = get_folder_id(movement_item_id)
         message_text = f"Не удалось переместить запись ❌"
 
     await bot.send_message(message.chat.id, message_text)
     await asyncio.sleep(0.4)
-    await show_folders(folder_id)
+    await show_folders(folder_id, need_to_resend=True)
     await asyncio.sleep(0.2)
     await show_item(movement_item_id)
 
