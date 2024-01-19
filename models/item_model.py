@@ -1,13 +1,31 @@
+import copy
 from datetime import datetime
 import requests
 import re
 from bs4 import BeautifulSoup
 
+invisible_char = "\u00A0"
 
 class Item:
-    def __init__(self, text, title=None, date_created=None, date_modified=None):
+    default_media = {
+        "photo": [],
+        "video": [],
+        "audio": [],
+        "document": [],
+        "voice": [],
+        "video_note": [],
+        "location": [],
+        "contact": [],
+        "sticker": [],
+    }
+
+    def __init__(self, text: str, title=None, media: dict = None, date_created=None, date_modified=None):
         self.title = title
         self.text = text
+        if not media:
+            self.media = copy.deepcopy(self.default_media)
+        else:
+            self.media = media
         self.date_created = date_created or datetime.now()
         self.date_modified = date_modified or self.date_created
 
@@ -15,12 +33,34 @@ class Item:
         return {
             "title": self.title,
             "text": self.text,
+            "media": self.media,
             "date_created": self.date_created,
             "date_modified": self.date_modified
         }
 
-    def get_short_title(self):
-        return self.text.splitlines()[0]
+    def get_all_media_values(self):
+        all_values = []
+        for key, value in self.media.items():
+            all_values.extend(value)
+        return all_values
+
+    def get_title(self):
+        title = self.title or ""
+        need_added_chars = 70 - len(title)
+        if need_added_chars > 0:
+            for i in range(need_added_chars):
+                title += ' '
+            title += f"\n{invisible_char}"
+        return title
+
+    def get_inline_title(self):
+        return self.title if self.title and self.title != "" \
+            else (self.text.splitlines()[0] if self.text is not ""
+                  else "")
+
+    def get_body(self):
+        return f"📄 <b>{self.get_title()}</b>\n{self.text}"
+
 
     def get_short_parse_title(self):
         urls = re.findall(r'https?://[^\s]+', self.text)

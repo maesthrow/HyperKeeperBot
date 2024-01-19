@@ -15,3 +15,4 @@ async def send_ok_info_message(info_text: str):
 @dp.callback_query_handler(lambda callback_query: callback_query.data == 'ok_info')
 async def ok_info_handler(callback_query: aiogram.types.CallbackQuery):
     await bot.delete_message(callback_query.message.chat.id, callback_query.message.message_id)
+    await callback_query.answer()
