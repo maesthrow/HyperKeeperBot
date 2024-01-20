@@ -1,11 +1,9 @@
 import logging
 
-import aiohttp
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiohttp import ClientSession, TCPConnector
 from aiogram import Bot
 from aiogram import Dispatcher
-#from aiogram.contrib.fsm_storage.memory import MemoryStorage
+from aiogram.fsm.storage.memory import MemoryStorage
+# from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 
 from config import TOKEN

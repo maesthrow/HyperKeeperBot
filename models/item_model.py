@@ -1,8 +1,5 @@
 import copy
 from datetime import datetime
-import requests
-import re
-from bs4 import BeautifulSoup
 
 invisible_char = "\u00A0"
 
@@ -61,39 +58,39 @@ class Item:
         return f"📄 <b>{title}</b>\n{self.text}"
 
 
-    def get_short_parse_title(self):
-        urls = re.findall(r'https?://[^\s]+', self.text)
-
-        if not urls:
-            words = self.text.split()
-            short_title = " ".join(words[:3])
-            if len(words) > 3:
-                short_title = short_title + "..."
-            return short_title
-
-        for url in urls:
-            print(url)
-        # Берем первый найденный URL
-        url = urls[0]
-
-        # Отправляем запрос на получение HTML-кода страницы
-        response = requests.get(url)
-        html_code = response.text
-
-        # Используем BeautifulSoup для парсинга HTML-кода
-        soup = BeautifulSoup(html_code, 'html.parser')
-
-        # Получаем текст заголовка страницы
-        try:
-            short_title = soup.title.string
-        except:
-            words = self.text.split()
-            short_title = " ".join(words[:3])
-            if len(words) > 3:
-                short_title = short_title + "..."
-            return short_title
-
-        return short_title
+    # def get_short_parse_title(self):
+    #     urls = re.findall(r'https?://[^\s]+', self.text)
+    #
+    #     if not urls:
+    #         words = self.text.split()
+    #         short_title = " ".join(words[:3])
+    #         if len(words) > 3:
+    #             short_title = short_title + "..."
+    #         return short_title
+    #
+    #     for url in urls:
+    #         print(url)
+    #     # Берем первый найденный URL
+    #     url = urls[0]
+    #
+    #     # Отправляем запрос на получение HTML-кода страницы
+    #     response = requests.get(url)
+    #     html_code = response.text
+    #
+    #     # Используем BeautifulSoup для парсинга HTML-кода
+    #     soup = BeautifulSoup(html_code, 'html.parser')
+    #
+    #     # Получаем текст заголовка страницы
+    #     try:
+    #         short_title = soup.title.string
+    #     except:
+    #         words = self.text.split()
+    #         short_title = " ".join(words[:3])
+    #         if len(words) > 3:
+    #             short_title = short_title + "..."
+    #         return short_title
+    #
+    #     return short_title
 
     def select_search_text(self, search_text: str, left_teg: str = '<b><i><u>', right_teg: str = '</u></i></b>'):
         self.title = get_selected_search_text(self.title, search_text, left_teg, right_teg)
