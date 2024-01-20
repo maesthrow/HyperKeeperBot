@@ -121,8 +121,8 @@ async def delete_message(chat_id, message_id):
 async def delete_item_handler(call: CallbackQuery):
     item_inlines = [
         [
-            InlineKeyboardButton("☑️ Да", callback_data="delete_item_yes"),
-            InlineKeyboardButton("✖️ Нет", callback_data="delete_item_no"),
+            InlineKeyboardButton(text="☑️ Да", callback_data="delete_item_yes"),
+            InlineKeyboardButton(text="✖️ Нет", callback_data="delete_item_no"),
         ]
     ]
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
@@ -137,7 +137,8 @@ async def cancel_delete_item_handler(call: CallbackQuery):
     item: Item = data.get('current_item', None)
     if item:
         inline_markup = await get_current_inline_markup()
-        await call.message.edit_text(text=item.get_body(), reply_markup=inline_markup)
+        item_body = await item.get_body()
+        await call.message.edit_text(text=item_body, reply_markup=inline_markup)
     await call.answer()
 
 

@@ -1,8 +1,9 @@
 import math
 
+from aiogram.filters.callback_data import CallbackData
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, User, Chat
-from aiogram.utils.callback_data import CallbackData
 
+from callbacks.callbackdata import CallbackFolder
 from firebase.firebase_collection_folders import ROOT_FOLDER_ID
 from utils.utils_button_manager import check_button_exists
 from enums.enums import Environment
@@ -11,7 +12,7 @@ from firebase.firebase_item_reader import get_folder_items, get_item, get_simple
 from load_all import dp
 from utils.utils_data import get_folders_collection, get_from_user_collection
 
-folder_callback = CallbackData("folder", "folder_id")
+#folder_callback = CallbackFolder()
 #folders_on_page_count = 4
 #items_on_page_count = 4
 separator = 'из'
@@ -100,8 +101,8 @@ async def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback
 
 async def create_folder_button(folder_id, folder_name):
     return InlineKeyboardButton(
-        f"{smile_folder} {folder_name}",
-        callback_data=folder_callback.new(folder_id=folder_id)
+        text="{smile_folder} {folder_name}",
+        callback_data=CallbackFolder(folder_id=folder_id).pack()  #folder_callback.new(folder_id=folder_id)
     )
 
 
@@ -161,7 +162,8 @@ async def get_inline_markup_items_in_folder(current_folder_id, current_page=1, s
 
         item_button_text = await item.get_inline_title()
         if item:
-            buttons.append([InlineKeyboardButton(f"{smile_item} {item_button_text}", callback_data=f"item_{item_id}")])
+            buttons.append([InlineKeyboardButton(text="{smile_item} {item_button_text}",
+                                                 callback_data=f"item_{item_id}")])
 
     # Создаем разметку и отправляем сообщение с кнопками для каждой item
     items_inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)

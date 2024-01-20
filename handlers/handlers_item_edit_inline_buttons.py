@@ -2,7 +2,6 @@ import asyncio
 import copy
 from datetime import datetime
 
-from aiogram.dispatcher import FSMContext
 from aiogram.types import CallbackQuery, User, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, Chat
 
 from firebase.firebase_item_reader import get_item
@@ -17,8 +16,8 @@ from utils.utils_items_db import util_edit_item
 
 edit_question = f"\n\n<b><i>Что будете редактировать?</i></b>"
 
-add_none_title_item_button = InlineKeyboardButton("🪧 Пустой заголовок", callback_data=f"add_none_title_item")
-cancel_edit_item_button = InlineKeyboardButton("❌ Отменить", callback_data=f"cancel_edit_item")
+add_none_title_item_button = InlineKeyboardButton(text="🪧 Пустой заголовок", callback_data=f"add_none_title_item")
+cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
 @dp.callback_query_handler(text="edit_item")
 async def edit_item_handler(call: CallbackQuery):

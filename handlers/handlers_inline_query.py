@@ -3,6 +3,7 @@ import hashlib
 
 import aiogram
 from aiogram import types
+from aiogram.enums import ParseMode
 from aiogram.types import Chat, User
 
 import load_all
@@ -23,7 +24,7 @@ async def inline_query(query: types.InlineQuery):
     file_id = await item.get_all_media_values()[0]
     input_message_content = types.InputTextMessageContent(item_body, parse_mode=types.ParseMode.HTML)
 
-    media = types.MediaGroup()
+    media = aiogram.types.InputMedia() #MediaGroup
     for file_id in item.media['photo']:
         media.attach_photo(file_id)
 
@@ -37,7 +38,7 @@ async def inline_query(query: types.InlineQuery):
             description=item.text,
             input_message_content=input_message_content,
             reply_markup=types.InlineKeyboardMarkup().add(
-                types.InlineKeyboardButton("Поделиться", switch_inline_query_current_chat=result_id)
+                types.InlineKeyboardButton(text="Поделиться", switch_inline_query_current_chat=result_id)
             ),
         ),
     )
@@ -50,14 +51,12 @@ async def inline_query(query: types.InlineQuery):
             title=item_title,
             description=item.text,
             caption=item.text,
-            parse_mode=types.ParseMode.HTML,
+            parse_mode=ParseMode.HTML,
             reply_markup=types.InlineKeyboardMarkup().add(
-                types.InlineKeyboardButton("Показать следующую", switch_inline_query_current_chat="next_photo")
+                types.InlineKeyboardButton(text="Показать следующую", switch_inline_query_current_chat="next_photo")
             ),
         )
         media_results.append(photo_result)
-
-
 
     await bot.answer_inline_query(
         query.id,

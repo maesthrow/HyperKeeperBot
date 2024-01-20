@@ -1,8 +1,7 @@
 import asyncio
 
 import aiogram
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
+from aiogram.fsm.context import FSMContext
 from aiogram.types import User, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Chat
 
 from handlers import states
@@ -14,10 +13,10 @@ from utils.utils_data import get_current_folder_id
 from utils.utils_items import get_all_search_items, get_items_count_in_markups
 from utils.utils_statistic import get_word_items_by_count
 
-cancel_enter_search_text_button = InlineKeyboardButton("Отменить", callback_data="cancel_enter_search_text")
+cancel_enter_search_text_button = InlineKeyboardButton(text="Отменить", callback_data="cancel_enter_search_text")
 
 
-@dp.message_handler(Text(equals="🔍 Поиск") | Text(equals="🔄 Новый поиск 🔍️"))
+@dp.message_handler(text="🔍 Поиск") #(text="🔍 Поиск") | (text="🔄 Новый поиск 🔍️"))
 async def search_item_handler(message: aiogram.types.Message):
     tg_user = User.get_current()
     chat = Chat.get_current()
@@ -60,7 +59,7 @@ async def get_search_text(message: aiogram.types.Message, state: FSMContext):
     #     await search_item_handler(message)
     # await show_folders()
 
-    await state.reset_state()
+    await state.set_state()
 
 
 async def show_search_results(dict_search_data):
@@ -105,6 +104,6 @@ async def show_search_results(dict_search_data):
 async def cancel_enter_search_text(call: CallbackQuery, state: FSMContext):
     # await call.message.answer("⌛️")
     await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    await state.reset_state()
+    await state.set_state()
     await show_folders()
     await call.answer()

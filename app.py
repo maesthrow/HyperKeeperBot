@@ -1,5 +1,3 @@
-from aiogram.utils import executor
-
 from load_all import bot, setup_bot_commands, dp, setup_bot
 
 
@@ -19,4 +17,4 @@ if __name__ == '__main__':
     #from admin_panel import dp
     from handlers.handlers_ import dp
 
-    executor.start_polling(dp, on_shutdown=on_shutdown, on_startup=on_startup)
+    dp.start_polling(dp, on_shutdown=on_shutdown, on_startup=on_startup)

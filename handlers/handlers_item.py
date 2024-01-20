@@ -2,13 +2,12 @@ import asyncio
 import copy
 from datetime import datetime
 
+from aiogram.fsm.context import FSMContext
+
 import handlers.handlers_inline_query
 import handlers.handlers_item_inline_buttons
 import aiogram
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Text
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, User, Chat
-from aiogram.utils.exceptions import MessageNotModified
 
 import load_all
 from enums.enums import Environment
@@ -31,15 +30,15 @@ from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util
 cancel_edit_item_button = InlineKeyboardButton("❌ Отменить", callback_data=f"cancel_edit_item")
 
 choose_edit_item_content_buttons = [
-    InlineKeyboardButton("📝 Текст", callback_data=f"edit_content_text"),
-    InlineKeyboardButton("📸 Медиафайлы", callback_data=f"edit_content_media")
+    InlineKeyboardButton(text="📝 Текст", callback_data=f"edit_content_text"),
+    InlineKeyboardButton(text="📸 Медиафайлы", callback_data=f"edit_content_media")
 ]
 
 choose_type_edit_item_buttons = [
-    InlineKeyboardButton("➕ Добавить", callback_data=f"new_text_type_add"),
-    InlineKeyboardButton("🔄 Перезаписать", callback_data=f"new_text_type_rewrite")
+    InlineKeyboardButton(text="➕ Добавить", callback_data=f"new_text_type_add"),
+    InlineKeyboardButton(text="🔄 Перезаписать", callback_data=f"new_text_type_rewrite")
 ]
-add_none_title_item_button = InlineKeyboardButton("🪧 Пустой заголовок", callback_data=f"add_none_title_item")
+add_none_title_item_button = InlineKeyboardButton(text="🪧 Пустой заголовок", callback_data=f"add_none_title_item")
 
 
 # Обработчик для ответа на нажатие кнопки
@@ -96,7 +95,7 @@ async def get_item_inline_markup(item: Item):
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
 
-@dp.message_handler(Text(equals="️↩️ Назад к папке"))
+@dp.message_handler(equals="️↩️ Назад к папке")
 async def back_to_folder(message: aiogram.types.Message):
     tg_user = User.get_current()
     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
@@ -108,13 +107,13 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(folder_id, need_to_resend=True)
 
 
-@dp.message_handler(Text(equals="️↩️ К результатам поиска 🔎"))
+@dp.message_handler(equals="️↩️ К результатам поиска 🔎")
 async def back_to_search_results(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=Chat.get_current(), user=User.get_current())
     await show_search_results(data['dict_search_data'])
 
 
-@dp.message_handler(Text(equals="️🗂️ Перейти к папке текущей записи"))
+@dp.message_handler(equals="️🗂️ Перейти к папке текущей записи")
 async def back_to_folder(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=Chat.get_current(), user=User.get_current())
     item_id = data['item_id']
@@ -132,8 +131,8 @@ async def cancel_add_new_item(call: CallbackQuery, state: FSMContext):
         for message in add_item_messages:
             await bot.delete_message(message.chat.id, message.message_id)
 
-    await state.reset_data()
-    await state.reset_state()
+    await state.set_state()
+    await state.set_data({})
     await show_folders()
     await call.answer()
 
@@ -167,8 +166,8 @@ async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSM
             await asyncio.sleep(0.2)
     # await asyncio.sleep(0.4)
 
-    await state.reset_data()
-    await state.reset_state()
+    await state.set_state()
+    await state.set_data({})
 
     if new_item_id:
         accept_add_item_message = await bot.send_message(message.chat.id, "Новая запись успешно добавлена ✅")
@@ -184,7 +183,7 @@ async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSM
         await show_folders(need_to_resend=True)
 
 
-@dp.message_handler(Text(equals="🗑 Удалить"))
+@dp.message_handler(equals="🗑 Удалить")
 async def delete_handler(message: aiogram.types.Message):
     await on_delete_item(message)
 
@@ -239,14 +238,14 @@ async def delete_item_request(call: CallbackQuery):
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить запись.'", show_alert=True)
 
-    except MessageNotModified:
+    except:
         await call.answer(text=f"Что то пошло не так при удалении записи.", show_alert=True)
         # await show_folders(need_to_resend=True)
 
     await call.answer()
 
 
-@dp.message_handler(Text(equals="️🧹 Удалить все записи в папке"))
+@dp.message_handler(equals="️🧹 Удалить все записи в папке")
 async def delete_all_items_handler(message: aiogram.types.Message):
     current_folder_id = await get_current_folder_id()
 
@@ -291,7 +290,7 @@ async def delete_all_items_request(call: CallbackQuery):
             # Отправляем ответ в виде всплывающего уведомления
             await call.answer(text=f"Не получилось удалить записи.'", show_alert=True)
         await show_folders(need_to_resend=False)
-    except MessageNotModified:
+    except:
         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
         await call.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
         await show_folders(need_to_resend=False)
@@ -337,7 +336,7 @@ async def delete_all_items_request(call: CallbackQuery):
 
 
 
-@dp.message_handler(Text(equals="️📝 Текст"))
+@dp.message_handler(equals="️📝 Текст")
 async def edit_item_content_handler(message: aiogram.types.Message):
     data = await dp.storage.get_data(chat=message.chat, user=message.from_user)
     item_id = data.get('item_id')
@@ -467,7 +466,7 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
 
     data['edit_item_messages'] = None
     await dp.storage.update_data(user=tg_user, chat=call.message.chat, data=data)
-    await state.reset_state()
+    await state.set_state()
     await show_item(item_id)
     await call.answer()
 
@@ -479,7 +478,7 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@dp.message_handler(Text(equals="️🔀 Переместить"))
+@dp.message_handler(equals="️🔀 Переместить")
 async def movement_item_handler(message: aiogram.types.Message, folder_id=None):
     tg_user = User.get_current()
 
@@ -499,7 +498,7 @@ async def movement_item_handler(message: aiogram.types.Message, folder_id=None):
     await show_folders(folder_id)
 
 
-@dp.message_handler(Text(equals="️🚫 Отменить перемещение"))
+@dp.message_handler(equals="️🚫 Отменить перемещение")
 async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     tg_user = User.get_current()
 
@@ -519,7 +518,7 @@ async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     await show_item(movement_item_id)
 
 
-@dp.message_handler(Text(equals="🔀 Переместить в текущую папку"))
+@dp.message_handler(equals="🔀 Переместить в текущую папку")
 async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
     tg_user = User.get_current()
 
@@ -544,7 +543,7 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
     await show_item(movement_item_id)
 
 
-@dp.message_handler(Text(equals="🫡 Завершить режим поиска 🔍️"))
+@dp.message_handler(equals="🫡 Завершить режим поиска 🔍️")
 async def search_item_handler(message: aiogram.types.Message):
     data = await dp.storage.get_data(user=User.get_current(), chat=Chat.get_current())
     data['dict_search_data'] = None

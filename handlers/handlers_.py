@@ -2,11 +2,10 @@ import asyncio
 from typing import List
 
 import aiogram
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Command, CommandStart
-from aiogram.dispatcher.filters import Text, MediaGroupFilter
+from aiogram.filters import Command, CommandStart
+from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton
-from aiogram_media_group import media_group_handler
+from aiogram_media_group import media_group_handler, MediaGroupFilter
 
 from firebase.firebase_collection_folders import add_user_folders, ROOT_FOLDER_ID
 from firebase.firebase_collection_users import add_user
@@ -29,8 +28,8 @@ import handlers.handlers_item_edit_inline_buttons
 # Используем фильтр CommandStart для команды /start
 @dp.message_handler(CommandStart())
 async def start(message: aiogram.types.Message, state: FSMContext):
-    await state.reset_data()
-    await state.reset_state()
+    await state.set_state(None)
+    await state.set_data({})
 
     chat_id = message.from_user.id
     tg_user = aiogram.types.User.get_current()
@@ -51,8 +50,8 @@ async def start(message: aiogram.types.Message, state: FSMContext):
 # Используем фильтр CommandStart для команды /storage
 @dp.message_handler(commands=["storage"])
 async def storage(message: aiogram.types.Message, state: FSMContext):
-    await state.reset_data()
-    await state.reset_state()
+    await state.set_state(None)
+    await state.set_data({})
 
     tg_user = User.get_current()
     chat = Chat.get_current()
@@ -74,10 +73,10 @@ async def storage(message: aiogram.types.Message, state: FSMContext):
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
         if movement_item_initial_folder_id != ROOT_FOLDER_ID:
-            general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
+            general_buttons.insert(0, [KeyboardButton(text="🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
-        general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
+        general_buttons.append([KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")])
 
     markup = create_general_reply_markup(general_buttons)
 
@@ -114,7 +113,8 @@ async def get_folders_with_items_inline_markup(folders_inline_markup, items_inli
         folders_inline_markup.add(*row)
     return folders_inline_markup
 
-@dp.callback_query_handler(text_contains="show_all")
+
+@dp.callback_query.router(text_contains="show_all")
 async def show_all_entities_handler(call: CallbackQuery):
     if 'folders' in call.data:
         await show_all_folders(need_resend=True)
@@ -123,13 +123,13 @@ async def show_all_entities_handler(call: CallbackQuery):
     await call.answer()
 
 
-@dp.message_handler(Text(equals="↪️ Перейти к общему виду папки 🗂️📄"))
+@dp.callback_query.router(message_text="↪️ Перейти к общему виду папки 🗂️📄")
 async def back_to_folder(message: aiogram.types.Message):
     folder_id = await get_current_folder_id()
     await show_folders(folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@dp.message_handler(~Command(["start", "storage"]), content_types=['text'])
+@dp.message_handler(Command=["start", "storage"], content_types=['text'])
 async def any_message(message: aiogram.types.Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return

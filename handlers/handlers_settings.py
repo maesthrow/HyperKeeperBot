@@ -8,13 +8,13 @@ from load_all import dp, bot
 from utils.utils_data import get_from_user_collection, set_to_user_collection
 
 settings_buttons = [
-    [InlineKeyboardButton("🗂️ Количество папок на странице", callback_data="settings_count_folders_on_page")],
-    [InlineKeyboardButton("📄 Количество записей на странице", callback_data="settings_count_items_on_page")],
-    [InlineKeyboardButton("🌐 Язык интерфейса", callback_data="settings_language")],
-    [InlineKeyboardButton("❌ Закрыть", callback_data="settings_close")],
+    [InlineKeyboardButton(text="🗂️ Количество папок на странице", callback_data="settings_count_folders_on_page")],
+    [InlineKeyboardButton(text="📄 Количество записей на странице", callback_data="settings_count_items_on_page")],
+    [InlineKeyboardButton(text="🌐 Язык интерфейса", callback_data="settings_language")],
+    [InlineKeyboardButton(text="❌ Закрыть", callback_data="settings_close")],
 ]
 
-back_to_settings_button = InlineKeyboardButton("↩️ Назад", callback_data="settings_back")
+back_to_settings_button = InlineKeyboardButton(text="↩️ Назад", callback_data="settings_back")
 
 START_COUNT_RANGE = 3
 END_COUNT_RANGE = 11
@@ -28,7 +28,7 @@ for row in range(START_COUNT_RANGE, END_COUNT_RANGE):
                 ((END_COUNT_RANGE - START_COUNT_RANGE) / ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS)
                 )
     (settings_count_folders_buttons[index]
-     .append(InlineKeyboardButton(str(row), callback_data=f"settings_count_folders_{row}")))
+     .append(InlineKeyboardButton(text=str(row), callback_data=f"settings_count_folders_{row}")))
 settings_count_folders_buttons[ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS].append(back_to_settings_button)
 
 settings_count_items_buttons = [[], [], []]
@@ -37,7 +37,7 @@ for row in range(3, 11):
                 ((END_COUNT_RANGE - START_COUNT_RANGE) / ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS)
                 )
     (settings_count_items_buttons[index]
-     .append(InlineKeyboardButton(str(row), callback_data=f"settings_count_items_{row}")))
+     .append(InlineKeyboardButton(text=str(row), callback_data=f"settings_count_items_{row}")))
 settings_count_items_buttons[ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS].append(back_to_settings_button)
 
 # Создаем кнопки для каждого языка
@@ -45,7 +45,7 @@ settings_languages_buttons = []
 
 for lang in Language:
     key, value = list(lang.value.items())[0]
-    row = InlineKeyboardButton(value, callback_data=f"settings_language_{key}")
+    row = InlineKeyboardButton(text=value, callback_data=f"settings_language_{key}")
     settings_languages_buttons.append(row)
 
 # Группируем по две кнопки в каждой строке

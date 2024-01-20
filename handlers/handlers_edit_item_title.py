@@ -1,7 +1,7 @@
 import asyncio
 from datetime import datetime
 
-from aiogram.dispatcher import FSMContext
+from aiogram.fsm.context import FSMContext
 from aiogram.types import User, Chat
 
 from firebase.firebase_item_reader import get_item
