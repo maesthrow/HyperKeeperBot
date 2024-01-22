@@ -1,3 +1,7 @@
+import asyncio
+import concurrent.futures
+import functools
+
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -91,10 +95,7 @@ item_edit_buttons = [
 
 # Определяем функцию для создания разметки ответа для общего использования
 def create_general_reply_markup(buttons):
-    markup = ReplyKeyboardMarkup(keyboard=[], resize_keyboard=True, row_width=3)
-    for sub_buttons in buttons:
-        #for button in sub_buttons:
-        markup.keyboard.append(sub_buttons)
+    markup = ReplyKeyboardMarkup(keyboard=[*buttons], resize_keyboard=True, row_width=3)
     return markup
 
 
@@ -119,8 +120,21 @@ def check_button_exists_part_of_text(keyboard: ReplyKeyboardMarkup, button_text:
 
 
 async def get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup):
+    loop = asyncio.get_event_loop()
+    result = await loop.run_in_executor(
+        concurrent.futures.ThreadPoolExecutor(max_workers=5),
+        functools.partial(merge_keyboards, folders_inline_markup, items_inline_markup))
+    return result
+
+
+# async def get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup):
+#     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+#         future = executor.submit(functools.partial(merge_keyboards, folders_inline_markup, items_inline_markup))
+#         result = await future.result(timeout=3)
+
+
+def merge_keyboards(*markups):
     keyboard_builder: InlineKeyboardBuilder = InlineKeyboardBuilder()
-    keyboard_builder.adjust(3)
-    keyboard_builder.attach(InlineKeyboardBuilder.from_markup(folders_inline_markup))
-    keyboard_builder.attach(InlineKeyboardBuilder.from_markup(items_inline_markup))
+    for markup in markups:
+        keyboard_builder.attach(InlineKeyboardBuilder.from_markup(markup))
     return keyboard_builder.as_markup()

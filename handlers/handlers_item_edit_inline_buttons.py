@@ -2,6 +2,7 @@ import asyncio
 import copy
 
 from aiogram import Router, F
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton
 
 from firebase_pack.firebase_item_reader import get_item
@@ -22,6 +23,7 @@ dp.include_router(router)
 
 @router.callback_query(F.data == "edit_item")
 async def edit_item_handler(call: CallbackQuery):
+    print('edit_item_handler')
     item_inlines = copy.deepcopy(item_edit_buttons)
     inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
 
@@ -39,7 +41,7 @@ async def edit_item_handler(call: CallbackQuery):
 #     await show_item(item_id)
 
 @router.callback_query(F.data == "edit_item_title")
-async def edit_item_title_handler(call: CallbackQuery):
+async def edit_item_title_handler(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     data = await get_data(user_id)
     item_id = data.get('item_id')
@@ -67,6 +69,6 @@ async def edit_item_title_handler(call: CallbackQuery):
     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
     await set_data(user_id, data)
 
-    await states.Item.EditTitle.set()
+    await state.set_state(states.Item.EditTitle)
 
 

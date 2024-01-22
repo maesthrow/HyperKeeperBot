@@ -1,4 +1,6 @@
 import asyncio
+import concurrent.futures
+import functools
 
 import aiogram.types
 from aiogram import Router, F
@@ -29,7 +31,6 @@ async def close_item_handler(call: CallbackQuery = None, message: aiogram.types.
         message = call.message
 
     user_id = call.from_user.id if call else message.from_user.id if message else None
-    print(f"user_id {user_id}")
     data = await get_data(user_id)
     item_files_messages = data.get('item_files_messages', [])
     accept_add_item_message = data.get('accept_add_item_message', None)
@@ -97,6 +98,12 @@ async def hide_item_files_handler(call: CallbackQuery):
 
 
 async def close_files(item_files_messages: list):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future = executor.submit(functools.partial(on_close_files, item_files_messages))
+        result = await future.result(timeout=3)
+
+
+async def on_close_files(item_files_messages: list):
     if len(item_files_messages) > 0:
         delete_tasks = [delete_files_message(message) for message in item_files_messages]
         await asyncio.gather(*delete_tasks)

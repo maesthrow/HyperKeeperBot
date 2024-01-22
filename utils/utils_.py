@@ -58,16 +58,19 @@ async def get_folder_path_names(user_id, folder_id=ROOT_FOLDER_ID):
     """Возвращает имена папок по пути к папке."""
     folders_collection = await get_folders_collection(user_id)
     folder_ids = folder_id.split('/')
+    path_names = []
     target_folders = folders_collection
     folder_id_with_path = None
-    path_names = None
+
     for folder_id in folder_ids:
         folder_id_with_path = f"{folder_id_with_path}/{folder_id}" if folder_id_with_path else folder_id
         target_folder = target_folders.get(folder_id_with_path, {})
         target_folder_name = target_folder.get("name", "")
-        path_names = f"{path_names} > {target_folder_name}" if path_names else target_folder_name
+        path_names.append(target_folder_name)
         target_folders = target_folder.get("folders", {})
-    return f"{path_names}:"
+
+    return " > ".join(path_names) + ":"
+
 
 
 async def get_environment(user_id):
@@ -189,7 +192,7 @@ async def get_inline_markup_for_pages(instance_text, inline_markup, current_page
 
     inline_markup.inline_keyboard.append([
         InlineKeyboardButton(text='⬅️', callback_data=f'{callback_data_text}prev_{prev_page}'),
-        InlineKeyboardButton(text=mid_btn_text, callback_data=f'show_all_{instance_text}'),
+        InlineKeyboardButton(text=mid_btn_text, callback_data=f'storage_show_all_{instance_text}'),
         InlineKeyboardButton(text='➡️', callback_data=f'{callback_data_text}next_{next_page}')
     ])
 

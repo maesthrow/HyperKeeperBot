@@ -24,6 +24,8 @@ from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
     util_move_item
 
+import handlers.handlers_item_edit_inline_buttons
+
 cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
 choose_edit_item_content_buttons = [
@@ -303,7 +305,7 @@ async def delete_all_items_request(call: CallbackQuery):
 
 
 # @dp.message_handler(Text(equals="️✏️ Заголовок"))
-# async def edit_item_title_handler(message: aiogram.types.Message):
+# async def edit_item_title_handler(message: aiogram.types.Message, state: FSMContext:
 #     tg_user = aiogram.types.User.get_current()
 #     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
 #     item_id = data.get('item_id')
@@ -331,18 +333,16 @@ async def delete_all_items_request(call: CallbackQuery):
 #     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
 #     await dp.storage.update_data(user=tg_user, chat=message.chat, data=data)
 #
-#     await states.Item.EditTitle.set()
-
-
+#     await state.set_state(states.Item.EditTitle)
 
 
 @router.message(F.text == "️📝 Текст")
-async def edit_item_content_handler(message: aiogram.types.Message):
+async def edit_item_content_handler(message: aiogram.types.Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
     item_id = data.get('item_id')
     item: Item = await get_item(user_id, item_id)
-    await edit_item_text_handler(message, item)
+    await edit_item_text_handler(message, item, state)
     # if len(item.get_all_media_values()) > 0:
     #     buttons = [choose_edit_item_content_buttons]
     #     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=buttons)
@@ -362,13 +362,13 @@ async def choose_edit_content_item(call: CallbackQuery, state: FSMContext):
         data = await get_data(user_id)
         item_id = data.get('item_id')
         item: Item = await get_item(user_id, item_id)
-        await edit_item_text_handler(call.message, item)
+        await edit_item_text_handler(call.message, item, state)
         await bot.delete_message(call.message.chat.id, call.message.message_id)
     else:
         pass
 
 
-async def edit_item_text_handler(message: aiogram.types.Message, item: Item):
+async def edit_item_text_handler(message: aiogram.types.Message, item: Item, state: FSMContext):
     user_id = message.from_user.id
 
     if item.text and item.text != "":
@@ -413,7 +413,7 @@ async def edit_item_text_handler(message: aiogram.types.Message, item: Item):
     data['edit_item_messages'] = edit_item_messages
     await set_data(user_id, data)
 
-    await states.Item.EditText.set()
+    await state.set_state(states.Item.EditText)
 
 
 @router.callback_query(states.Item.EditText, F.data.contains("new_text_type"))
@@ -440,7 +440,8 @@ async def choose_type_edit_text_item(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@router.message(states.Item.EditTitle, states.Item.EditText)
+@router.message(states.Item.EditTitle)
+@router.message(states.Item.EditText)
 async def edit_item_handler(message: aiogram.types.Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
@@ -449,7 +450,8 @@ async def edit_item_handler(message: aiogram.types.Message, state: FSMContext):
     await show_item(user_id, item_id)
 
 
-@router.callback_query(states.Item.EditTitle, states.Item.EditText, F.data.contains("cancel_edit_item"))
+@router.callback_query(F.data.contains("cancel_edit_item"), states.Item.EditTitle)
+@router.callback_query(F.data.contains("cancel_edit_item"), states.Item.EditText)
 async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     data = await get_data(user_id)
@@ -467,9 +469,13 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(states.Item.EditTitle, F.data.contains("add_none_title_item"))
-async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
+async def add_none_title_item_handler(call: CallbackQuery, state: FSMContext):
     await on_edit_item(call.from_user.id, None, state)
     await call.answer()
+    user_id = call.from_user.id
+    data = await get_data(user_id)
+    item_id = data.get('item_id')
+    await show_item(user_id, item_id)
 
 
 @router.message(F.text == "️🔀 Переместить")
@@ -505,7 +511,7 @@ async def movement_item_cancel(message: aiogram.types.Message, folder_id=None):
     await asyncio.sleep(0.4)
 
     folder_id = get_folder_id(movement_item_id)
-    await set_current_folder_id(folder_id)
+    await set_current_folder_id(user_id, folder_id)
     await show_folders(user_id, folder_id, need_to_resend=True)
     await asyncio.sleep(0.2)
     await show_item(user_id, movement_item_id)
@@ -550,5 +556,5 @@ async def search_item_handler(message: aiogram.types.Message):
         item_id = data.get('item_id')
         if item_id:
             current_folder = get_folder_id(item_id)
-            await set_current_folder_id(current_folder)
+            await set_current_folder_id(user_id, current_folder)
             await show_item(user_id, item_id)

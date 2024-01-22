@@ -46,5 +46,5 @@ async def on_edit_item(user_id, edit_text, state: FSMContext):
 
     await asyncio.sleep(0.4)
 
-    await state.clear()
+    await state.set_state()
     # await show_item(item_id)

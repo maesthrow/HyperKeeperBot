@@ -1,4 +1,6 @@
+import concurrent.futures
 import asyncio
+import functools
 import re
 from html import escape
 
@@ -6,13 +8,14 @@ import aiogram
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, \
-    KeyboardButton
+    KeyboardButton, Message
 
 from callbacks.callbackdata import FolderCallback
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 from firebase_pack.firebase_folder_reader import get_folders_in_folder
 from handlers import states
 from handlers.message_manager import send_ok_info_message
+from handlers.states import Folder
 from load_all import bot, dp
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
@@ -37,14 +40,23 @@ router = Router()
 dp.include_router(router)
 
 
-# Определяем функцию для обработки отображения папок
 async def show_folders(user_id, current_folder_id=None, page_folder=None, page_item=None, need_to_resend=False):
-    storage_message: aiogram.types.Message
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        future = executor.submit(functools.partial(
+            do_show_folders,
+            user_id=user_id,
+            current_folder_id=current_folder_id,
+            page_folder=page_folder,
+            page_item=page_item,
+            need_to_resend=need_to_resend))
+        result = await future.result(timeout=3)
 
+
+async def do_show_folders(user_id, current_folder_id=None, page_folder=None, page_item=None, need_to_resend=False):
     if not current_folder_id:
         current_folder_id = await get_current_folder_id(user_id)
 
-    await set_current_folder_id(current_folder_id)
+    await set_current_folder_id(user_id, current_folder_id)
     user_folders = await get_folders_in_folder(user_id, current_folder_id)
 
     folder_buttons = [
@@ -56,12 +68,8 @@ async def show_folders(user_id, current_folder_id=None, page_folder=None, page_i
 
     # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
-    # movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
-
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
-        # if movement_item_initial_folder_id != current_folder_id:
-        #     general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
     if True:  # current_folder_id != ROOT_FOLDER_ID:
@@ -70,7 +78,6 @@ async def show_folders(user_id, current_folder_id=None, page_folder=None, page_i
                 KeyboardButton(text="✏️ Переименовать папку"),
                 KeyboardButton(text="🗑 Удалить папку")
             ])
-        # general_buttons.append([KeyboardButton("↩️ Назад")])
     markup = create_general_reply_markup(general_buttons)
 
     folders_page_info = await get_page_info(user_id, current_folder_id, 'folders', page_folder)
@@ -90,11 +97,10 @@ async def show_folders(user_id, current_folder_id=None, page_folder=None, page_i
         return
 
     current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
-    # await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
 
     folders_inline_markup = await get_inline_markup_folders(user_id, folder_buttons, current_folder_page)
-    folders_message = data.get('folders_message')
-    #folders_message.reply_markup = folders_inline_markup
+    folders_message: Message = data.get('folders_message')
+
     if current_folder_page > 0:
         items_inline_markup = await get_inline_markup_items_in_folder(
             user_id, current_folder_id, current_page=current_item_page
@@ -102,44 +108,40 @@ async def show_folders(user_id, current_folder_id=None, page_folder=None, page_i
         if items_inline_markup.inline_keyboard:
             folders_inline_markup = await get_folders_with_items_inline_markup(folders_inline_markup,
                                                                                items_inline_markup)
-            # for row in items_inline_markup.inline_keyboard:
-            #     folders_inline_markup.add(*row)
         if current_folder_id != ROOT_FOLDER_ID:
             folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
-            # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
-        # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
 
     if await is_only_folders_mode_keyboard(user_id) and current_folder_page > 0:
         need_to_resend = True
 
-    data = await get_data(user_id)
-
     try:
-        # if is_storage_message(folders_message) and not need_to_resend:
         if not need_to_resend:
             # Изменение существующего сообщения
-            await bot.edit_message_text(chat_id=folders_message.chat.id,
-                                        message_id=folders_message.message_id,
-                                        text=f"🗂️ <b>{current_folder_path_names}</b>",
-                                        reply_markup=folders_inline_markup,
-                                        )
+            folders_message = await folders_message.edit_text(
+                text=f"🗂️ <b>{current_folder_path_names}</b>",
+                reply_markup=folders_inline_markup,
+            )
         else:
             data['current_keyboard'] = markup
             await bot.send_message(user_id, f"🗂️", reply_markup=markup)
-            # storage_message.edit_reply_markup(ReplyKeyboardRemove())
-            folders_message = await bot.send_message(user_id, f"🗂️ <b>{current_folder_path_names}</b>",
-                                                     reply_markup=folders_inline_markup)
-
+            folders_message = await send_new_folders_message(user_id, current_folder_path_names, folders_inline_markup)
     except:
         data['current_keyboard'] = markup
         await bot.send_message(user_id, f"🗂️", reply_markup=markup)
-        folders_message = await bot.send_message(user_id, f"🗂️ <b>{current_folder_path_names}</b>",
-                                                 reply_markup=folders_inline_markup)
+        folders_message = await send_new_folders_message(user_id, current_folder_path_names, folders_inline_markup)
 
     data['folders_message'] = folders_message
     data['page_folders'] = str(new_page_folders)
     data['page_items'] = str(new_page_items)
     await set_data(user_id, data)
+
+
+async def send_new_folders_message(user_id, current_folder_path_names, folders_inline_markup):
+    folders_message = await bot.send_message(user_id, f"⏳")
+    folders_message = await folders_message.edit_text(
+        text=f"🗂️ <b>{current_folder_path_names}</b>",
+        reply_markup=folders_inline_markup)
+    return folders_message
 
 
 async def show_all_folders(user_id, current_folder_id=None, need_resend=False):
@@ -167,7 +169,7 @@ async def show_all_folders(user_id, current_folder_id=None, need_resend=False):
 
     folders_inline_markup = await get_inline_markup_folders(user_id, folder_buttons, current_folder_page)
     if current_folder_id != ROOT_FOLDER_ID:
-        folders_inline_markup.add(back_to_up_level_folder_button)
+        folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
 
     if not await is_only_folders_mode_keyboard(user_id):
         need_resend = True
@@ -214,7 +216,7 @@ async def is_only_folders_mode_keyboard(user_id):
 async def to_folder(call: CallbackQuery, callback_data: FolderCallback):
     user_id = call.from_user.id
     folder_id = callback_data.folder_id
-    await show_folders(user_id, folder_id)
+    await show_folders(user_id=user_id, current_folder_id=folder_id)
     try:
         await call.answer()
     except:
@@ -228,19 +230,6 @@ async def back_to_folders(callback_query: CallbackQuery):
     back_to_folder_id = get_parent_folder_id(folder_id)
     await show_folders(user_id, back_to_folder_id)
     await callback_query.answer()
-    # await to_folder(call=callback_query, callback_data={"folder_id": back_to_folder_id})
-    # try:
-    #     await callback_query.answer()
-    # except:
-    #     pass
-
-
-# Используем обработчик CallbackQuery для навигации по папкам
-# @dp.message_handler(Text(equals="↩️ Назад"))
-# async def back_to_folders(message: aiogram.types.Message):
-#     folder_id = await get_current_folder_id(User.get_current(), Chat.get_current())
-#     back_to_folder_id = get_parent_folder_id(folder_id)
-#     await to_folder(call=CallbackQuery(), callback_data={"folder_id": back_to_folder_id})
 
 
 @router.callback_query(F.data.contains("delete_folder_request"))
@@ -287,7 +276,7 @@ async def delete_folder_request(call: CallbackQuery):
     await call.answer()
 
 
-async def edit_this_folder(message: aiogram.types.Message, folder_id):
+async def edit_this_folder(message: aiogram.types.Message, folder_id, state: FSMContext):
     buttons = [[cancel_enter_folder_name_button]]
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     user_id = message.from_user.id
@@ -302,7 +291,7 @@ async def edit_this_folder(message: aiogram.types.Message, folder_id):
     await bot.send_message(message.chat.id,
                            "Придумайте новое название папки:", reply_markup=ReplyKeyboardRemove())
 
-    await states.Folder.EditName.set()
+    await state.set_state(states.Folder.EditName)
 
 
 async def get_enter_folder_name(message: aiogram.types.Message):
@@ -354,7 +343,7 @@ async def new_folder(message: aiogram.types.Message, state: FSMContext):
         sent_message = await bot.send_message(message.chat.id,
                                               text=f"Не удалось создать папку ❌")
     # await message.answer("Новая папка успешно создана ✅")
-    await state.clear()
+    await state.set_state()
     await show_folders(user_id, need_to_resend=True)
 
     # await asyncio.sleep(1)
@@ -378,15 +367,15 @@ async def edit_folder(message: aiogram.types.Message, state: FSMContext):
         sent_message = await bot.send_message(message.chat.id, "Что то пошло не так при редактировании папки ❌")
 
     # await dp.storage.reset_data(chat=message.chat, user=tg_user)
-    await state.set_data({})
-    await state.set_state(None)
+    await state.clear()
     await show_folders(user_id, need_to_resend=True)
 
     # await asyncio.sleep(1)
     # await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
 
 
-@router.callback_query(F.data == "cancel_enter_folder_name", states.Folder.NewName, states.Folder.EditName)
+@router.callback_query(F.data == "cancel_enter_folder_name", Folder.NewName)
+@router.callback_query(F.data == "cancel_enter_folder_name", Folder.EditName)
 async def cancel_create_new_folder(call: CallbackQuery, state: FSMContext):
     await state.set_state()
     await bot.delete_message(call.message.chat.id, call.message.message_id)
@@ -395,7 +384,7 @@ async def cancel_create_new_folder(call: CallbackQuery, state: FSMContext):
 
 
 @router.message(F.text.contains("Новая папка"))
-async def create_new_folder(message: aiogram.types.Message):
+async def create_new_folder(message: aiogram.types.Message, state: FSMContext):
     await bot.delete_message(
         chat_id=message.chat.id,
         message_id=message.message_id,
@@ -405,11 +394,11 @@ async def create_new_folder(message: aiogram.types.Message):
     await bot.send_message(message.chat.id, "<b>Создание новой папки</b> 📁", reply_markup=inline_markup)
     await bot.send_message(message.chat.id, "Придумайте название:", reply_markup=ReplyKeyboardRemove())
 
-    await states.Folder.NewName.set()
+    await state.set_state(states.Folder.NewName)
 
 
 @router.message(F.text == "✏️ Переименовать папку")
-async def edit_folder_handler(message: aiogram.types.Message):
+async def edit_folder_handler(message: aiogram.types.Message, state: FSMContext):
     current_folder_id = await get_current_folder_id(message.from_user.id)
     if current_folder_id == ROOT_FOLDER_ID:
         await asyncio.sleep(0.3)
@@ -417,7 +406,7 @@ async def edit_folder_handler(message: aiogram.types.Message):
         await bot.delete_message(message.chat.id, message.message_id)
         return
 
-    await edit_this_folder(message, current_folder_id)
+    await edit_this_folder(message, current_folder_id, state)
     await bot.delete_message(message.chat.id, message.message_id)
 
 
@@ -482,12 +471,12 @@ async def go_to_page_folders(call: CallbackQuery):
 
         folders_inline_markup = await get_inline_markup_folders(user_id, folder_buttons, page)
         inline_markup = folders_message.reply_markup
-        for row in inline_markup.inline_keyboard:
-            for button in row[-1:]:
-                if 'item' in button.callback_data:  # and 'page_items' not in button.callback_data):
-                    folders_inline_markup.add(*row)
+        if inline_markup and inline_markup.inline_keyboard:
+            for row in inline_markup.inline_keyboard:
+                if 'item' in row[-1].callback_data:  # and 'page_items' not in button.callback_data):
+                    folders_inline_markup.inline_keyboard.append(row)
         if current_folder_id != ROOT_FOLDER_ID:
-            folders_inline_markup.add(back_to_up_level_folder_button)
+            folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
 
         folders_message = await folders_message.edit_text(
             folders_message.text,
@@ -519,15 +508,16 @@ async def go_to_page_items(call: CallbackQuery):
         items_inline_markup = await get_inline_markup_items_in_folder(user_id, current_folder_id, current_page=page)
         inline_markup = folders_message.reply_markup
         new_inline_markup = InlineKeyboardMarkup(inline_keyboard=[])
-        for row in inline_markup.inline_keyboard:
-            button = row[0]  # Получаем первую кнопку в строке
-            if 'folder' in button.callback_data and 'back' not in button.callback_data:
-                new_inline_markup.add(*row)
+        if inline_markup and inline_markup.inline_keyboard:
+            for row in inline_markup.inline_keyboard:
+                button = row[0]  # Получаем первую кнопку в строке
+                if 'folder' in button.callback_data and 'back' not in button.callback_data:
+                    new_inline_markup.inline_keyboard.append(row)
 
         for row in items_inline_markup.inline_keyboard:
-            new_inline_markup.add(*row)
+            new_inline_markup.inline_keyboard.append(row)
         if current_folder_id != ROOT_FOLDER_ID:
-            new_inline_markup.add(back_to_up_level_folder_button)
+            new_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
 
         folders_message = await folders_message.edit_text(
             folders_message.text,
