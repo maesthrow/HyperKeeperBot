@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/venv/python" />
       <excludeFolder url="file://$MODULE_DIR$/venv/python312" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.8 (HyperKeeperBot)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.12 (HyperKeeperBot)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>
