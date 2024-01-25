@@ -1,23 +1,21 @@
 import asyncio
 from datetime import datetime
 
-from aiogram.dispatcher import FSMContext
-from aiogram.types import User, Chat
+from aiogram.fsm.context import FSMContext
 
-from firebase.firebase_item_reader import get_item
+from firebase_pack.firebase_item_reader import get_item
 from handlers import states
 from handlers.handlers_item_inline_buttons import close_item_handler
-from load_all import dp, bot
+from load_all import bot
 from models.item_model import Item
+from utils.data_manager import get_data
 from utils.utils_items_db import util_edit_item
 
 
-async def on_edit_item(edit_text, state: FSMContext):
-    tg_user = User.get_current()
-    chat = Chat.get_current(())
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+async def on_edit_item(user_id, edit_text, state: FSMContext):
+    data = await get_data(user_id)
     item_id = data.get('item_id')
-    item: Item = await get_item(item_id)
+    item: Item = await get_item(user_id, item_id)
     current_state = await state.get_state()
     if current_state == states.Item.EditTitle.state:
         item.title = edit_text
@@ -40,13 +38,13 @@ async def on_edit_item(edit_text, state: FSMContext):
         await close_item_handler(message=item_message)
         #await bot.delete_message(chat_id=chat.id, message_id=item_message.message_id)
 
-    result = await util_edit_item(item_id, item)
+    result = await util_edit_item(user_id, item_id, item)
     if result:
-        sent_message = await bot.send_message(chat.id, message_success_text)
+        sent_message = await bot.send_message(user_id, message_success_text)
     else:
-        sent_message = await bot.send_message(chat.id, message_failure_text)
+        sent_message = await bot.send_message(user_id, message_failure_text)
 
     await asyncio.sleep(0.4)
 
-    await state.reset_state()
+    await state.set_state()
     # await show_item(item_id)

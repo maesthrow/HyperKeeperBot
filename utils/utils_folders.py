@@ -1,6 +1,6 @@
 import aiogram
 
-from firebase.firebase_folder_reader import get_folders_count_in_folder, get_user_folders_deep_count
+from firebase_pack.firebase_folder_reader import get_folders_count_in_folder, get_user_folders_deep_count
 from utils.utils_statistic import util_get_items_count, util_get_items_deep_count
 
 invalid_chars = r'/\:,.*?"<>|'
@@ -23,12 +23,12 @@ def is_storage_message(message: aiogram.types.Message):
     return message.text.startswith("🗂️ Хранилище")
 
 
-async def get_folder_statistic(folder_id) -> dict:
+async def get_folder_statistic(user_id, folder_id) -> dict:
     dict_statistic = {}
-    folders_count = await get_folders_count_in_folder(folder_id)
-    items_count = await util_get_items_count(folder_id)
-    deep_folders_count = await get_user_folders_deep_count(folder_id)
-    deep_items_count = await util_get_items_deep_count(folder_id)
+    folders_count = await get_folders_count_in_folder(user_id, folder_id)
+    items_count = await util_get_items_count(user_id, folder_id)
+    deep_folders_count = await get_user_folders_deep_count(user_id, folder_id)
+    deep_items_count = await util_get_items_deep_count(user_id, folder_id)
     dict_statistic["folders_count"] = folders_count
     dict_statistic["items_count"] = items_count
     dict_statistic["deep_folders_count"] = deep_folders_count

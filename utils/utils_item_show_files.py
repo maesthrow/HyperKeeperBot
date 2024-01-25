@@ -1,13 +1,12 @@
 import asyncio
 
-from aiogram.types import User, Chat
-
-from load_all import dp, bot
+from load_all import bot
 from models.item_model import Item
 from utils.MediaGroupBuilder import MediaGroupBuilder
+from utils.data_manager import get_data, set_data
 
 
-async def show_item_files(item: Item):
+async def show_item_files(user_id, item: Item):
     media_files = await item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builders = [MediaGroupBuilder()]
@@ -16,53 +15,48 @@ async def show_item_files(item: Item):
         await fill_builders(item, media_group_builders, voice_builders, video_note_builders)
 
         item_files_messages = []
-        await send_media_group(media_group_builders, item_files_messages)
-        await send_voices(voice_builders, item_files_messages)
-        await send_video_notes(video_note_builders, item_files_messages)
+        await send_media_group(user_id, media_group_builders, item_files_messages)
+        await send_voices(user_id, voice_builders, item_files_messages)
+        await send_video_notes(user_id, video_note_builders, item_files_messages)
 
-        await update_data(item_files_messages)
+        await update_data(user_id, item_files_messages)
 
 
-async def update_data(item_files_messages):
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
+async def update_data(user_id, item_files_messages):
+    data = await get_data(user_id)
     data['item_files_messages'] = item_files_messages
-    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+    await set_data(user_id, data)
 
 
-async def send_media_group(media_group_builders, item_files_messages):
-    chat = Chat.get_current()
+async def send_media_group(user_id, media_group_builders, item_files_messages):
     for mg_builder in media_group_builders:
         media_group = mg_builder.build()
         if len(media_group) > 0:
             await asyncio.sleep(0.25)
             item_files_messages.append(
-                await bot.send_media_group(chat_id=chat.id, media=media_group)
+                await bot.send_media_group(chat_id=user_id, media=media_group)
             )
 
 
-async def send_voices(voice_builders, item_files_messages):
-    chat = Chat.get_current()
+async def send_voices(user_id, voice_builders, item_files_messages):
     for v_builder in voice_builders:
         voices = v_builder.build()
         if len(voices) > 0:
             for voice in voices:
                 await asyncio.sleep(0.25)
                 item_files_messages.append(
-                    await bot.send_voice(chat_id=chat.id, voice=voice)
+                    await bot.send_voice(chat_id=user_id, voice=voice)
                 )
 
 
-async def send_video_notes(video_note_builders, item_files_messages):
-    chat = Chat.get_current()
+async def send_video_notes(user_id, video_note_builders, item_files_messages):
     for vn_builder in video_note_builders:
         video_notes = vn_builder.build()
         if len(video_notes) > 0:
             for video_note in video_notes:
                 await asyncio.sleep(0.25)
                 item_files_messages.append(
-                    await bot.send_video_note(chat_id=chat.id, video_note=video_note)
+                    await bot.send_video_note(chat_id=user_id, video_note=video_note)
                 )
 
 

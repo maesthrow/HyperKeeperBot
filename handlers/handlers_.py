@@ -1,43 +1,51 @@
+import concurrent.futures
 import asyncio
+import functools
 from typing import List
 
 import aiogram
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters import Command, CommandStart
-from aiogram.dispatcher.filters import Text, MediaGroupFilter
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, User, Chat, CallbackQuery, KeyboardButton
-from aiogram_media_group import media_group_handler
+from aiogram import Router, F
+from aiogram.filters import Command, CommandStart
+from aiogram.fsm.context import FSMContext
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, CallbackQuery, KeyboardButton, Message
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from firebase.firebase_collection_folders import add_user_folders, ROOT_FOLDER_ID
-from firebase.firebase_collection_users import add_user
-from firebase.firebase_folder_reader import get_folders_in_folder
-from firebase.firebase_item_reader import get_folder_id
+from firebase_pack.firebase_collection_folders import add_user_folders, ROOT_FOLDER_ID
+from firebase_pack.firebase_collection_users import add_user
+from firebase_pack.firebase_folder_reader import get_folders_in_folder
+from firebase_pack.firebase_item_reader import get_folder_id
 from handlers import states
 from handlers.handlers_folder import create_folder_button, show_all_folders, show_folders
 from handlers.handlers_item import movement_item_handler
 from load_all import dp, bot
 from models.item_model import Item
+from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
-    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item
+    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
+    get_folders_with_items_inline_markup
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_items import show_all_items
 
-import handlers.handlers_item_edit_inline_buttons
+# from aiogram_media_group import media_group_handler, MediaGroupFilter
+
+router = Router()
+dp.include_router(router)
 
 
-# Используем фильтр CommandStart для команды /start
-@dp.message_handler(CommandStart())
+@router.message(CommandStart())
 async def start(message: aiogram.types.Message, state: FSMContext):
-    await state.reset_data()
-    await state.reset_state()
+    await state.set_state(None)
+    await state.set_data({})
 
-    chat_id = message.from_user.id
-    tg_user = aiogram.types.User.get_current()
+    tg_user = message.from_user
+    chat_id = tg_user.id
+
     await add_user(tg_user)
     await add_user_folders(tg_user)
 
-    bot_username = (await bot.me).username
+    me = await bot.me()
+    bot_username = me.username
 
     text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
             f"которое доступно с помощью команды /storage\n\n"
@@ -49,87 +57,96 @@ async def start(message: aiogram.types.Message, state: FSMContext):
 
 
 # Используем фильтр CommandStart для команды /storage
-@dp.message_handler(commands=["storage"])
-async def storage(message: aiogram.types.Message, state: FSMContext):
-    await state.reset_data()
-    await state.reset_state()
+@router.message(Command(commands=["storage"]))
+async def storage(message: Message, state: FSMContext):
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        future = executor.submit(functools.partial(show_storage, message, state))
+        result = await future.result(timeout=3)
 
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    user_folders = await get_folders_in_folder()
 
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
+async def show_storage(message: Message, state: FSMContext):
+    await state.clear()
+
+    user_id = message.from_user.id
+
+    #user_folders = await get_folders_in_folder(user_id)
+
+    data = await get_data(user_id)
+    await set_current_folder_id(user_id)
 
     # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
     movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
 
-    await set_current_folder_id()
-
-    folder_buttons = [
-        await create_folder_button(folder_id, folder_data.get("name"))
-        for folder_id, folder_data in user_folders.items()
-    ]
-
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
         if movement_item_initial_folder_id != ROOT_FOLDER_ID:
-            general_buttons.insert(0, [KeyboardButton("🔀 Переместить в текущую папку")])
+            general_buttons.insert(0, [KeyboardButton(text="🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
-        general_buttons.append([KeyboardButton("✏️ Переименовать папку"), KeyboardButton("🗑 Удалить папку")])
+        general_buttons.append([KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")])
 
     markup = create_general_reply_markup(general_buttons)
 
-    current_folder_path_names = await get_folder_path_names()
-    folders_inline_markup = await get_inline_markup_folders(folder_buttons, 1)
-    items_inline_markup = await get_inline_markup_items_in_folder(ROOT_FOLDER_ID, 1)
+    # folder_buttons = [
+    #     await create_folder_button(folder_id, folder_data.get("name"))
+    #     for folder_id, folder_data in user_folders.items()
+    # ]
+
+    current_folder_path_names = await get_folder_path_names(user_id)
+    # folders_inline_markup = await get_inline_markup_folders(user_id, ROOT_FOLDER_ID, 1)
+    # items_inline_markup = await get_inline_markup_items_in_folder(user_id, ROOT_FOLDER_ID, 1)
+
+    folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, ROOT_FOLDER_ID)
+
     if items_inline_markup.inline_keyboard:
-        folders_inline_markup = await get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
-        #await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
+        folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
+        # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
-    await bot.send_message(chat.id, f"🗂️", reply_markup=markup)
-    folders_message = await bot.send_message(chat.id,
-                                             f"🗂️ <b>{current_folder_path_names}</b>",
-                                             reply_markup=folders_inline_markup)
+    await bot.send_message(user_id, f"🗂️", reply_markup=markup)
+    folders_message = await bot.send_message(user_id, f"⏳")
+    data['folders_message'] = await folders_message.edit_text(
+                              text=f"🗂️ <b>{current_folder_path_names}</b>",
+                              reply_markup=folders_inline_markup
+    )
 
-    # load_message = await bot.send_message(chat.id, f"⌛️")
-
-
-    # await bot.delete_message(chat_id=chat.id, message_id=load_message.message_id)
-    folders_message.reply_markup = folders_inline_markup
-
-    data = await dp.storage.get_data(user=tg_user, chat=chat)
     data['current_keyboard'] = markup
-    data['folders_message'] = folders_message
     data['page_folders'] = str(1)
     data['page_items'] = str(1)
     data['item_id'] = None
     data['dict_search_data'] = None
-    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+    await set_data(user_id, data)
 
 
-async def get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup):
-    for row in items_inline_markup.inline_keyboard:
-        folders_inline_markup.add(*row)
-    return folders_inline_markup
+async def get_folders_and_items(user_id, root_folder_id):
+    # Вызов двух асинхронных функций параллельно и ожидание результатов
+    folders_inline_markup_task = get_inline_markup_folders(user_id, root_folder_id, 1)
+    items_inline_markup_task = get_inline_markup_items_in_folder(user_id, root_folder_id, 1)
 
-@dp.callback_query_handler(text_contains="show_all")
+    # Ожидание завершения обоих задач
+    folders_inline_markup = await folders_inline_markup_task
+    items_inline_markup = await items_inline_markup_task
+
+    return folders_inline_markup, items_inline_markup
+
+
+@router.callback_query(F.data.contains("storage_show_all"))
 async def show_all_entities_handler(call: CallbackQuery):
+    user_id = call.from_user.id
     if 'folders' in call.data:
-        await show_all_folders(need_resend=True)
+        await show_all_folders(user_id, need_resend=True)
     elif 'items' in call.data:
-        await show_all_items(need_to_resend=True)
+        await show_all_items(user_id, need_to_resend=True)
     await call.answer()
 
 
-@dp.message_handler(Text(equals="↪️ Перейти к общему виду папки 🗂️📄"))
+@router.message(F.text == "↪️ Перейти к общему виду папки 🗂️📄")
 async def back_to_folder(message: aiogram.types.Message):
-    folder_id = await get_current_folder_id()
-    await show_folders(folder_id, page_folder=1, page_item=1, need_to_resend=True)
+    folder_id = await get_current_folder_id(message.from_user.id)
+    await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@dp.message_handler(~Command(["start", "storage"]), content_types=['text'])
+@router.message(F.content_type == 'text')
 async def any_message(message: aiogram.types.Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return
@@ -140,7 +157,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     add_item_messages.append(
         await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌")
-                               #reply_markup=ReplyKeyboardRemove())
+        # reply_markup=ReplyKeyboardRemove())
     )
     await asyncio.sleep(0.7)
     add_item_messages.append(
@@ -153,12 +170,12 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
 
-    await states.Item.NewStepTitle.set()
+    await state.set_state(states.Item.NewStepTitle)
 
 
-@dp.message_handler(MediaGroupFilter(is_media_group=True),
-                    content_types=['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker'])
-@media_group_handler
+@router.message(F.media_group_id,
+                F.content_type.in_(['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker']))
+# @media_group_handler
 async def media_files_handler(messages: List[aiogram.types.Message], state: FSMContext):
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages', None)
@@ -169,13 +186,14 @@ async def media_files_handler(messages: List[aiogram.types.Message], state: FSMC
     await files_in_message_handler(messages, state, need_pre_save_message=need_pre_save_message)
 
 
-@dp.message_handler(content_types=['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker'])
+@dp.message(F.content_type.in_(['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker']))
 async def media_file_handler(message: aiogram.types.Message, state: FSMContext):
     add_item_messages = [message]
-    await files_in_message_handler([message], state)
+    await files_in_message_handler(add_item_messages, state)
 
 
-async def files_in_message_handler(messages: List[aiogram.types.Message], state: FSMContext, need_pre_save_message=True):
+async def files_in_message_handler(messages: List[aiogram.types.Message], state: FSMContext,
+                                   need_pre_save_message=True):
     if not await is_message_allowed_new_item(messages[0]):
         return
 
@@ -211,7 +229,7 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
         await state.update_data(item=new_item, add_item_messages=add_item_messages)
     else:
         await state.update_data(item=new_item, add_item_messages=add_item_messages)
-    await states.Item.NewStepTitle.set()
+    await state.set_state(states.Item.NewStepTitle)
 
 
 def get_file_id(message: aiogram.types.Message):
@@ -239,7 +257,6 @@ def get_file_id(message: aiogram.types.Message):
 
 
 async def get_new_item_from_state_data(message: aiogram.types.Message, state: FSMContext):
-    # data = await dp.storage.get_data(user=message.from_user, chat=message.chat)
     data = await state.get_data()
     new_item: Item = data.get('item', None)
     if new_item:
@@ -260,12 +277,13 @@ async def is_message_allowed_new_item(message: aiogram.types.Message):
     if message.text == "🔄 Новый поиск 🔍️":
         return False
 
-    data = await dp.storage.get_data(user=message.from_user, chat=message.chat)
+    user_id = message.from_user.id
+    data = await get_data(user_id)
 
     # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
     if movement_item_id:
-        current_folder_id = await get_current_folder_id()
+        current_folder_id = await get_current_folder_id(user_id)
         await movement_item_handler(message, current_folder_id)
         return False
 

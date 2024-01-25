@@ -1,79 +1,64 @@
-from aiogram.types import User, Chat
+from aiogram.fsm.storage.base import StorageKey
 
-from firebase.firebase_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection
-from firebase.firebase_collection_users import get_user_collection, set_user_collection
-from load_all import dp
+from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection
+from firebase_pack.firebase_collection_users import get_user_collection, set_user_collection
+from load_all import dp, bot
+from utils.data_manager import get_data, set_data
 
 
-async def set_current_folder_id(folder_id=ROOT_FOLDER_ID):
+async def set_current_folder_id(user_id, folder_id=ROOT_FOLDER_ID):
     """Устанавливает новый идентификатор текущей папки для пользователя."""
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data = await get_data(user_id)
     data['current_folder_id'] = folder_id
-    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+    await set_data(user_id, data)
 
 
-async def get_current_folder_id(tg_user=None, chat=None):
+async def get_current_folder_id(user_id):
     """Устанавливает новый идентификатор текущей папки для пользователя."""
-    if tg_user is None and chat is None:
-        tg_user = User.get_current()
-        chat = Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data = await get_data(user_id)
     current_folder_id = data.get('current_folder_id')
     if not current_folder_id:
         current_folder_id = ROOT_FOLDER_ID
     return current_folder_id
 
 
-async def get_folders_collection():
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+async def get_folders_collection(user_id):
+    data = await get_data(user_id)
     folders_collection = data.get('folders_collection', None)
-
     if not folders_collection:
-        folders_collection = await get_user_folders_collection(tg_user.id)
-        await set_folders_collection(folders_collection)
+        folders_collection = await get_user_folders_collection(user_id)
+        await set_folders_collection(user_id, folders_collection)
 
     return folders_collection
 
 
-async def set_folders_collection(folders_collection=None):
-    tg_user = User.get_current()
-    chat = Chat.get_current()
+async def set_folders_collection(user_id, folders_collection=None):
     if not folders_collection:
-        folders_collection = await get_user_folders_collection(tg_user.id)
+        folders_collection = await get_user_folders_collection(user_id)
 
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data = await get_data(user_id)
     data['dict_search_data'] = None
     data['folders_collection'] = folders_collection
+    await set_data(user_id, data)
 
-    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
 
-
-async def get_from_user_collection(collection_name: str):
-    tg_user = User.get_current()
-    chat = Chat.get_current()
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+async def get_from_user_collection(user_id, collection_name: str):
+    data = await get_data(user_id)
     collection = data.get(f'{collection_name}_collection', None)
 
     if not collection:
-        collection = await get_user_collection(tg_user.id, collection_name)
-        await set_to_user_collection(collection)
+        collection = await get_user_collection(user_id, collection_name)
+        await set_to_user_collection(user_id, collection)
 
     return collection
 
 
-async def set_to_user_collection(collection_name: str, collection=None):
-    tg_user = User.get_current()
-    chat = Chat.get_current()
+async def set_to_user_collection(user_id, collection_name: str, collection=None):
     if not collection:
-        collection = await get_user_collection(tg_user.id, collection_name)
+        collection = await get_user_collection(user_id, collection_name)
     else:
-        await set_user_collection(tg_user.id, collection_name, collection)
+        await set_user_collection(user_id, collection_name, collection)
 
-    data = await dp.storage.get_data(chat=chat, user=tg_user)
+    data = await get_data(user_id)
     data[f'{collection}_collection'] = collection
-
-    await dp.storage.update_data(user=tg_user, chat=chat, data=data)
+    await set_data(user_id, data)

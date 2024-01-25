@@ -1,26 +1,27 @@
 import asyncio
 import copy
-from datetime import datetime
 
-from aiogram.dispatcher import FSMContext
-from aiogram.types import CallbackQuery, User, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, Chat
+from aiogram import Router, F
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton
 
-from firebase.firebase_item_reader import get_item
+from firebase_pack.firebase_item_reader import get_item
 from handlers import states
-from handlers.handlers_edit_item_title import on_edit_item
-from handlers.handlers_item import show_item
-from handlers.handlers_item_inline_buttons import close_item_handler
-from load_all import dp, bot
+from load_all import bot, dp
 from models.item_model import Item
+from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import item_edit_buttons
-from utils.utils_items_db import util_edit_item
 
-edit_question = f"\n\n<b><i>Что будете редактировать?</i></b>"
+edit_question = f"\n\n\n<b><i>Что будете редактировать?</i></b>"
 
-add_none_title_item_button = InlineKeyboardButton("🪧 Пустой заголовок", callback_data=f"add_none_title_item")
-cancel_edit_item_button = InlineKeyboardButton("❌ Отменить", callback_data=f"cancel_edit_item")
+add_none_title_item_button = InlineKeyboardButton(text="🪧 Пустой заголовок", callback_data=f"add_none_title_item")
+cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
-@dp.callback_query_handler(text="edit_item")
+router = Router()
+dp.include_router(router)
+
+
+@router.callback_query(F.data == "edit_item")
 async def edit_item_handler(call: CallbackQuery):
     item_inlines = copy.deepcopy(item_edit_buttons)
     inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
@@ -38,13 +39,13 @@ async def edit_item_handler(call: CallbackQuery):
 #     await on_edit_item(edit_text, state)
 #     await show_item(item_id)
 
-@dp.callback_query_handler(text="edit_item_title")
-async def edit_item_title_handler(call: CallbackQuery):
-    tg_user = User.get_current()
-    data = await dp.storage.get_data(chat=call.message.chat, user=tg_user)
+@router.callback_query(F.data == "edit_item_title")
+async def edit_item_title_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    data = await get_data(user_id)
     item_id = data.get('item_id')
 
-    item: Item = await get_item(item_id)
+    item: Item = await get_item(user_id, item_id)
     if item.title and item.title != "":
         item_title = f"<b>{item.title}</b>"
     else:
@@ -63,10 +64,11 @@ async def edit_item_title_handler(call: CallbackQuery):
                                                  f"Придумайте новый заголовок:",
                                                  reply_markup=inline_markup)
 
-    data = await dp.storage.get_data(user=tg_user, chat=call.message.chat)
+    data = await get_data(user_id)
     data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
-    await dp.storage.update_data(user=tg_user, chat=call.message.chat, data=data)
+    await set_data(user_id, data)
 
-    await states.Item.EditTitle.set()
+    await state.set_state(states.Item.EditTitle)
+    await call.answer()
 
 
