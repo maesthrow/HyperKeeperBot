@@ -447,6 +447,7 @@ async def edit_item_handler(message: aiogram.types.Message, state: FSMContext):
     data = await get_data(user_id)
     item_id = data.get('item_id')
     await on_edit_item(user_id, message.text, state)
+    await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id)
 
 
@@ -464,6 +465,7 @@ async def cancel_edit_item(call: CallbackQuery, state: FSMContext):
     data['edit_item_messages'] = None
     await set_data(user_id, data)
     await state.set_state()
+    await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id)
     await call.answer()
 
@@ -475,6 +477,7 @@ async def add_none_title_item_handler(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     data = await get_data(user_id)
     item_id = data.get('item_id')
+    await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id)
 
 

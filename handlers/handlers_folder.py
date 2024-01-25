@@ -49,20 +49,13 @@ async def show_folders(user_id, current_folder_id=None, page_folder=None, page_i
             page_folder=page_folder,
             page_item=page_item,
             need_to_resend=need_to_resend))
-        result = await future.result(timeout=3)
+        result = await future.result(timeout=30)
 
 
 async def do_show_folders(user_id, current_folder_id=None, page_folder=None, page_item=None, need_to_resend=False):
     if not current_folder_id:
         current_folder_id = await get_current_folder_id(user_id)
-
     await set_current_folder_id(user_id, current_folder_id)
-    user_folders = await get_folders_in_folder(user_id, current_folder_id)
-
-    folder_buttons = [
-        await create_folder_button(folder_id, folder_data.get("name"))
-        for folder_id, folder_data in user_folders.items()
-    ]
 
     data = await get_data(user_id)
 
@@ -98,7 +91,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
 
     current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
 
-    folders_inline_markup = await get_inline_markup_folders(user_id, folder_buttons, current_folder_page)
+    folders_inline_markup = await get_inline_markup_folders(user_id, current_folder_id, current_folder_page)
     folders_message: Message = data.get('folders_message')
 
     if current_folder_page > 0:
@@ -106,8 +99,8 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
             user_id, current_folder_id, current_page=current_item_page
         )
         if items_inline_markup.inline_keyboard:
-            folders_inline_markup = await get_folders_with_items_inline_markup(folders_inline_markup,
-                                                                               items_inline_markup)
+            folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup,
+                                                                         items_inline_markup)
         if current_folder_id != ROOT_FOLDER_ID:
             folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
 
@@ -148,13 +141,6 @@ async def show_all_folders(user_id, current_folder_id=None, need_resend=False):
     if not current_folder_id:
         current_folder_id = await get_current_folder_id(user_id)
 
-    user_folders = await get_folders_in_folder(user_id, current_folder_id)
-
-    folder_buttons = [
-        await create_folder_button(folder_id, folder_data.get("name"))
-        for folder_id, folder_data in user_folders.items()
-    ]
-
     general_buttons = general_buttons_folder_show_all[:]
     if current_folder_id != ROOT_FOLDER_ID:
         general_buttons.append([KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")])
@@ -167,7 +153,7 @@ async def show_all_folders(user_id, current_folder_id=None, need_resend=False):
     current_folder_page = folders_page_info.get('current_page_folders')
     new_page_folders = folders_page_info.get('page_folders')
 
-    folders_inline_markup = await get_inline_markup_folders(user_id, folder_buttons, current_folder_page)
+    folders_inline_markup = await get_inline_markup_folders(user_id, current_folder_id, current_folder_page)
     if current_folder_id != ROOT_FOLDER_ID:
         folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
 
@@ -367,7 +353,7 @@ async def edit_folder(message: aiogram.types.Message, state: FSMContext):
         sent_message = await bot.send_message(message.chat.id, "Что то пошло не так при редактировании папки ❌")
 
     # await dp.storage.reset_data(chat=message.chat, user=tg_user)
-    await state.clear()
+    await state.set_state()
     await show_folders(user_id, need_to_resend=True)
 
     # await asyncio.sleep(1)
@@ -462,14 +448,14 @@ async def go_to_page_folders(call: CallbackQuery):
 
         folders_message = data.get('folders_message')
 
-        user_folders = await get_folders_in_folder(user_id, current_folder_id)
+        # user_folders = await get_folders_in_folder(user_id, current_folder_id)
+        #
+        # folder_buttons = [
+        #     await create_folder_button(folder_id, folder_data.get("name"))
+        #     for folder_id, folder_data in user_folders.items()
+        # ]
 
-        folder_buttons = [
-            await create_folder_button(folder_id, folder_data.get("name"))
-            for folder_id, folder_data in user_folders.items()
-        ]
-
-        folders_inline_markup = await get_inline_markup_folders(user_id, folder_buttons, page)
+        folders_inline_markup = await get_inline_markup_folders(user_id, current_folder_id, page)
         inline_markup = folders_message.reply_markup
         if inline_markup and inline_markup.inline_keyboard:
             for row in inline_markup.inline_keyboard:

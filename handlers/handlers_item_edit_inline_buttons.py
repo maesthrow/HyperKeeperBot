@@ -12,7 +12,7 @@ from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import item_edit_buttons
 
-edit_question = f"\n\n<b><i>Что будете редактировать?</i></b>"
+edit_question = f"\n\n\n<b><i>Что будете редактировать?</i></b>"
 
 add_none_title_item_button = InlineKeyboardButton(text="🪧 Пустой заголовок", callback_data=f"add_none_title_item")
 cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
@@ -23,7 +23,6 @@ dp.include_router(router)
 
 @router.callback_query(F.data == "edit_item")
 async def edit_item_handler(call: CallbackQuery):
-    print('edit_item_handler')
     item_inlines = copy.deepcopy(item_edit_buttons)
     inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
 
@@ -70,5 +69,6 @@ async def edit_item_title_handler(call: CallbackQuery, state: FSMContext):
     await set_data(user_id, data)
 
     await state.set_state(states.Item.EditTitle)
+    await call.answer()
 
 

@@ -6,6 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 
 from enums.enums import Language
+from handlers.handlers_folder import show_folders
 from load_all import bot, dp
 from utils.utils_data import get_from_user_collection, set_to_user_collection
 
@@ -13,30 +14,38 @@ settings_buttons = [
     [InlineKeyboardButton(text="🗂️ Количество папок на странице", callback_data="settings_count_folders_on_page")],
     [InlineKeyboardButton(text="📄 Количество записей на странице", callback_data="settings_count_items_on_page")],
     [InlineKeyboardButton(text="🌐 Язык интерфейса", callback_data="settings_language")],
-    [InlineKeyboardButton(text="❌ Закрыть", callback_data="settings_close")],
+    [InlineKeyboardButton(text="✖️ Закрыть", callback_data="settings_close")],
 ]
 
 back_to_settings_button = InlineKeyboardButton(text="↩️ Назад", callback_data="settings_back")
 
-START_COUNT_RANGE = 3
-END_COUNT_RANGE = 11
+START_FOLDER_COUNT_RANGE = 6
+END_FOLDER_COUNT_RANGE = 20
+COUNT_FOLDER_ON_ROW = 2
+
+START_ITEM_COUNT_RANGE = 3
+END_ITEM_COUNT_RANGE = 10
+COUNT_ITEM_ON_ROW = 1
+
 ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS = 2
 
 CURRENT_LABEL = "✅"  # "🟢"
 
 settings_count_folders_buttons = [[] for _ in range(ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS + 1)]
-for row in range(START_COUNT_RANGE, END_COUNT_RANGE):
-    index = int((row - START_COUNT_RANGE) //
-                ((END_COUNT_RANGE - START_COUNT_RANGE) / ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS)
+for row in range(START_FOLDER_COUNT_RANGE, END_FOLDER_COUNT_RANGE + COUNT_FOLDER_ON_ROW, COUNT_FOLDER_ON_ROW):
+    index = int((row - START_FOLDER_COUNT_RANGE + COUNT_FOLDER_ON_ROW) //
+                ((END_FOLDER_COUNT_RANGE + COUNT_FOLDER_ON_ROW + (COUNT_FOLDER_ON_ROW - 1) - START_FOLDER_COUNT_RANGE) /
+                 ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS)
                 )
     (settings_count_folders_buttons[index]
      .append(InlineKeyboardButton(text=str(row), callback_data=f"settings_count_folders_{row}")))
 settings_count_folders_buttons[ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS].append(back_to_settings_button)
 
 settings_count_items_buttons = [[], [], []]
-for row in range(3, 11):
-    index = int((row - START_COUNT_RANGE) //
-                ((END_COUNT_RANGE - START_COUNT_RANGE) / ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS)
+for row in range(START_ITEM_COUNT_RANGE, END_ITEM_COUNT_RANGE + 1):
+    index = int((row - START_ITEM_COUNT_RANGE) //
+                ((END_ITEM_COUNT_RANGE + COUNT_ITEM_ON_ROW + (COUNT_ITEM_ON_ROW - 1) - START_ITEM_COUNT_RANGE) /
+                 ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS)
                 )
     (settings_count_items_buttons[index]
      .append(InlineKeyboardButton(text=str(row), callback_data=f"settings_count_items_{row}")))
@@ -229,6 +238,7 @@ async def back_settings_handler(callback_query: aiogram.types.CallbackQuery):
 async def close_settings_handler(callback_query: aiogram.types.CallbackQuery):
     await bot.delete_message(chat_id=callback_query.message.chat.id, message_id=callback_query.message.message_id)
     await callback_query.answer()
+    await show_folders(callback_query.from_user.id, need_to_resend=True)
 
 
 def get_inline_markup_with_selected_current_setting(inline_keyboard, current_value):

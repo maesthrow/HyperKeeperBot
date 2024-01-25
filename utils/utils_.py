@@ -5,7 +5,7 @@ from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeybo
 from callbacks.callbackdata import FolderCallback
 from enums.enums import Environment
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
-from firebase_pack.firebase_folder_reader import get_folder_data
+from firebase_pack.firebase_folder_reader import get_folder_data, get_folders_in_folder
 from firebase_pack.firebase_item_reader import get_folder_items, get_simple_item
 from utils.data_manager import get_data
 from utils.utils_button_manager import check_button_exists
@@ -106,43 +106,66 @@ async def create_folder_button(folder_id, folder_name):
     )
 
 
-async def get_inline_markup_folders(user_id, folder_buttons, current_page):
-    inline_markup = InlineKeyboardMarkup(inline_keyboard=[], row_width=3)
-
-    sorted_buttons = sorted(folder_buttons, key=lambda x: x.text)
+async def get_folders_for_page(user_id, current_folder_id, current_page):
+    user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
+    sorted_folders = sorted(user_folders.items(), key=lambda item: item[1].get("name"))
 
     settings = await get_from_user_collection(user_id, 'settings')
     folders_on_page_count = settings.get('folders_on_page_count', 4)
 
     if current_page > 0:
-        buttons = sorted_buttons[current_page * folders_on_page_count - folders_on_page_count:
+        folders = sorted_folders[current_page * folders_on_page_count - folders_on_page_count:
                                  current_page * folders_on_page_count]
     else:
-        buttons = sorted_buttons
-    for button in buttons:
+        folders = sorted_folders
+    return folders
+
+
+async def get_inline_markup_folders(user_id, current_folder_id, current_page):
+    user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
+    sorted_folders = sorted(user_folders.items(), key=lambda item: item[1].get("name"))
+
+    settings = await get_from_user_collection(user_id, 'settings')
+    folders_on_page_count = settings.get('folders_on_page_count', 6)
+
+    if current_page > 0:
+        folders = sorted_folders[current_page * folders_on_page_count - folders_on_page_count:
+                                 current_page * folders_on_page_count]
+    else:
+        folders = sorted_folders
+
+    folder_buttons = [
+        await create_folder_button(folder_id, folder_data.get("name"))
+        for folder_id, folder_data in folders
+    ]
+
+    folders_inline_markup = InlineKeyboardMarkup(inline_keyboard=[], row_width=3)
+
+    buttons_row = []
+    for button in folder_buttons:
         folder_name_button = button
+        if len(buttons_row) < 2:
+            buttons_row.append(folder_name_button)
+        if len(buttons_row) == 2:
+            folders_inline_markup.inline_keyboard.append(buttons_row)
+            buttons_row = []
+    if len(buttons_row) > 0:
+        folders_inline_markup.inline_keyboard.append(buttons_row)
 
-        # Добавляем кнопки на одну строку
-        inline_markup.inline_keyboard.append([folder_name_button])
-        # inline_markup.row(folder_name_button, InlineKeyboardButton(text='', callback_data='empty'),
-        #                   InlineKeyboardButton(text='', callback_data='empty'))
-
-    max_folder_num = len(sorted_buttons)
+    max_folder_num = len(sorted_folders)
     last_page = math.ceil(max_folder_num / folders_on_page_count)
     if last_page > 1 and current_page > 0:
-        inline_markup = await get_inline_markup_for_pages('folders', inline_markup, current_page,
+        folders_inline_markup = await get_inline_markup_for_pages('folders', folders_inline_markup, current_page,
                                                           last_page, folders_on_page_count,
                                                           max_folder_num, 'go_to_page_folders_')
 
-    return inline_markup
+    return folders_inline_markup
 
 
 async def get_inline_markup_items_in_folder(user_id, current_folder_id, current_page=1, search_text=None):
     # Получаем записи из коллекции items для текущей папки
     folder_items = await get_folder_items(user_id, current_folder_id, search_text)
-    list_items_id = []
-    for item_id in folder_items:
-        list_items_id.append(item_id)
+    list_items_id = [item_id for item_id in folder_items]
 
     settings = await get_from_user_collection(user_id, 'settings')
     items_on_page_count = settings.get('items_on_page_count', 4)

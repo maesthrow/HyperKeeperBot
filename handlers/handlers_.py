@@ -68,20 +68,15 @@ async def show_storage(message: Message, state: FSMContext):
     await state.clear()
 
     user_id = message.from_user.id
-    user_folders = await get_folders_in_folder(user_id)
+
+    #user_folders = await get_folders_in_folder(user_id)
 
     data = await get_data(user_id)
+    await set_current_folder_id(user_id)
 
     # если это перемещение записи
     movement_item_id = data.get('movement_item_id')
     movement_item_initial_folder_id = get_folder_id(movement_item_id) if movement_item_id else None
-
-    await set_current_folder_id(user_id)
-
-    folder_buttons = [
-        await create_folder_button(folder_id, folder_data.get("name"))
-        for folder_id, folder_data in user_folders.items()
-    ]
 
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
@@ -93,31 +88,46 @@ async def show_storage(message: Message, state: FSMContext):
 
     markup = create_general_reply_markup(general_buttons)
 
+    # folder_buttons = [
+    #     await create_folder_button(folder_id, folder_data.get("name"))
+    #     for folder_id, folder_data in user_folders.items()
+    # ]
+
     current_folder_path_names = await get_folder_path_names(user_id)
-    folders_inline_markup = await get_inline_markup_folders(user_id, folder_buttons, 1)
-    items_inline_markup = await get_inline_markup_items_in_folder(user_id, ROOT_FOLDER_ID, 1)
+    # folders_inline_markup = await get_inline_markup_folders(user_id, ROOT_FOLDER_ID, 1)
+    # items_inline_markup = await get_inline_markup_items_in_folder(user_id, ROOT_FOLDER_ID, 1)
+
+    folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, ROOT_FOLDER_ID)
+
     if items_inline_markup.inline_keyboard:
-        folders_inline_markup = await get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
+        folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
     await bot.send_message(user_id, f"🗂️", reply_markup=markup)
     folders_message = await bot.send_message(user_id, f"⏳")
-    folders_message = await folders_message.edit_text(
+    data['folders_message'] = await folders_message.edit_text(
                               text=f"🗂️ <b>{current_folder_path_names}</b>",
                               reply_markup=folders_inline_markup
     )
-    # folders_message = await bot.send_message(user_id,
-    #                                          f"🗂️ <b>{current_folder_path_names}</b>",
-    #                                          reply_markup=folders_inline_markup)
 
     data['current_keyboard'] = markup
-    data['folders_message'] = folders_message
     data['page_folders'] = str(1)
     data['page_items'] = str(1)
     data['item_id'] = None
     data['dict_search_data'] = None
     await set_data(user_id, data)
 
+
+async def get_folders_and_items(user_id, root_folder_id):
+    # Вызов двух асинхронных функций параллельно и ожидание результатов
+    folders_inline_markup_task = get_inline_markup_folders(user_id, root_folder_id, 1)
+    items_inline_markup_task = get_inline_markup_items_in_folder(user_id, root_folder_id, 1)
+
+    # Ожидание завершения обоих задач
+    folders_inline_markup = await folders_inline_markup_task
+    items_inline_markup = await items_inline_markup_task
+
+    return folders_inline_markup, items_inline_markup
 
 
 @router.callback_query(F.data.contains("storage_show_all"))

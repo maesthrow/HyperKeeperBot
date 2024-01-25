@@ -19,7 +19,7 @@ from utils.utils_items_db import util_delete_item
 # import handlers.handlers_item_edit_inline_buttons
 
 
-delete_question = f"\n\n<b><i>Хотите удалить запись?</i></b>"
+delete_question = f"\n\n\n<b><i>Хотите удалить запись?</i></b>"
 
 router = Router()
 dp.include_router(router)
