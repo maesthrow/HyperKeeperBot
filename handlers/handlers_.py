@@ -69,8 +69,6 @@ async def show_storage(message: Message, state: FSMContext):
 
     user_id = message.from_user.id
 
-    #user_folders = await get_folders_in_folder(user_id)
-
     data = await get_data(user_id)
     await set_current_folder_id(user_id)
 
@@ -88,28 +86,21 @@ async def show_storage(message: Message, state: FSMContext):
 
     markup = create_general_reply_markup(general_buttons)
 
-    # folder_buttons = [
-    #     await create_folder_button(folder_id, folder_data.get("name"))
-    #     for folder_id, folder_data in user_folders.items()
-    # ]
-
     current_folder_path_names = await get_folder_path_names(user_id)
-    # folders_inline_markup = await get_inline_markup_folders(user_id, ROOT_FOLDER_ID, 1)
-    # items_inline_markup = await get_inline_markup_items_in_folder(user_id, ROOT_FOLDER_ID, 1)
 
     folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, ROOT_FOLDER_ID)
 
+    await bot.send_message(user_id, f"🗂️", reply_markup=markup)
+    folders_message = await bot.send_message(user_id, f"⏳")
+    #await asyncio.sleep(0.1)
     if items_inline_markup.inline_keyboard:
         folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
-    await bot.send_message(user_id, f"🗂️", reply_markup=markup)
-    folders_message = await bot.send_message(user_id, f"⏳")
     data['folders_message'] = await folders_message.edit_text(
                               text=f"🗂️ <b>{current_folder_path_names}</b>",
                               reply_markup=folders_inline_markup
     )
-
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
     data['page_items'] = str(1)
