@@ -8,17 +8,14 @@ from aiogram import Router, F
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, CallbackQuery, KeyboardButton, Message
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from firebase_pack.firebase_collection_folders import add_user_folders, ROOT_FOLDER_ID
-from firebase_pack.firebase_collection_users import add_user
-from firebase_pack.firebase_folder_reader import get_folders_in_folder
-from firebase_pack.firebase_item_reader import get_folder_id
 from handlers import states
-from handlers.handlers_folder import create_folder_button, show_all_folders, show_folders
+from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item import movement_item_handler
 from load_all import dp, bot
 from models.item_model import Item
+from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
+from mongo_db.mongo_collection_users import add_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
@@ -26,6 +23,7 @@ from utils.utils_button_manager import create_general_reply_markup, general_butt
     get_folders_with_items_inline_markup
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_items import show_all_items
+from utils.utils_items_reader import get_folder_id
 
 # from aiogram_media_group import media_group_handler, MediaGroupFilter
 
@@ -61,7 +59,7 @@ async def start(message: aiogram.types.Message, state: FSMContext):
 async def storage(message: Message, state: FSMContext):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         future = executor.submit(functools.partial(show_storage, message, state))
-        result = await future.result(timeout=3)
+        result = await future.result(timeout=5)
 
 
 async def show_storage(message: Message, state: FSMContext):

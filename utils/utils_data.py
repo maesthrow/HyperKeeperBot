@@ -1,8 +1,5 @@
-from aiogram.fsm.storage.base import StorageKey
-
-from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection
-from firebase_pack.firebase_collection_users import get_user_collection, set_user_collection
-from load_all import dp, bot
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection
+from mongo_db.mongo_collection_users import get_user_collection, set_user_collection
 from utils.data_manager import get_data, set_data
 
 
@@ -47,16 +44,20 @@ async def get_from_user_collection(user_id, collection_name: str):
     collection = data.get(f'{collection_name}_collection', None)
 
     if not collection:
+        print(f"get_from_user_collection -> collection_name {collection_name}")
         collection = await get_user_collection(user_id, collection_name)
-        await set_to_user_collection(user_id, collection)
+        await set_to_user_collection(user_id, collection_name, collection)
 
     return collection
 
 
 async def set_to_user_collection(user_id, collection_name: str, collection=None):
+    print(f"set_to_user_collection -> collection_name {collection_name}")
     if not collection:
         collection = await get_user_collection(user_id, collection_name)
+        print(f"1 - {collection}")
     else:
+        print(f"2 - {collection}")
         await set_user_collection(user_id, collection_name, collection)
 
     data = await get_data(user_id)

@@ -3,13 +3,13 @@ from datetime import datetime
 
 from aiogram.fsm.context import FSMContext
 
-from firebase_pack.firebase_item_reader import get_item
 from handlers import states
 from handlers.handlers_item_inline_buttons import close_item_handler
 from load_all import bot
 from models.item_model import Item
 from utils.data_manager import get_data
 from utils.utils_items_db import util_edit_item
+from utils.utils_items_reader import get_item
 
 
 async def on_edit_item(user_id, edit_text, state: FSMContext):

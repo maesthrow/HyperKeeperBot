@@ -1,4 +1,4 @@
-from firebase_pack.firebase_collection_folders import set_user_folders_data
+from mongo_db.mongo_collection_folders import set_user_folders_data
 from utils.utils_data import get_folders_collection
 
 

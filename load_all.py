@@ -9,6 +9,7 @@ from aiogram.types import BotCommand
 
 from config import TOKEN
 
+
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG)
 

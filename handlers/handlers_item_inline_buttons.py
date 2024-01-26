@@ -6,7 +6,6 @@ import aiogram.types
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
-from firebase_pack.firebase_item_reader import get_folder_id
 from handlers.handlers_folder import show_folders
 from load_all import bot, dp
 from models.item_model import Item
@@ -15,6 +14,7 @@ from utils.utils_button_manager import show_item_files_button, hide_item_files_b
 from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
+from utils.utils_items_reader import get_folder_id
 
 # import handlers.handlers_item_edit_inline_buttons
 

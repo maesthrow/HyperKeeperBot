@@ -5,12 +5,12 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton
 
-from firebase_pack.firebase_item_reader import get_item
 from handlers import states
 from load_all import bot, dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import item_edit_buttons
+from utils.utils_items_reader import get_item
 
 edit_question = f"\n\n\n<b><i>Что будете редактировать?</i></b>"
 

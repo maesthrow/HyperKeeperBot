@@ -8,7 +8,6 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQu
 
 import load_all
 from enums.enums import Environment
-from firebase_pack.firebase_item_reader import get_item, get_folder_id
 from handlers import states
 from handlers.handlers_edit_item_title import on_edit_item
 from handlers.handlers_folder import show_folders
@@ -25,6 +24,7 @@ from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util
     util_move_item
 
 import handlers.handlers_item_edit_inline_buttons
+from utils.utils_items_reader import get_item, get_folder_id
 
 cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 

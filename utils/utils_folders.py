@@ -1,6 +1,6 @@
 import aiogram
 
-from firebase_pack.firebase_folder_reader import get_folders_count_in_folder, get_user_folders_deep_count
+from utils.utils_folders_reader import get_folders_count_in_folder, get_user_folders_deep_count
 from utils.utils_statistic import util_get_items_count, util_get_items_deep_count
 
 invalid_chars = r'/\:,.*?"<>|'
