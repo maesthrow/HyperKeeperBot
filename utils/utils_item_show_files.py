@@ -1,21 +1,29 @@
 import asyncio
 
+from aiogram.types import Location
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from load_all import bot
 from models.item_model import Item
-#from utils.MediaGroupBuilder import MediaGroupBuilder
+from utils.ContentGroupBuilder import ContentGroupBuilder
 from utils.data_manager import get_data, set_data
+from utils.utils_files import dict_to_location
 
 
 async def show_item_files(user_id, item: Item):
     media_files = await item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builders = [MediaGroupBuilder()]
-        await fill_builders(item, media_group_builders)
+        location_builders = [ContentGroupBuilder()]
+        await fill_builders(
+            item=item,
+            media_group_builders=media_group_builders,
+            location_builders=location_builders
+        )
 
         item_files_messages = []
         await send_media_group(user_id, media_group_builders, item_files_messages)
+        await send_locations(user_id, location_builders, item_files_messages)
 
         await update_data(user_id, item_files_messages)
 
@@ -36,14 +44,22 @@ async def send_media_group(user_id, media_group_builders, item_files_messages):
             )
 
 
-async def send_voices(user_id, voice_builders, item_files_messages):
-    for v_builder in voice_builders:
-        voices = v_builder.build()
-        if len(voices) > 0:
-            for voice in voices:
+async def send_locations(user_id, location_builders, item_files_messages):
+    for l_builder in location_builders:
+        locations = l_builder.build()
+        if len(locations) > 0:
+            for location in locations:
                 await asyncio.sleep(0.25)
                 item_files_messages.append(
-                    await bot.send_voice(chat_id=user_id, voice=voice)
+                    await bot.send_location(
+                        chat_id=user_id,
+                        latitude=location.latitude,
+                        longitude=location.longitude,
+                        horizontal_accuracy=location.horizontal_accuracy,
+                        live_period=location.live_period,
+                        heading=location.heading,
+                        proximity_alert_radius=location.proximity_alert_radius
+                    )
                 )
 
 
@@ -58,24 +74,23 @@ async def send_video_notes(user_id, video_note_builders, item_files_messages):
                 )
 
 
-async def fill_builders(item: Item, media_group_builders):
+async def fill_builders(item: Item, media_group_builders, location_builders):
     tasks = []
     for content_type, files in item.media.items():
         for file_id in files:
-            if content_type == 'voice':
-                content_type = 'audio'
-            elif content_type == 'video_note':
-                content_type = 'video'
-            #     await process_voice(file_id, voice_builders)
-            #     #tasks.append(process_voice(file_id, voice_builders))
-            # elif content_type == 'video_note':
-            #     await process_video_note(file_id, video_note_builders)
-            #     #tasks.append(process_video_note(file_id, video_note_builders))
-            # else:
-            await process_media_group(content_type, file_id, media_group_builders)
-                #tasks.append(process_media_group(content_type, file_id, media_group_builders))
+            if content_type == 'location':
+                location: Location = dict_to_location(file_id)
+                await process_location_group(location, location_builders)
+            else:
+                if content_type == 'voice':
+                    content_type = 'audio'
+                elif content_type == 'video_note':
+                    content_type = 'video'
+                await process_media_group(content_type, file_id, media_group_builders)
 
-    #await asyncio.gather(*tasks)
+                # tasks.append(process_media_group(content_type, file_id, media_group_builders))
+
+    # await asyncio.gather(*tasks)
 
 
 async def process_media_group(content_type, file_id, media_group_builders):
@@ -84,10 +99,10 @@ async def process_media_group(content_type, file_id, media_group_builders):
     media_group_builders[-1].add(type=content_type, media=str(file_id))
 
 
-async def process_voice(file_id, voice_builders):
-    if len(voice_builders[-1]._media) >= 10:
-        voice_builders.append(MediaGroupBuilder())
-    voice_builders[-1].add_voice(file_id)
+async def process_location_group(location: Location, location_builders):
+    if len(location_builders[-1]._media) >= 10:
+        location_builders.append(ContentGroupBuilder())
+    location_builders[-1].add_location(location)
 
 
 async def process_video_note(file_id, video_note_builders):

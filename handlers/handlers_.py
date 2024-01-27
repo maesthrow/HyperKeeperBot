@@ -22,8 +22,10 @@ from utils.utils_button_manager import create_general_reply_markup, general_butt
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
     get_folders_with_items_inline_markup
 from utils.utils_data import set_current_folder_id, get_current_folder_id
+from utils.utils_files import get_file_id_by_content_type
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id
+from utils.utils_sender_message_loop import send_storage
 
 # from aiogram_media_group import media_group_handler, MediaGroupFilter
 
@@ -90,15 +92,16 @@ async def show_storage(message: Message, state: FSMContext):
 
     await bot.send_message(user_id, f"🗂️", reply_markup=markup)
     folders_message = await bot.send_message(user_id, f"⏳")
-    #await asyncio.sleep(0.1)
+    folders_message = await asyncio.wait_for(folders_message.edit_text(
+        text=f"🗂️ <b>{current_folder_path_names}</b>",
+        reply_markup=folders_inline_markup,
+    ), timeout=1)
+
     if items_inline_markup.inline_keyboard:
         folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
-    data['folders_message'] = await folders_message.edit_text(
-                              text=f"🗂️ <b>{current_folder_path_names}</b>",
-                              reply_markup=folders_inline_markup
-    )
+    data['folders_message'] = await send_storage(user_id, folders_message, folders_inline_markup, 20)
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
     data['page_items'] = str(1)
@@ -162,12 +165,10 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     await state.set_state(states.Item.NewStepTitle)
 
 
-@router.message(F.content_type.in_(['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker']))
-# @media_group_handler
+@router.message(F.content_type.in_(['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location']))
 async def media_files_handler(message: Message, state: FSMContext):
-    print("media_files_handler")
-    print(message.content_type)
-
+    if message.content_type == 'location':
+        print(f"message: {message.location}")
     if message.media_group_id:
         data = await state.get_data()
         file_messages = data.get('file_messages', [])
@@ -209,7 +210,7 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
     new_item: Item = Item("")
     for message in messages:
         new_item = await get_new_item_from_state_data(message, state)
-        file_id = get_file_id(message)
+        file_id = get_file_id_by_content_type(message)
         if file_id:
             new_item.media[message.content_type].append(file_id)
     # if new_item.text == "":
@@ -217,30 +218,6 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
 
     await state.update_data(item=new_item, add_item_messages=add_item_messages)
     await state.set_state(states.Item.NewStepTitle)
-
-
-def get_file_id(message: aiogram.types.Message):
-    content_type = message.content_type
-    file_id = None
-    if content_type == 'photo':
-        file_id = message.photo[-1].file_id
-    elif content_type == 'video':
-        file_id = message.video.file_id
-    elif content_type == 'audio':
-        file_id = message.audio.file_id
-    elif content_type == 'document':
-        file_id = message.document.file_id
-    elif content_type == 'voice':
-        file_id = message.voice.file_id
-    elif content_type == 'video_note':
-        file_id = message.video_note.file_id
-    # elif content_type == 'location':
-    #     file_id = message.location
-    # elif content_type == 'contact':
-    #     file_id = message.contact
-    elif content_type == 'sticker':
-        file_id = message.sticker.file_id
-    return file_id
 
 
 async def get_new_item_from_state_data(message: aiogram.types.Message, state: FSMContext):
