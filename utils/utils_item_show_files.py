@@ -86,14 +86,18 @@ async def send_contacts(user_id, contact_builders, item_files_messages):
 async def fill_builders(item: Item, media_group_builders, location_builders, contact_builders):
     #tasks = []
     for content_type, files in item.media.items():
-        for file_id in files:
+        for file_info in files:
             if content_type == 'location':
-                location: Location = dict_to_location(file_id)
+                location: Location = dict_to_location(file_info)
                 await process_location_group(location, location_builders)
             elif content_type == 'contact':
-                contact: Contact = dict_to_contact(file_id)
+                contact: Contact = dict_to_contact(file_info)
                 await process_contact_group(contact, contact_builders)
             else:
+                if content_type == 'document':
+                    file_id = file_info.get('file_id')
+                else:
+                    file_id = file_info
                 if content_type == 'voice':
                     content_type = 'audio'
                 elif content_type == 'video_note':

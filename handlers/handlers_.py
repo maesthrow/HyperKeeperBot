@@ -183,8 +183,8 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
-    if message.content_type == 'contact':
-        print(f"message: {message.contact}")
+    if message.content_type == 'document':
+        print(f"message: {message}")
     if message.media_group_id:
         data = await state.get_data()
         file_messages = data.get('file_messages', [])
