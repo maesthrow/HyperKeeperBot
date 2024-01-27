@@ -1,7 +1,7 @@
-from firebase_pack.firebase_item_reader import get_folder_id, get_item
-from firebase_pack.firebase_collection_folders import set_user_folders_data
 from models.item_model import Item
+from mongo_db.mongo_collection_folders import set_user_folders_data
 from utils.utils_data import get_folders_collection, set_folders_collection
+from utils.utils_items_reader import get_folder_id, get_item
 
 
 async def add_item_to_folder(user_id, folder_id, item: Item):
@@ -36,7 +36,6 @@ async def add_item_to_folder(user_id, folder_id, item: Item):
 
         # Обновляем данные пользователя
         await set_user_folders_data(user_id, {"folders": folders_collection})
-
         return new_item_id  # Успешно добавлено
     else:
         return None  # Папка не найдена

@@ -40,7 +40,3 @@ async def get_user_folders_deep_count(user_id, folder_id=ROOT_FOLDER_ID):
     for sub_folder_id in folders_in_folder:
         deep_count += await get_user_folders_deep_count(user_id, sub_folder_id)
     return deep_count
-
-
-
-

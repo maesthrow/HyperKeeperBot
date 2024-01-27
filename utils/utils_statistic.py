@@ -1,6 +1,6 @@
-from firebase_pack.firebase_folder_reader import get_folders_in_folder
-from firebase_pack.firebase_item_reader import get_folder_items
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
+from utils.utils_folders_reader import get_folders_in_folder
+from utils.utils_items_reader import get_folder_items
 
 
 async def util_get_items_count(user_id, folder_id=ROOT_FOLDER_ID):

@@ -1,5 +1,5 @@
-from firebase_pack.firebase_folder_writer import add_new_folder, delete_folder, rename_folder
 from utils.utils_data import set_folders_collection
+from utils.utils_folders_writer import add_new_folder, delete_folder, rename_folder
 
 
 async def util_add_new_folder(user_id, new_folder_name, parent_folder_id):

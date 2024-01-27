@@ -9,6 +9,7 @@ from aiogram.types import BotCommand
 
 from config import TOKEN
 
+
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG)
 
@@ -16,8 +17,6 @@ storage = MemoryStorage()
 
 bot = Bot(token=str(TOKEN), parse_mode="HTML")
 dp = Dispatcher(bot=bot, storage=storage)
-
-# semaphore = asyncio.Semaphore(value=100)
 
 
 async def setup_bot():

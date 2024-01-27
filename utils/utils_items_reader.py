@@ -1,8 +1,7 @@
-from firebase_pack.firebase_folder_reader import get_folder_data
 from models.item_model import Item
+from utils.utils_folders_reader import get_folder_data
 
 
-# Функция для извлечения последнего числа из ключа
 def get_last_number(key):
     return int(key.split('/')[-1])
 
@@ -15,7 +14,7 @@ def get_folder_id(item_id):
 async def get_folder_items(user_id, folder_id, text_search=None):
     """Возвращает элементы папки по её идентификатору с учетом текстового поиска."""
     folder_data = await get_folder_data(user_id, folder_id)
-    items = folder_data.get("items", [])
+    items = folder_data.get("items", {})
 
     if text_search:
         # Фильтрация элементов по текстовому поиску в title или text
