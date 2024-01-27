@@ -116,17 +116,7 @@ def check_button_exists_part_of_text(keyboard: ReplyKeyboardMarkup, button_text:
 
 
 def get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup):
-    # loop = asyncio.get_event_loop()
-    # result = await loop.run_in_executor(
-    #     concurrent.futures.ProcessPoolExecutor(max_workers=2),
-    #     functools.partial(merge_keyboards, folders_inline_markup, items_inline_markup))
     return merge_keyboards(folders_inline_markup, items_inline_markup)
-
-
-# async def get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup):
-#     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-#         future = executor.submit(functools.partial(merge_keyboards, folders_inline_markup, items_inline_markup))
-#         result = await future.result(timeout=3)
 
 
 def merge_keyboards(*markups):

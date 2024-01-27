@@ -18,8 +18,6 @@ storage = MemoryStorage()
 bot = Bot(token=str(TOKEN), parse_mode="HTML")
 dp = Dispatcher(bot=bot, storage=storage)
 
-#semaphore = asyncio.Semaphore(value=100)
-
 
 async def setup_bot():
     pass
