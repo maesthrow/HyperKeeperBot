@@ -7,7 +7,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 # from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.types import BotCommand
 
-from config import TOKEN
+from config import BOT_TOKEN
 
 
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
@@ -15,9 +15,10 @@ logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(
 
 storage = MemoryStorage()
 
-bot = Bot(token=str(TOKEN), parse_mode="HTML")
+bot = Bot(token=str(BOT_TOKEN), parse_mode="HTML")
 dp = Dispatcher(bot=bot, storage=storage)
 
+# current_item = {}
 
 async def setup_bot():
     pass
@@ -30,7 +31,7 @@ async def setup_bot():
     # connector._session_timeout = aiohttp.ClientTimeout(total=30)
 
 
-current_item = {}
+
 
 
 async def setup_bot_commands():

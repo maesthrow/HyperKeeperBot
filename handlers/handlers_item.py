@@ -24,6 +24,8 @@ from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util
     util_move_item
 
 import handlers.handlers_item_edit_inline_buttons
+import handlers.handlers_inline_query
+
 from utils.utils_items_reader import get_item, get_folder_id
 
 cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
@@ -81,7 +83,7 @@ async def show_item(user_id, item_id):
     data['current_inline_markup'] = inline_markup
     #data['current_keyboard'] = markup
     await set_data(user_id, data)
-    load_all.current_item[user_id] = item
+    #load_all.current_item[user_id] = item
 
 
 async def get_item_inline_markup(item: Item):
