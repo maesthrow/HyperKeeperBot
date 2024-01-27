@@ -1,4 +1,4 @@
-from aiogram.types import Message, Location
+from aiogram.types import Message, Location, Contact
 
 
 def get_file_id_by_content_type(message: Message):
@@ -18,8 +18,8 @@ def get_file_id_by_content_type(message: Message):
         file_id = message.video_note.file_id
     elif content_type == 'location':
         file_id = location_to_dict(message.location)
-    # elif content_type == 'contact':
-    #     file_id = message.contact
+    elif content_type == 'contact':
+        file_id = contact_to_dict(message.contact)
     elif content_type == 'sticker':
         file_id = message.sticker.file_id
     return file_id
@@ -38,3 +38,17 @@ def location_to_dict(location: Location):
 
 def dict_to_location(location_dict: dict):
     return Location(**location_dict)
+
+
+def contact_to_dict(contact: Contact):
+    return {
+        'phone_number': contact.phone_number,
+        'first_name': contact.first_name,
+        'last_name': contact.last_name,
+        'user_id': contact.user_id,
+        'vcard': contact.vcard
+    }
+
+
+def dict_to_contact(contact_dict: dict):
+    return Contact(**contact_dict)

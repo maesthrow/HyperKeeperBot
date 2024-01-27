@@ -25,7 +25,7 @@ from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_files import get_file_id_by_content_type
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id
-from utils.utils_sender_message_loop import send_storage
+from utils.utils_sender_message_loop import send_storage, send_storage_folders, send_storage_with_items
 
 # from aiogram_media_group import media_group_handler, MediaGroupFilter
 
@@ -91,17 +91,31 @@ async def show_storage(message: Message, state: FSMContext):
     folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, ROOT_FOLDER_ID)
 
     await bot.send_message(user_id, f"🗂️", reply_markup=markup)
+    folders_message: Message
     folders_message = await bot.send_message(user_id, f"⏳")
-    folders_message = await asyncio.wait_for(folders_message.edit_text(
+    #await asyncio.sleep(0.3)
+    folders_message = await send_storage_folders(
+        user_id=user_id,
+        message=folders_message,
         text=f"🗂️ <b>{current_folder_path_names}</b>",
-        reply_markup=folders_inline_markup,
-    ), timeout=1)
+        inline_markup=folders_inline_markup,
+        max_attempts=20
+    )
+    # folders_message = await asyncio.wait_for(folders_message.edit_text(
+    #     text=f"🗂️ <b>{current_folder_path_names}</b>",
+    #     reply_markup=folders_inline_markup,
+    # ), timeout=1)
 
     if items_inline_markup.inline_keyboard:
         folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
-
-    data['folders_message'] = await send_storage(user_id, folders_message, folders_inline_markup, 20)
+    #await asyncio.sleep(0.3)
+    data['folders_message'] = await send_storage_with_items(
+        user_id=user_id,
+        message=folders_message,
+        inline_markup=folders_inline_markup,
+        max_attempts=20
+    )
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
     data['page_items'] = str(1)
@@ -165,10 +179,12 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     await state.set_state(states.Item.NewStepTitle)
 
 
-@router.message(F.content_type.in_(['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location']))
+@router.message(F.content_type.in_(
+    ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
+))
 async def media_files_handler(message: Message, state: FSMContext):
-    if message.content_type == 'location':
-        print(f"message: {message.location}")
+    if message.content_type == 'contact':
+        print(f"message: {message.contact}")
     if message.media_group_id:
         data = await state.get_data()
         file_messages = data.get('file_messages', [])

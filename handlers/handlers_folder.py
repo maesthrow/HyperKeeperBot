@@ -115,12 +115,12 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         else:
             data['current_keyboard'] = markup
             await bot.send_message(user_id, f"🗂️", reply_markup=markup)
-            await asyncio.sleep(0.3)
+            #await asyncio.sleep(0.3)
             folders_message = await send_new_folders_message(user_id, current_folder_path_names, folders_inline_markup)
     except:
         data['current_keyboard'] = markup
         await bot.send_message(user_id, f"🗂️", reply_markup=markup)
-        await asyncio.sleep(0.3)
+        #await asyncio.sleep(0.3)
         folders_message = await send_new_folders_message(user_id, current_folder_path_names, folders_inline_markup)
 
     data['folders_message'] = folders_message

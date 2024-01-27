@@ -176,13 +176,13 @@ async def on_add_new_item(state: FSMContext, item: Item, message: Message=None, 
         data['accept_add_item_message'] = accept_add_item_message
         await set_data(user_id, data)
         await asyncio.sleep(0.4)
-        await show_folders(user_id, need_to_resend=False)
+        await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=False)
         await asyncio.sleep(0.2)
         await show_item(user_id, new_item_id)
     else:
         await bot.send_message(chat_id=user_id, text="Не получилось добавить запись ❌")
         # await asyncio.sleep(0.4)
-        await show_folders(user_id, need_to_resend=True)
+        await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=True)
 
 
 @router.message(F.text == "🗑 Удалить")
