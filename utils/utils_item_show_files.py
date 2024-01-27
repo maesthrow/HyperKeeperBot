@@ -1,8 +1,10 @@
 import asyncio
 
+from aiogram.utils.media_group import MediaGroupBuilder
+
 from load_all import bot
 from models.item_model import Item
-from utils.MediaGroupBuilder import MediaGroupBuilder
+#from utils.MediaGroupBuilder import MediaGroupBuilder
 from utils.data_manager import get_data, set_data
 
 
@@ -10,14 +12,10 @@ async def show_item_files(user_id, item: Item):
     media_files = await item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builders = [MediaGroupBuilder()]
-        voice_builders = [MediaGroupBuilder()]
-        video_note_builders = [MediaGroupBuilder()]
-        await fill_builders(item, media_group_builders, voice_builders, video_note_builders)
+        await fill_builders(item, media_group_builders)
 
         item_files_messages = []
         await send_media_group(user_id, media_group_builders, item_files_messages)
-        await send_voices(user_id, voice_builders, item_files_messages)
-        await send_video_notes(user_id, video_note_builders, item_files_messages)
 
         await update_data(user_id, item_files_messages)
 
@@ -60,37 +58,39 @@ async def send_video_notes(user_id, video_note_builders, item_files_messages):
                 )
 
 
-async def fill_builders(item: Item, media_group_builders, voice_builders, video_note_builders):
+async def fill_builders(item: Item, media_group_builders):
     tasks = []
     for content_type, files in item.media.items():
         for file_id in files:
             if content_type == 'voice':
-                await process_voice(file_id, voice_builders)
-                #tasks.append(process_voice(file_id, voice_builders))
+                content_type = 'audio'
             elif content_type == 'video_note':
-                await process_video_note(file_id, video_note_builders)
-                #tasks.append(process_video_note(file_id, video_note_builders))
-            else:
-                await process_media_group(content_type, file_id, media_group_builders)
+                content_type = 'video'
+            #     await process_voice(file_id, voice_builders)
+            #     #tasks.append(process_voice(file_id, voice_builders))
+            # elif content_type == 'video_note':
+            #     await process_video_note(file_id, video_note_builders)
+            #     #tasks.append(process_video_note(file_id, video_note_builders))
+            # else:
+            await process_media_group(content_type, file_id, media_group_builders)
                 #tasks.append(process_media_group(content_type, file_id, media_group_builders))
 
     #await asyncio.gather(*tasks)
 
 
-
 async def process_media_group(content_type, file_id, media_group_builders):
-    if len(media_group_builders[-1].media_group) >= 10:
+    if len(media_group_builders[-1]._media) >= 10:
         media_group_builders.append(MediaGroupBuilder())
-    media_group_builders[-1].add(content_type, file_id)
+    media_group_builders[-1].add(type=content_type, media=str(file_id))
 
 
 async def process_voice(file_id, voice_builders):
-    if len(voice_builders[-1].media_group) >= 10:
+    if len(voice_builders[-1]._media) >= 10:
         voice_builders.append(MediaGroupBuilder())
     voice_builders[-1].add_voice(file_id)
 
 
 async def process_video_note(file_id, video_note_builders):
-    if len(video_note_builders[-1].media_group) >= 10:
+    if len(video_note_builders[-1]._media) >= 10:
         video_note_builders.append(MediaGroupBuilder())
     video_note_builders[-1].add_video_note(file_id)

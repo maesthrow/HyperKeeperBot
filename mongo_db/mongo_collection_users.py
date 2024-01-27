@@ -5,7 +5,6 @@ async def add_user(tg_user):
     """Добавляет пользователя в базу данных, если его не существует."""
     user_collection = db["users"]
     user_document = user_collection.find_one({"_id": tg_user.id})
-    print(user_document)
     if not user_document:
         user_data = {
             "_id": tg_user.id,
@@ -45,7 +44,6 @@ async def set_user_data(tg_user_id, data):
 async def get_user_collection(tg_user_id, collection_name: str):
     """Возвращает папки пользователя по идентификатору."""
     user_document = await get_user_data(tg_user_id)
-    print(f"collection_name {collection_name}")
     if user_document:
         return user_document.get(collection_name, {})
     return {}

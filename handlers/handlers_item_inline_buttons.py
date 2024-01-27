@@ -98,9 +98,12 @@ async def hide_item_files_handler(call: CallbackQuery):
 
 
 async def close_files(item_files_messages: list):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        future = executor.submit(functools.partial(on_close_files, item_files_messages))
-        result = await future.result(timeout=3)
+    try:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            future = executor.submit(functools.partial(on_close_files, item_files_messages))
+            result = await future.result(timeout=3)
+    except:
+        pass
 
 
 async def on_close_files(item_files_messages: list):

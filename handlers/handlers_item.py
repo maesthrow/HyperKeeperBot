@@ -4,7 +4,7 @@ import copy
 import aiogram
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, Message
 
 import load_all
 from enums.enums import Environment
@@ -141,8 +141,8 @@ async def cancel_add_new_item(call: CallbackQuery, state: FSMContext):
 @router.callback_query(states.Item.NewStepTitle, F.data == "skip_enter_item_title")
 async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    item = data.get('item')
-    await on_add_new_item(item, call.message, state)
+    item: Item = data.get('item')
+    await on_add_new_item(state, item, call=call)
     await call.answer()
 
 
@@ -151,12 +151,12 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
     item.title = message.text
-    await on_add_new_item(item, message, state)
+    await on_add_new_item(state, item, message=message)
     await bot.delete_message(message.chat.id, message.message_id)
 
 
-async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSMContext):
-    user_id = message.from_user.id
+async def on_add_new_item(state: FSMContext, item: Item, message: Message=None, call: CallbackQuery=None):
+    user_id = message.from_user.id if message else call.from_user.id if call else 0
     current_folder_id = await get_current_folder_id(user_id)
     new_item_id = await util_add_item_to_folder(user_id, current_folder_id, item)
 
@@ -165,14 +165,14 @@ async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSM
     if add_item_messages:
         for message_del in add_item_messages:
             await bot.delete_message(message_del.chat.id, message_del.message_id)
-            await asyncio.sleep(0.2)
+            #await asyncio.sleep(0.2)
     # await asyncio.sleep(0.4)
 
-    await state.set_state()
-    await state.set_data({})
+    await state.clear()
+    data = await state.get_data()
 
     if new_item_id:
-        accept_add_item_message = await bot.send_message(message.chat.id, "Новая запись успешно добавлена ✅")
+        accept_add_item_message = await bot.send_message(chat_id=user_id, text="Новая запись успешно добавлена ✅")
         data['accept_add_item_message'] = accept_add_item_message
         await set_data(user_id, data)
         await asyncio.sleep(0.4)
@@ -180,7 +180,7 @@ async def on_add_new_item(item: Item, message: aiogram.types.Message, state: FSM
         await asyncio.sleep(0.2)
         await show_item(user_id, new_item_id)
     else:
-        await bot.send_message(message.chat.id, "Не получилось добавить запись ❌")
+        await bot.send_message(chat_id=user_id, text="Не получилось добавить запись ❌")
         # await asyncio.sleep(0.4)
         await show_folders(user_id, need_to_resend=True)
 

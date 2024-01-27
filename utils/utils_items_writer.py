@@ -36,7 +36,6 @@ async def add_item_to_folder(user_id, folder_id, item: Item):
 
         # Обновляем данные пользователя
         await set_user_folders_data(user_id, {"folders": folders_collection})
-
         return new_item_id  # Успешно добавлено
     else:
         return None  # Папка не найдена

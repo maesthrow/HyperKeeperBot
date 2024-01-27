@@ -44,7 +44,6 @@ async def get_from_user_collection(user_id, collection_name: str):
     collection = data.get(f'{collection_name}_collection', None)
 
     if not collection:
-        print(f"get_from_user_collection -> collection_name {collection_name}")
         collection = await get_user_collection(user_id, collection_name)
         await set_to_user_collection(user_id, collection_name, collection)
 
@@ -52,12 +51,9 @@ async def get_from_user_collection(user_id, collection_name: str):
 
 
 async def set_to_user_collection(user_id, collection_name: str, collection=None):
-    print(f"set_to_user_collection -> collection_name {collection_name}")
     if not collection:
         collection = await get_user_collection(user_id, collection_name)
-        print(f"1 - {collection}")
     else:
-        print(f"2 - {collection}")
         await set_user_collection(user_id, collection_name, collection)
 
     data = await get_data(user_id)
