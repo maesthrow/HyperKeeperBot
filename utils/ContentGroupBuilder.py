@@ -1,5 +1,5 @@
 from aiogram import types
-from aiogram.types import Location
+from aiogram.types import Location, Sticker
 
 
 class ContentGroupBuilder:
@@ -60,9 +60,9 @@ class ContentGroupBuilder:
         media = types.Contact(phone_number=phone_number, first_name=first_name, vcard=None)
         self._media.append(media)
 
-    def add_sticker(self, file_id):
+    def add_sticker(self, sticker: Sticker):
         self.check_caption()
-        media = types.InputMediaDocument(media=file_id, caption=self.caption)
+        media = sticker
         self._media.append(media)
 
     def build(self):

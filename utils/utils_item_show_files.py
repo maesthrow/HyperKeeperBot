@@ -1,13 +1,13 @@
 import asyncio
 
-from aiogram.types import Location, Contact
+from aiogram.types import Location, Contact, InputFile, Sticker
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from load_all import bot
 from models.item_model import Item
 from utils.ContentGroupBuilder import ContentGroupBuilder
 from utils.data_manager import get_data, set_data
-from utils.utils_files import dict_to_location, dict_to_contact
+from utils.utils_files import dict_to_location, dict_to_contact, dict_to_sticker
 
 
 async def show_item_files(user_id, item: Item):
@@ -16,17 +16,20 @@ async def show_item_files(user_id, item: Item):
         media_group_builders = [MediaGroupBuilder()]
         location_builders = [ContentGroupBuilder()]
         contact_builders = [ContentGroupBuilder()]
+        sticker_builders = [ContentGroupBuilder()]
         await fill_builders(
             item=item,
             media_group_builders=media_group_builders,
             location_builders=location_builders,
-            contact_builders=contact_builders
+            contact_builders=contact_builders,
+            sticker_builders=sticker_builders
         )
 
         item_files_messages = []
         await send_media_group(user_id, media_group_builders, item_files_messages)
         await send_locations(user_id, location_builders, item_files_messages)
         await send_contacts(user_id, contact_builders, item_files_messages)
+        await send_stickers(user_id, sticker_builders, item_files_messages)
 
         await update_data(user_id, item_files_messages)
 
@@ -83,7 +86,21 @@ async def send_contacts(user_id, contact_builders, item_files_messages):
                 )
 
 
-async def fill_builders(item: Item, media_group_builders, location_builders, contact_builders):
+async def send_stickers(user_id, sticker_builders, item_files_messages):
+    for s_builder in sticker_builders:
+        stickers = s_builder.build()
+        if len(stickers) > 0:
+            for sticker in stickers:
+                await asyncio.sleep(0.25)
+                item_files_messages.append(
+                    await bot.send_sticker(
+                        chat_id=user_id,
+                        sticker=sticker.file_id
+                    )
+                )
+
+
+async def fill_builders(item: Item, media_group_builders, location_builders, contact_builders, sticker_builders):
     #tasks = []
     for content_type, files in item.media.items():
         for file_info in files:
@@ -93,6 +110,9 @@ async def fill_builders(item: Item, media_group_builders, location_builders, con
             elif content_type == 'contact':
                 contact: Contact = dict_to_contact(file_info)
                 await process_contact_group(contact, contact_builders)
+            elif content_type == 'sticker':
+                sticker = dict_to_sticker(file_info)
+                await process_sticker_group(sticker, sticker_builders)
             else:
                 if content_type == 'document':
                     file_id = file_info.get('file_id')
@@ -125,3 +145,9 @@ async def process_contact_group(contact: Contact, contact_builders):
     if len(contact_builders[-1]._media) >= 10:
         contact_builders.append(ContentGroupBuilder())
     contact_builders[-1].add_video_note(contact)
+
+
+async def process_sticker_group(sticker: Sticker, sticker_builders):
+    if len(sticker_builders[-1]._media) >= 10:
+        sticker_builders.append(ContentGroupBuilder())
+    sticker_builders[-1].add_sticker(sticker)

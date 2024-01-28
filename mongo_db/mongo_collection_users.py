@@ -22,8 +22,9 @@ async def add_user(tg_user):
             },
         }
         try:
-            print("Запись в базу данных:")
+            print("Запись пользователя в базу данных:")
             user_collection.insert_one(user_data)
+            print("Успешно")
         except Exception as e:
             print("Ошибка при добавлении пользователя в базу данных:", e)
 

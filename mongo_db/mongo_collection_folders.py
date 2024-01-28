@@ -34,8 +34,13 @@ async def add_user_folders(tg_user):
                 }
             }
         }
-        # Вставляем данные пользователя в коллекцию
-        user_folders_collection.insert_one(user_data)
+        try:
+            print("Запись хранилища в базу данных:")
+            user_folders_collection.insert_one(user_data)
+            print("Успешно")
+        except Exception as e:
+            print("Ошибка при добавлении хранилища пользователя в базу данных:", e)
+
 
 
 async def get_user_folders_data(tg_user_id):

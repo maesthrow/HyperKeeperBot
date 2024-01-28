@@ -46,7 +46,7 @@ async def start(message: aiogram.types.Message, state: FSMContext):
 
     me = await bot.me()
     bot_username = me.username
-
+    await asyncio.sleep(1)
     text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
             f"которое доступно с помощью команды /storage\n\n"
             f"Управляйте вашими данными 🗃️, создавайте папки 🗂️ и записи 📄, сохраняйте медиафайлы 📸, "
@@ -92,7 +92,7 @@ async def show_storage(message: Message, state: FSMContext):
 
     await bot.send_message(user_id, f"🗂️", reply_markup=markup)
     folders_message: Message
-    folders_message = await bot.send_message(user_id, f"⏳")
+    folders_message = await bot.send_message(user_id, "⏳")
     #await asyncio.sleep(0.3)
     folders_message = await send_storage_folders(
         user_id=user_id,
@@ -183,8 +183,8 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
-    if message.content_type == 'document':
-        print(f"message: {message}")
+    if message.content_type == 'sticker':
+        print(f"message: {message.sticker}")
     if message.media_group_id:
         data = await state.get_data()
         file_messages = data.get('file_messages', [])

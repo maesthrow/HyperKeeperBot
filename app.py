@@ -15,7 +15,7 @@ async def on_startup(dp):
 
 async def main():
     await bot(DeleteWebhook(drop_pending_updates=True))
-    await dp.start_polling(bot, on_shutdown=on_shutdown, on_startup=on_startup, polling_timeout=5)
+    await dp.start_polling(bot, on_shutdown=on_shutdown, on_startup=on_startup)
 
 
 if __name__ == '__main__':

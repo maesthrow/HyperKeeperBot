@@ -41,6 +41,9 @@ async def send_storage(
 
     while attempt < max_attempts and not success:
         try:
+            if (message.reply_markup
+                    and len(inline_markup.inline_keyboard) <= len(message.reply_markup.inline_keyboard)):
+                return message
             if not text:
                 message = await asyncio.wait_for(message.edit_reply_markup(
                     reply_markup=inline_markup,
@@ -52,11 +55,13 @@ async def send_storage(
                     text=text,
                     reply_markup=inline_markup,
                 ), timeout=0.3)
+
             success = True
-            wait_message = await send_wait_message(user_id, with_wait_message, wait_message)
+            await delete_wait_message(user_id, wait_message)
             return message
+
         except Exception as e:
-            await send_wait_message(user_id, with_wait_message, wait_message)
+            wait_message = await send_wait_message(user_id, with_wait_message, wait_message)
             print(f"Attempt {attempt + 1}: {e}")
             attempt += 1
             await asyncio.sleep(0.5)
@@ -65,16 +70,15 @@ async def send_storage(
         print("Failed after maximum attempts.")
 
     await delete_wait_message(user_id, wait_message)
-
     return message
 
 
 async def send_wait_message(user_id, with_wait_message, wait_message=None):
-    if with_wait_message and wait_message:
-        wait_message = await bot.delete_message(user_id, wait_message.message_id)
+    if with_wait_message and not wait_message:
+        wait_message = await bot.send_message(user_id, "⏳")
     return wait_message
 
 
-async def delete_wait_message(user_id, wait_message):
+async def delete_wait_message(user_id, wait_message=None):
     if wait_message:
         await bot.delete_message(user_id, wait_message.message_id)

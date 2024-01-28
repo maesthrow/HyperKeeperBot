@@ -1,4 +1,4 @@
-from aiogram.types import Message, Location, Contact, Document
+from aiogram.types import Message, Location, Contact, Document, Sticker
 
 
 def get_file_id_by_content_type(message: Message):
@@ -21,7 +21,8 @@ def get_file_id_by_content_type(message: Message):
     elif content_type == 'contact':
         file_id = contact_to_dict(message.contact)
     elif content_type == 'sticker':
-        file_id = message.sticker.file_id
+        file_id = sticker_to_dict(message.sticker)
+        print(f"message.sticker.file_id {file_id}")
     return file_id
 
 
@@ -64,3 +65,24 @@ def contact_to_dict(contact: Contact):
 
 def dict_to_contact(contact_dict: dict):
     return Contact(**contact_dict)
+
+
+def sticker_to_dict(sticker: Sticker):
+    return {
+        "file_id": sticker.file_id,
+        "file_unique_id": sticker.file_unique_id,
+        "type": sticker.type,
+        "width": sticker.width,
+        "height": sticker.height,
+        "is_animated": sticker.is_animated,
+        "is_video": sticker.is_video,
+        "emoji": sticker.emoji,
+        "set_name": sticker.set_name,
+        "custom_emoji_id": sticker.custom_emoji_id,
+        "needs_repainting": sticker.needs_repainting,
+        "file_size": sticker.file_size
+    }
+
+
+def dict_to_sticker(sticker_dict: dict):
+    return Sticker(**sticker_dict)
