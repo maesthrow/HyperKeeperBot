@@ -42,7 +42,6 @@ async def add_user_folders(tg_user):
             print("Ошибка при добавлении хранилища пользователя в базу данных:", e)
 
 
-
 async def get_user_folders_data(tg_user_id):
     """Возвращает данные пользователя по его идентификатору."""
     user_folders_collection = db["folders"]

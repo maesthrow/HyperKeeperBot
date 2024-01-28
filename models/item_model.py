@@ -1,7 +1,9 @@
 import copy
+import json
 from datetime import datetime
 
 invisible_char = "\u00A0"
+
 
 class Item:
     default_media = {
@@ -16,7 +18,8 @@ class Item:
         "sticker": [],
     }
 
-    def __init__(self, text: str, title=None, media: dict = None, date_created=None, date_modified=None):
+    def __init__(self, id: str, text: str, title=None, media: dict = None, date_created=None, date_modified=None):
+        self.id = id
         self.title = title
         self.text = text
         if not media:
@@ -26,7 +29,7 @@ class Item:
         self.date_created = date_created or datetime.now()
         self.date_modified = date_modified or self.date_created
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         return {
             "title": self.title,
             "text": self.text,
@@ -34,6 +37,14 @@ class Item:
             "date_created": self.date_created,
             "date_modified": self.date_modified
         }
+
+    def to_json(self) -> str:
+        item_dict = self.to_dict()
+        item_dict['date_created'] = serialize_datetime(item_dict['date_created'])
+        item_dict['date_modified'] = serialize_datetime(item_dict['date_modified'])
+        item_json = json.dumps(item_dict).replace(':', '>').replace("sep", ">")
+        return item_json
+
 
     async def get_all_media_values(self):
         all_values = []
@@ -50,8 +61,9 @@ class Item:
             title += f"\n{invisible_char}"
         return title
 
-    async def get_inline_title(self):
-        return self.title if self.title and self.title != "" else (self.text.splitlines()[0] if self.text and self.text != "" else "")
+    def get_inline_title(self):
+        return self.title if self.title and self.title != "" else \
+            (self.text.splitlines()[0] if self.text and self.text != "" else "")
 
     async def get_body(self):
         title = await self.get_title()
@@ -97,8 +109,14 @@ class Item:
         self.text = get_selected_search_text(self.text, search_text, left_teg, right_teg)
 
     def __str__(self):
-        return f"{self.title} ({self.date_created.strftime('%Y-%m-%d %H:%M:%S')})"
+        return f"{self.id} {self.get_inline_title()} ({self.date_created.strftime('%Y-%m-%d %H:%M:%S')})"
 
+
+# Функция для сериализации объекта datetime в строку формата ISO 8601
+def serialize_datetime(dt):
+    if dt is None:
+        return None
+    return dt.isoformat()
 
 def get_selected_search_text(text: str, search_text: str, left_teg: str = '<b><i><u>', right_teg: str = '</u></i></b>'):
     # Ищем все вхождения search_text в тексте

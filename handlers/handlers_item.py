@@ -69,7 +69,7 @@ async def show_item(user_id, item_id):
     item = await get_item(user_id, item_id)
 
     #item_inlines = await get_item_inlines(item)
-    inline_markup = await get_item_inline_markup(item) #InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
+    inline_markup = await get_item_inline_markup(user_id, item) #InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
     message_text = await item.get_body()
     bot_message = await bot.send_message(chat_id=user_id, text=message_text, reply_markup=inline_markup)
 
@@ -86,14 +86,14 @@ async def show_item(user_id, item_id):
     #load_all.current_item[user_id] = item
 
 
-async def get_item_inline_markup(item: Item):
+async def get_item_inline_markup(user_id, item: Item):
     all_media_values = await item.get_all_media_values()
     if len(all_media_values) == 0:
         item_inlines = item_inline_buttons
     else:
         item_inlines = item_inline_buttons_with_files
         item_inlines[-1][-1] = hide_item_files_button
-    item_inlines[0][0].switch_inline_query = await item.get_inline_title()
+    item_inlines[0][0].switch_inline_query = f"{user_id}|{item.id}" #item.get_inline_title()
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
 

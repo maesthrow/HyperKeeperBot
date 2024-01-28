@@ -172,7 +172,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     )
 
     # if message.content_type == aiogram.types.ContentType.TEXT:
-    item = Item(message.text)
+    item = Item(id="", text=message.text)
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
 
@@ -223,7 +223,7 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
                                reply_markup=inline_markup)
     )
 
-    new_item: Item = Item("")
+    new_item: Item = Item(id="", text="")
     for message in messages:
         new_item = await get_new_item_from_state_data(message, state)
         file_id = get_file_id_by_content_type(message)
@@ -247,7 +247,7 @@ async def get_new_item_from_state_data(message: aiogram.types.Message, state: FS
             message_text = message.caption
         else:
             message_text = ""
-        new_item = Item(message_text)
+        new_item = Item(id="", text=message_text)
 
     await state.update_data(item=new_item)
     return new_item

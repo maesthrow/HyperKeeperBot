@@ -51,7 +51,7 @@ async def get_item(user_id, item_id):
     else:
         media = None
     if item_dict:
-        item = Item(text=item_dict["text"], title=item_dict["title"],
+        item = Item(id=item_id, text=item_dict["text"], title=item_dict["title"],
                     media=media, date_created=item_dict["date_created"])
         return item
 
@@ -61,7 +61,7 @@ async def get_item(user_id, item_id):
 async def get_simple_item(user_id, item_id):
     item_dict = await get_item_dict(user_id, item_id)
     if item_dict:
-        item = Item(text=item_dict["text"], title=item_dict["title"], date_created=item_dict["date_created"])
+        item = Item(id=item_id, text=item_dict["text"], title=item_dict["title"], date_created=item_dict["date_created"])
         return item
 
     return None
