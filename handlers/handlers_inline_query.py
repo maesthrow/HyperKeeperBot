@@ -12,13 +12,13 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMedia
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import load_all
-from callbacks.callbackdata import InlineQueryCallback
+from callbacks.callbackdata import InlineQueryCallback, SendItemCallback
 from config import BOT_TOKEN
 from load_all import bot, dp
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import get_user_folders_data
 from utils.data_manager import get_data
-from utils.utils_bot import get_bot_link, get_bot_name
+from utils.utils_bot import get_bot_link, get_bot_name, to_url_data_item
 from utils.utils_files import dict_to_sticker, dict_to_location, dict_to_contact
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_reader import get_item
@@ -31,7 +31,7 @@ dp.include_router(router)
 #@router.callback_query(InlineQueryCallback.filter())
 async def inline_query(query: Union[types.InlineQuery, types.CallbackQuery]):
     print(f"query {query.query}")
-    query_data = query.query.split('|')
+    query_data = query.query.split('_')
     author_user_id = int(query_data[0])
     item_id = query_data[1]
     item: Item = Item("", "")
@@ -81,7 +81,7 @@ async def inline_query(query: Union[types.InlineQuery, types.CallbackQuery]):
         )
     )
 
-    repost_switch_inline_query = f"{author_user_id}|{item.id}"
+    repost_switch_inline_query = f"{author_user_id}_{item.id}"
     bot_name = await get_bot_name()
     bot_link = await get_bot_link()
     builder = InlineKeyboardBuilder()
@@ -118,7 +118,7 @@ async def inline_query(query: Union[types.InlineQuery, types.CallbackQuery]):
 
 
 async def get_main_inline_markup(user_id, author_user_id, item: Item, result_id):
-    repost_switch_inline_query = f"{author_user_id}|{item.id}"
+    repost_switch_inline_query = f"{author_user_id}_{item.id}"
     bot_name = await get_bot_name()
     bot_link = await get_bot_link()
 
@@ -126,47 +126,22 @@ async def get_main_inline_markup(user_id, author_user_id, item: Item, result_id)
     builder.add(
         InlineKeyboardButton(
             text="Поделиться",
-            switch_inline_query=repost_switch_inline_query,
+            switch_inline_query=repost_switch_inline_query
         )
     )
     builder.add(
         InlineKeyboardButton(
             text=bot_name,
-            url=bot_link
+            url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
         )
     )
     builder.add(
         InlineKeyboardButton(
             text="📑 Показать весь контент",
             switch_inline_query_current_chat=repost_switch_inline_query,
-            # callback_data=InlineQueryCallback(
-            #     action="report",
-            #     autor_user_id=user_id,
-            #     item_id=item.id).pack()
         )
     )
-    # builder.add(
-    #     InlineKeyboardButton(
-    #         text="« Скрыть файлы",
-    #         callback_data=InlineQueryCallback(
-    #             action="show_hide_files",
-    #             autor_user_id=author_user_id,
-    #             item_id=item.id
-    #             # ite
-    #             # item_text=item.text,
-    #             # item_title=item.title,
-    #             # item_media_photo=", ".join(item.media['photo']),
-    #             # item_media_video=item.media['photo'],
-    #             # item_media_audio=item.media['photo'],
-    #             # item_media_document=item.media['photo'],
-    #             # item_media_voice=item.media['photo'],
-    #             # item_media_video_note=item.media['photo'],
-    #             # item_media_location=item.media['photo'],
-    #             # item_media_contact=item.media['photo'],
-    #             # item_media_sticker=item.media['photo']
-    #         ).pack()
-    #     )
-    # )
+
     builder.adjust(2)
     return builder.as_markup()
 

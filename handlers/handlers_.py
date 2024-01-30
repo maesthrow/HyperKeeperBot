@@ -11,13 +11,14 @@ from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, CallbackQue
 
 from handlers import states
 from handlers.handlers_folder import show_all_folders, show_folders
-from handlers.handlers_item import movement_item_handler
+from handlers.handlers_item import movement_item_handler, show_item
 from load_all import dp, bot
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import add_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names
+from utils.utils_bot import from_url_data_item
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
     get_folders_with_items_inline_markup
@@ -34,9 +35,21 @@ dp.include_router(router)
 
 
 @router.message(CommandStart())
-async def start(message: aiogram.types.Message, state: FSMContext):
-    await state.set_state(None)
-    await state.set_data({})
+async def start(message: Message, state: FSMContext):
+    print(message.text)
+    url_data = from_url_data_item(message.text).split()
+    if len(url_data) > 1:
+        url_data = from_url_data_item(message.text).split()[1]
+        author_user_id = int(url_data.split('_')[0])
+        item_id = url_data.split('_')[1]
+        print(f"author_user_id {author_user_id}\nitem_id {item_id}")
+        await show_item(user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id)
+        return
+    # if args:
+    #     key = args[1]
+    #     print(key)
+
+    await state.clear()
 
     tg_user = message.from_user
     chat_id = tg_user.id

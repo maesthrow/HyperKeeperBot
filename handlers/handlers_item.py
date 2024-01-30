@@ -7,6 +7,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, Message
 
 import load_all
+from callbacks.callbackdata import SendItemCallback
 from enums.enums import Environment
 from handlers import states
 from handlers.handlers_edit_item_title import on_edit_item
@@ -65,24 +66,26 @@ async def show_item_button(callback_query: CallbackQuery):
     await callback_query.answer()
 
 
-async def show_item(user_id, item_id):
-    item = await get_item(user_id, item_id)
+async def show_item(user_id, item_id, author_user_id=None):
+    if not author_user_id:
+        author_user_id = user_id
+    item = await get_item(author_user_id, item_id)
 
     #item_inlines = await get_item_inlines(item)
-    inline_markup = await get_item_inline_markup(user_id, item) #InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
+    inline_markup = await get_item_inline_markup(author_user_id, item) #InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
     message_text = await item.get_body()
     bot_message = await bot.send_message(chat_id=user_id, text=message_text, reply_markup=inline_markup)
 
     await show_item_files(user_id, item)
 
     # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
-    data = await get_data(user_id)
+    data = await get_data(author_user_id)
     data['bot_message'] = bot_message
     data['item_id'] = item_id
     data['current_item'] = item
     data['current_inline_markup'] = inline_markup
     #data['current_keyboard'] = markup
-    await set_data(user_id, data)
+    await set_data(author_user_id, data)
     #load_all.current_item[user_id] = item
 
 
@@ -93,7 +96,7 @@ async def get_item_inline_markup(user_id, item: Item):
     else:
         item_inlines = item_inline_buttons_with_files
         item_inlines[-1][-1] = hide_item_files_button
-    item_inlines[0][0].switch_inline_query = f"{user_id}|{item.id}" #item.get_inline_title()
+    item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}" #item.get_inline_title()
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
 
@@ -563,3 +566,14 @@ async def search_item_handler(message: aiogram.types.Message):
             current_folder = get_folder_id(item_id)
             await set_current_folder_id(user_id, current_folder)
             await show_item(user_id, item_id)
+
+
+@router.callback_query(SendItemCallback.filter())
+async def send_item_handler(call: CallbackQuery, callback_data: SendItemCallback):
+    print("send_item_handler")
+    user_id = call.from_user.id
+    author_user_id = callback_data.author_user_id
+    item_id = callback_data.item_id
+    await show_item(user_id=user_id, author_user_id=author_user_id, item_id=item_id)
+
+

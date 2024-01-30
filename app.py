@@ -11,7 +11,8 @@ async def on_shutdown(dp):
 
 async def on_startup(dp):
     #await setup_bot()
-    await setup_bot_commands()
+    #await setup_bot_commands()
+    pass
 
 async def main():
     await bot(DeleteWebhook(drop_pending_updates=True))

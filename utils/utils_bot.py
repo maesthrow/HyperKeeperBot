@@ -12,3 +12,11 @@ async def get_bot_name():
     bot_info = await bot.get_me()
     name = bot_info.first_name
     return name
+
+
+def to_url_data_item(data: str) -> str:
+    return data.replace("/", "__")
+
+
+def from_url_data_item(data: str) -> str:
+    return data.replace("__", "/")
