@@ -47,14 +47,14 @@ async def send_storage(
             if not text:
                 message = await asyncio.wait_for(message.edit_reply_markup(
                     reply_markup=inline_markup,
-                ), timeout=0.3)
+                ), timeout=0.5)
             else:
                 message = await asyncio.wait_for(bot.edit_message_text(
                     chat_id=user_id,
                     message_id=message.message_id,
                     text=text,
                     reply_markup=inline_markup,
-                ), timeout=0.3)
+                ), timeout=0.5)
 
             success = True
             await delete_wait_message(user_id, wait_message)

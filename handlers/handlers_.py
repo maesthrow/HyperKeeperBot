@@ -36,40 +36,51 @@ dp.include_router(router)
 
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
-    print(message.text)
+    tg_user = message.from_user
     url_data = from_url_data_item(message.text).split()
     if len(url_data) > 1:
-        url_data = from_url_data_item(message.text).split()[1]
-        author_user_id = int(url_data.split('_')[0])
-        item_id = url_data.split('_')[1]
-        print(f"author_user_id {author_user_id}\nitem_id {item_id}")
-        await show_item(user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id)
-        return
-    # if args:
-    #     key = args[1]
-    #     print(key)
+        await start_url_data_handler(message, state, tg_user)
+    else:
+        await start_handler(message, state, tg_user)
 
+
+async def start_handler(message: Message, state: FSMContext, tg_user):
     await state.clear()
-
-    tg_user = message.from_user
-    chat_id = tg_user.id
 
     await add_user(tg_user)
     await add_user_folders(tg_user)
 
     me = await bot.me()
     bot_username = me.username
-    await asyncio.sleep(1)
+    #await asyncio.sleep(1)
     text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
             f"которое доступно с помощью команды /storage\n\n"
             f"Управляйте вашими данными 🗃️, создавайте папки 🗂️ и записи 📄, сохраняйте медиафайлы 📸, "
             f"используя кнопки и подсказки на клавиатуре📱\n\n"
             f"Для доступа ко всем функциям бота жмите на кнопку 'Меню' рядом с полем ввода сообщения ↙️\n\n"
             f"Приятного использования! ☺️")
-    await bot.send_message(chat_id, text, reply_markup=ReplyKeyboardRemove())
+    await bot.send_message(tg_user.id, text, reply_markup=ReplyKeyboardRemove())
 
 
-# Используем фильтр CommandStart для команды /storage
+async def start_url_data_handler(message, state, tg_user):
+    data = await get_data(tg_user.id)
+    author_user_id = data.get('author_user_id', None)
+    if not author_user_id:
+        await start_handler(message, state, tg_user)
+        url_data = from_url_data_item(message.text).split()[1]
+        author_user_id = int(url_data.split('_')[0])
+        item_id = url_data.split('_')[1]
+
+        data['author_user_id'] = author_user_id
+        await set_data(user_id=tg_user.id, data=data)
+        await show_item(user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id)
+        await asyncio.sleep(5)
+        data['author_user_id'] = None
+        await set_data(user_id=tg_user.id, data=data)
+    else:
+        await bot.delete_message(tg_user.id, message.message_id)
+
+
 @router.message(Command(commands=["storage"]))
 async def storage(message: Message, state: FSMContext):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
@@ -112,7 +123,7 @@ async def show_storage(message: Message, state: FSMContext):
         message=folders_message,
         text=f"🗂️ <b>{current_folder_path_names}</b>",
         inline_markup=folders_inline_markup,
-        max_attempts=20
+        max_attempts=10
     )
     # folders_message = await asyncio.wait_for(folders_message.edit_text(
     #     text=f"🗂️ <b>{current_folder_path_names}</b>",
@@ -127,7 +138,7 @@ async def show_storage(message: Message, state: FSMContext):
         user_id=user_id,
         message=folders_message,
         inline_markup=folders_inline_markup,
-        max_attempts=20
+        max_attempts=10
     )
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
