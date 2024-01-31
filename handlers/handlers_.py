@@ -123,7 +123,7 @@ async def show_storage(message: Message, state: FSMContext):
         message=folders_message,
         text=f"🗂️ <b>{current_folder_path_names}</b>",
         inline_markup=folders_inline_markup,
-        max_attempts=10
+        max_attempts=5
     )
     # folders_message = await asyncio.wait_for(folders_message.edit_text(
     #     text=f"🗂️ <b>{current_folder_path_names}</b>",
@@ -138,7 +138,7 @@ async def show_storage(message: Message, state: FSMContext):
         user_id=user_id,
         message=folders_message,
         inline_markup=folders_inline_markup,
-        max_attempts=10
+        max_attempts=1
     )
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
