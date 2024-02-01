@@ -63,6 +63,7 @@ async def start_handler(message: Message, state: FSMContext, tg_user):
 
 
 async def start_url_data_handler(message, state, tg_user):
+    await asyncio.sleep(0.5)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
     if not author_user_id:

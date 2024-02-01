@@ -34,6 +34,10 @@ async def inline_query(query: Union[types.InlineQuery, types.CallbackQuery]):
     query_data = query.query.split('_')
     author_user_id = int(query_data[0])
     item_id = query_data[1]
+    file_id = None
+    if len(query_data) > 2:
+        file_id = "_".join(query_data[2:])
+    print(f"file_id = {file_id}")
     item: Item = Item("", "")
     user_id = 0
     result_id = 0
@@ -43,15 +47,7 @@ async def inline_query(query: Union[types.InlineQuery, types.CallbackQuery]):
         #item: Item = data.get('current_item')  # load_all.current_item.get(user_id)
         item: Item = await get_item(author_user_id, item_id)
         result_id = hashlib.md5(query.query.encode()).hexdigest()
-    # elif isinstance(query, types.CallbackQuery):
-    #     data_parts = query.data.split(":")
-    #     action = data_parts[1]
-    #     autor_user_id = int(data_parts[2])
-    #     item_id = data_parts[3]
-    #     item: Item = await get_item(autor_user_id, item_id)
-    #     user_id = query.from_user.id
-    #     data_str = f"{user_id}"
-    #     result_id = hashlib.md5(data_str.encode()).hexdigest()
+    
 
         #item = await get_item(user_id, item_id)
     #print(f"user_id {user_id}\nitem {item}")
@@ -94,7 +90,7 @@ async def inline_query(query: Union[types.InlineQuery, types.CallbackQuery]):
     builder.add(
         InlineKeyboardButton(
             text=bot_name,
-            url=bot_link
+            url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
         )
     )
     inline_markup_media = builder.as_markup()
@@ -131,13 +127,13 @@ async def get_main_inline_markup(user_id, author_user_id, item: Item, result_id)
     )
     builder.add(
         InlineKeyboardButton(
-            text=bot_name,
+            text=f"💾 {bot_name}",
             url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
         )
     )
     builder.add(
         InlineKeyboardButton(
-            text="📑 Показать весь контент",
+            text="Показать весь контент 📲",
             switch_inline_query_current_chat=repost_switch_inline_query,
         )
     )
@@ -184,6 +180,8 @@ async def create_document_results(item: Item, media_results: list, inline_markup
 async def create_photo_results(item: Item, media_results: list, inline_markup):
     item_title = item.get_inline_title()
     for file_id in item.media['photo']:
+        print(f"button -> {inline_markup.inline_keyboard[-1]}")
+        inline_markup.inline_keyboard[-1][0].switch_inline_query += f"_{file_id}"
         result = InlineQueryResultPhoto(
             id=hashlib.md5(file_id.encode()).hexdigest(),
             photo_url=file_id,
@@ -196,6 +194,7 @@ async def create_photo_results(item: Item, media_results: list, inline_markup):
             reply_markup=inline_markup
         )
         media_results.append(result)
+        print(f"button -> {inline_markup.inline_keyboard[-1]}")
     return media_results
 
 

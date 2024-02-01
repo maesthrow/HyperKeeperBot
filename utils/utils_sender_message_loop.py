@@ -48,14 +48,14 @@ async def send_storage(
                 print(f"inline_markup.inline_keyboard len {len(inline_markup.inline_keyboard)}")
                 return await asyncio.wait_for(message.edit_reply_markup(
                     reply_markup=inline_markup,
-                ), timeout=5)
+                ), timeout=1)
             else:
                 message = await asyncio.wait_for(bot.edit_message_text(
                     chat_id=user_id,
                     message_id=message.message_id,
                     text=text,
                     reply_markup=inline_markup,
-                ), timeout=5)
+                ), timeout=1)
 
             success = True
             await delete_wait_message(user_id, wait_message)
