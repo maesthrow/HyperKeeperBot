@@ -43,19 +43,30 @@ async def send_storage(
         try:
             if (message.reply_markup
                     and len(inline_markup.inline_keyboard) <= len(message.reply_markup.inline_keyboard)):
+                print("pre return")
                 return message
             if not text:
                 print(f"inline_markup.inline_keyboard len {len(inline_markup.inline_keyboard)}")
-                return await asyncio.wait_for(message.edit_reply_markup(
-                    reply_markup=inline_markup,
-                ), timeout=1)
+                print(f"inline_markup.inline_keyboard = {inline_markup.inline_keyboard}")
+                # return await asyncio.wait_for(message.edit_reply_markup(
+                #     reply_markup=inline_markup,
+                # ), timeout=1)
+                return await message.edit_reply_markup(
+                        reply_markup=inline_markup,
+                    )
             else:
-                message = await asyncio.wait_for(bot.edit_message_text(
-                    chat_id=user_id,
-                    message_id=message.message_id,
-                    text=text,
-                    reply_markup=inline_markup,
-                ), timeout=1)
+                # message = await asyncio.wait_for(bot.edit_message_text(
+                #     chat_id=user_id,
+                #     message_id=message.message_id,
+                #     text=text,
+                #     reply_markup=inline_markup,
+                # ), timeout=1)
+                message = await bot.edit_message_text(
+                        chat_id=user_id,
+                        message_id=message.message_id,
+                        text=text,
+                        reply_markup=inline_markup,
+                    )
 
             success = True
             await delete_wait_message(user_id, wait_message)
@@ -66,7 +77,7 @@ async def send_storage(
             wait_message = await send_wait_message(user_id, with_wait_message, wait_message)
             print(f"Attempt {attempt + 1}: {e}")
             attempt += 1
-            await asyncio.sleep(0.3)
+            #await asyncio.sleep(0.3)
 
     if not success:
         print("Failed after maximum attempts.")

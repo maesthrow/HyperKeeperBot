@@ -20,3 +20,9 @@ class InlineQueryCallback(CallbackData, prefix="inline_query"):
 class SendItemCallback(CallbackData, prefix="=send_item"):
     author_user_id: int
     item_id: str
+
+
+class SwitchInlineQueryCallback(CallbackData, prefix="switch_inline_query"):
+    author_user_id: int
+    item_id: str
+    file_id: str

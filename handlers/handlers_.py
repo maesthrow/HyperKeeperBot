@@ -39,7 +39,8 @@ async def start(message: Message, state: FSMContext):
     tg_user = message.from_user
     url_data = from_url_data_item(message.text).split()
     if len(url_data) > 1:
-        await start_url_data_handler(message, state, tg_user)
+        if len(url_data) <= 3: # ИЛИ 2
+            await start_url_data_item_handler(message, state, tg_user)
     else:
         await start_handler(message, state, tg_user)
 
@@ -62,7 +63,7 @@ async def start_handler(message: Message, state: FSMContext, tg_user):
     await bot.send_message(tg_user.id, text, reply_markup=ReplyKeyboardRemove())
 
 
-async def start_url_data_handler(message, state, tg_user):
+async def start_url_data_item_handler(message, state, tg_user):
     await asyncio.sleep(0.5)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
@@ -80,6 +81,29 @@ async def start_url_data_handler(message, state, tg_user):
         await set_data(user_id=tg_user.id, data=data)
     else:
         await bot.delete_message(tg_user.id, message.message_id)
+
+
+async def start_url_data_file_handler(message, state, tg_user):
+    await asyncio.sleep(0.5)
+    data = await get_data(tg_user.id)
+    author_user_id = data.get('author_user_id', None)
+    if not author_user_id:
+        await start_handler(message, state, tg_user)
+        url_data = from_url_data_item(message.text).split()[1]
+        author_user_id = int(url_data.split('_')[0])
+        item_id = url_data.split('_')[1]
+        file_type = url_data.split('_')[2]
+        file_id = url_data.split('_')[3]
+        print(f"author_user_id {author_user_id}\nitem_id {item_id}\nfile_type {file_type}\nfile_id {file_id}")
+
+    #     data['author_user_id'] = author_user_id
+    #     await set_data(user_id=tg_user.id, data=data)
+    #     await show_item(user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id)
+    #     await asyncio.sleep(5)
+    #     data['author_user_id'] = None
+    #     await set_data(user_id=tg_user.id, data=data)
+    # else:
+    #     await bot.delete_message(tg_user.id, message.message_id)
 
 
 @router.message(Command(commands=["storage"]))
@@ -134,13 +158,18 @@ async def show_storage(message: Message, state: FSMContext):
     if items_inline_markup.inline_keyboard:
         folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
-    #await asyncio.sleep(0.3)
-    data['folders_message'] = await send_storage_with_items(
+
+    print(f"len {len(folders_inline_markup.inline_keyboard)}\n{folders_inline_markup.inline_keyboard}")
+
+    folders_message = await send_storage_with_items(
         user_id=user_id,
         message=folders_message,
         inline_markup=folders_inline_markup,
         max_attempts=1
     )
+    #await asyncio.sleep(0.3)
+    print(len(folders_message.reply_markup.inline_keyboard))
+    data['folders_message'] = folders_message
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
     data['page_items'] = str(1)
