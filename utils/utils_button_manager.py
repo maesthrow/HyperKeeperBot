@@ -89,6 +89,14 @@ item_edit_buttons = [
 ]
 
 
+save_file_buttons = [
+    [
+        InlineKeyboardButton(text="💾 Сохранить", callback_data="save_file"),
+        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_file"),
+    ]
+]
+
+
 # Определяем функцию для создания разметки ответа для общего использования
 def create_general_reply_markup(buttons):
     markup = ReplyKeyboardMarkup(keyboard=[*buttons], resize_keyboard=True, row_width=3)

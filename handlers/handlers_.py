@@ -5,6 +5,7 @@ from typing import List
 
 import aiogram
 from aiogram import Router, F
+from aiogram.enums import ContentType
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, CallbackQuery, KeyboardButton, Message
@@ -17,15 +18,17 @@ from models.item_model import Item
 from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import add_user
 from utils.data_manager import get_data, set_data
-from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names
+from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names, \
+    invisible_char
 from utils.utils_bot import from_url_data_item
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
-    get_folders_with_items_inline_markup
+    get_folders_with_items_inline_markup, save_file_buttons
 from utils.utils_data import set_current_folder_id, get_current_folder_id
+from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_id_by_content_type
 from utils.utils_items import show_all_items
-from utils.utils_items_reader import get_folder_id
+from utils.utils_items_reader import get_folder_id, get_item
 from utils.utils_sender_message_loop import send_storage, send_storage_folders, send_storage_with_items
 
 # from aiogram_media_group import media_group_handler, MediaGroupFilter
@@ -36,11 +39,16 @@ dp.include_router(router)
 
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
+    print(message.text)
     tg_user = message.from_user
     url_data = from_url_data_item(message.text).split()
     if len(url_data) > 1:
-        if len(url_data) <= 3: # ИЛИ 2
+        if len(url_data[1].split('_')) <= 2: # ИЛИ 2
+            print(f"item {len(url_data[1].split('_'))}")
             await start_url_data_item_handler(message, state, tg_user)
+        else:
+            #print(f"file {len(url_data[1].split('_'))}")
+            await start_url_data_file_handler(message, state, tg_user)
     else:
         await start_handler(message, state, tg_user)
 
@@ -64,17 +72,19 @@ async def start_handler(message: Message, state: FSMContext, tg_user):
 
 
 async def start_url_data_item_handler(message, state, tg_user):
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.3)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
+    print(f"author_user_id {author_user_id}")
     if not author_user_id:
+        data['author_user_id'] = author_user_id
+        await set_data(user_id=tg_user.id, data=data)
+
         await start_handler(message, state, tg_user)
         url_data = from_url_data_item(message.text).split()[1]
         author_user_id = int(url_data.split('_')[0])
         item_id = url_data.split('_')[1]
 
-        data['author_user_id'] = author_user_id
-        await set_data(user_id=tg_user.id, data=data)
         await show_item(user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id)
         await asyncio.sleep(5)
         data['author_user_id'] = None
@@ -84,26 +94,36 @@ async def start_url_data_item_handler(message, state, tg_user):
 
 
 async def start_url_data_file_handler(message, state, tg_user):
-    await asyncio.sleep(0.5)
+    await asyncio.sleep(0.3)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
+    print(f"author_user_id {author_user_id}")
     if not author_user_id:
+        data['author_user_id'] = author_user_id
+        await set_data(user_id=tg_user.id, data=data)
+
         await start_handler(message, state, tg_user)
         url_data = from_url_data_item(message.text).split()[1]
+        print(f"url_data = {url_data}")
         author_user_id = int(url_data.split('_')[0])
         item_id = url_data.split('_')[1]
-        file_type = url_data.split('_')[2]
-        file_id = url_data.split('_')[3]
-        print(f"author_user_id {author_user_id}\nitem_id {item_id}\nfile_type {file_type}\nfile_id {file_id}")
+        short_file_id = url_data[-8:]
+        file_type: ContentType = ContentType(url_data[:-8].split('_')[-2])
 
-    #     data['author_user_id'] = author_user_id
-    #     await set_data(user_id=tg_user.id, data=data)
-    #     await show_item(user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id)
-    #     await asyncio.sleep(5)
-    #     data['author_user_id'] = None
-    #     await set_data(user_id=tg_user.id, data=data)
-    # else:
-    #     await bot.delete_message(tg_user.id, message.message_id)
+        #print(f"author_user_id {author_user_id}\nitem_id {item_id}\nfile_type {file_type}\nfile_id {short_file_id}")
+
+        inline_markup = InlineKeyboardMarkup(inline_keyboard=save_file_buttons)
+
+        file_id = await FileFinder.get_file_id_in_item(author_user_id, item_id, file_type, short_file_id)
+        if file_type == "photo":
+            await bot.send_photo(tg_user.id, file_id,
+                                 reply_markup=inline_markup)
+
+        await asyncio.sleep(5)
+        data['author_user_id'] = None
+        await set_data(user_id=tg_user.id, data=data)
+    else:
+        await bot.delete_message(tg_user.id, message.message_id)
 
 
 @router.message(Command(commands=["storage"]))
@@ -237,8 +257,8 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
-    if message.content_type == 'sticker':
-        print(f"message: {message.sticker}")
+    if message.content_type == 'photo':
+        print(f"message: {message.photo}")
     if message.media_group_id:
         data = await state.get_data()
         file_messages = data.get('file_messages', [])

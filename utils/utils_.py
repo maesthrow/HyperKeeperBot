@@ -14,6 +14,8 @@ from utils.utils_items_reader import get_folder_items, get_simple_item
 #folder_callback = CallbackFolder()
 #folders_on_page_count = 4
 #items_on_page_count = 4
+
+invisible_char = "\u00A0"
 separator = 'из'
 smile_folder = '🗂️'
 smile_item = '📄'

@@ -21,6 +21,7 @@ async def main():
 
 if __name__ == '__main__':
     from handlers.handlers_ import dp
+    import handlers.handlers_file
     asyncio.run(main())
 
 

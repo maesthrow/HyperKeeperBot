@@ -1,3 +1,4 @@
+import copy
 import hashlib
 from typing import Union
 
@@ -35,10 +36,11 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     file_type = query_data[2]
     file_id = "_".join(query_data[3:])
     print(f"file_type = {file_type}, file_id = {file_id}")
-
     repost_switch_inline_query = query.query
     bot_name = await get_bot_name()
     bot_link = await get_bot_link()
+    file_data = to_url_data_item("_".join([str(author_user_id), item_id, file_type, file_id[16:24]]))
+    url = f"{bot_link}?start={file_data}"
     builder = InlineKeyboardBuilder()
     builder.add(
         InlineKeyboardButton(
@@ -49,7 +51,7 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     builder.add(
         InlineKeyboardButton(
             text=bot_name,
-            url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
+            url=url,
         )
     )
     inline_markup_media = builder.as_markup()
@@ -131,7 +133,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
     inline_markup_media = builder.as_markup()
 
     await create_document_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
-    await create_photo_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
+    await create_photo_results(author_user_id=author_user_id, item=item, media_results=media_results, inline_markup=inline_markup_media)
     await create_audio_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
     await create_voice_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
     await create_video_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
@@ -211,26 +213,32 @@ async def create_document_results(item: Item, media_results: list, inline_markup
     return media_results
 
 
-async def create_photo_results(item: Item, media_results: list, inline_markup):
+async def create_photo_results(author_user_id, item: Item, media_results: list, inline_markup):
     item_title = item.get_inline_title()
     for file_id in item.media['photo']:
-        switch_inline_query = "_".join(inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:2])
+        this_inline_markup = copy.deepcopy(inline_markup)
+        switch_inline_query = "_".join(this_inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:2])
         switch_inline_query += f"_photo_{file_id}"
-        inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
+        this_inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
+
         bot_link = await get_bot_link()
-        print(f"new_url = {bot_link}?start={to_url_data_item(switch_inline_query)}")
-        #inline_markup.inline_keyboard[-1][1].url = f"{bot_link}?start={to_url_data_item(switch_inline_query)}",
-        result = InlineQueryResultPhoto(
+        file_data = to_url_data_item("_".join([str(author_user_id), item.id, "photo", file_id[16:24]]))
+        url = f"{bot_link}?start={file_data}"
+        inline_button: InlineKeyboardButton = this_inline_markup.inline_keyboard[-1][1]
+        #print(f"old_url {inline_button.url}")
+        inline_button.url = url
+
+        media_results.append(InlineQueryResultPhoto(
             id=hashlib.md5(file_id.encode()).hexdigest(),
             photo_url=file_id,
             thumb_url=file_id,
             thumbnail_url=file_id,
             title=item_title,
             parse_mode=ParseMode.HTML,
-            reply_markup=inline_markup
-        )
-        media_results.append(result)
-        print(f"button -> {inline_markup.inline_keyboard[-1]}")
+            reply_markup=this_inline_markup
+        ))
+        #media_results.append(result)
+        #print(f"buttons -> {result.reply_markup.inline_keyboard[-1]}")
     return media_results
 
 
