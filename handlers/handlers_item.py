@@ -3,10 +3,10 @@ import copy
 
 import aiogram
 from aiogram import Router, F
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, Message
 
-import load_all
 from callbacks.callbackdata import SendItemCallback
 from enums.enums import Environment
 from handlers import states
@@ -23,11 +23,8 @@ from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
     util_move_item
-
-import handlers.handlers_item_edit_inline_buttons
-import handlers.handlers_inline_query
-
 from utils.utils_items_reader import get_item, get_folder_id
+from utils.utils_parse_mode_converter import to_markdown_text
 
 cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
@@ -71,26 +68,34 @@ async def show_item(user_id, item_id, author_user_id=None):
         author_user_id = user_id
     item = await get_item(author_user_id, item_id)
 
-    #item_inlines = await get_item_inlines(item)
-    inline_markup = await get_item_inline_markup(author_user_id, item) #InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
-    message_text = await item.get_body()
-    bot_message = await bot.send_message(chat_id=user_id, text=message_text, reply_markup=inline_markup)
+    inline_markup = await get_item_inline_markup(author_user_id, item)
+    message_text = item.get_body_markdown()
+    print(f"send message_text:\n{message_text}")
+    #message_text = message_text.replace("import aiohttp", "```\nimport aiohttp").replace("skip_updates=True)", "skip_updates=True)\n```")
+    #message_text = ((message_text.replace(">", "\>").replace("-", "\-").replace(".","\.").replace("!", "\!")))
+    # message_text = ((message_text.replace(">", "\>").replace(".","\.").replace("-", "\-").replace("_", "\_").
+    #                 replace("=", "\=").replace("#", "\#")).replace("(", "\(").replace(")", "\)").
+    #                 replace("{", "\{").replace("}", "\}"))
+    #print(message_text)
+    bot_message = await bot.send_message(
+        chat_id=user_id,
+        text=message_text,
+        reply_markup=inline_markup,
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
 
     await show_item_files(user_id, item)
 
-    # await dp.storage.update_data(user=tg_user, chat=chat, data={'current_keyboard': markup})
     data = await get_data(author_user_id)
     data['bot_message'] = bot_message
     data['item_id'] = item_id
     data['current_item'] = item
     data['current_inline_markup'] = inline_markup
-    #data['current_keyboard'] = markup
     await set_data(author_user_id, data)
-    #load_all.current_item[user_id] = item
 
 
 async def get_item_inline_markup(user_id, item: Item):
-    all_media_values = await item.get_all_media_values()
+    all_media_values = item.get_all_media_values()
     if len(all_media_values) == 0:
         item_inlines = item_inline_buttons
     else:
@@ -155,7 +160,7 @@ async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
 async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
-    item.title = message.text
+    item.title = message.text #to_markdown_text(message.text, message.entities)
     await on_add_new_item(state, item, message=message)
     await bot.delete_message(message.chat.id, message.message_id)
 

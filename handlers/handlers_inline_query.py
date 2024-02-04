@@ -90,7 +90,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
         result_id = hashlib.md5(query.query.encode()).hexdigest()
 
     if item:
-        item_body = await item.get_body()
+        item_body = item.get_body()
     else:
         item_body = "пусто"
     item_title = item.get_inline_title()

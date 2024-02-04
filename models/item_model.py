@@ -2,6 +2,8 @@ import copy
 import json
 from datetime import datetime
 
+from utils.utils_parse_mode_converter import escape_markdown, to_markdown_text_show
+
 invisible_char = "\u00A0"
 
 
@@ -46,13 +48,13 @@ class Item:
         return item_json
 
 
-    async def get_all_media_values(self):
+    def get_all_media_values(self):
         all_values = []
         for key, value in self.media.items():
             all_values.extend(value)
         return all_values
 
-    async def get_title(self):
+    def get_title(self):
         title = self.title if self.title else ""
         need_added_chars = 70 - len(title)
         if need_added_chars > 0:
@@ -65,9 +67,15 @@ class Item:
         return self.title if self.title and self.title != "" else \
             (self.text.splitlines()[0] if self.text and self.text != "" else "")
 
-    async def get_body(self):
-        title = await self.get_title()
+    def get_body(self):
+        title = self.get_title()
         return f"📄 <b>{title}</b>\n{self.text}"
+
+
+    def get_body_markdown(self):
+        title = escape_markdown(self.get_title())
+        title += '\n' if title[-1] != '\n' else ''
+        return f"📄 *{title}*{self.text}"
 
 
     # def get_short_parse_title(self):

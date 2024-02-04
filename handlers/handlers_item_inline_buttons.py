@@ -4,6 +4,7 @@ import functools
 
 import aiogram.types
 from aiogram import Router, F
+from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from handlers.handlers_folder import show_folders
@@ -15,11 +16,12 @@ from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
 from utils.utils_items_reader import get_folder_id
+from utils.utils_parse_mode_converter import to_markdown_text_show
 
 # import handlers.handlers_item_edit_inline_buttons
 
 
-delete_question = f"\n\n\n<b><i>Хотите удалить запись?</i></b>"
+delete_question = f"\n\n\n_*Хотите удалить запись?*_"
 
 router = Router()
 dp.include_router(router)
@@ -134,8 +136,15 @@ async def delete_item_handler(call: CallbackQuery):
     ]
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
+    format_message_text = to_markdown_text_show(call.message.text, call.message.entities)
+    print(f"format_message_text\n{format_message_text}")
+
     await call.answer()
-    await call.message.edit_text(text=f"{call.message.text}{delete_question}", reply_markup=inline_markup)
+    await call.message.edit_text(
+        text=f"{format_message_text}{delete_question}",
+        reply_markup=inline_markup,
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
 
 
 @router.callback_query(F.data == "edit_item_back")
@@ -146,8 +155,13 @@ async def cancel_delete_item_handler(call: CallbackQuery):
     item: Item = data.get('current_item', None)
     if item:
         inline_markup = await get_current_inline_markup(user_id)
-        item_body = await item.get_body()
-        await call.message.edit_text(text=item_body, reply_markup=inline_markup)
+        item_body = item.get_body_markdown()
+        print(f"cancel_delete_item_body\n{item_body}")
+        await call.message.edit_text(
+            text=item_body,
+            reply_markup=inline_markup,
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
     await call.answer()
 
 

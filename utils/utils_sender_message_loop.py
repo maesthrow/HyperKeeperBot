@@ -48,25 +48,25 @@ async def send_storage(
             if not text:
                 print(f"inline_markup.inline_keyboard len {len(inline_markup.inline_keyboard)}")
                 print(f"inline_markup.inline_keyboard = {inline_markup.inline_keyboard}")
-                # return await asyncio.wait_for(message.edit_reply_markup(
-                #     reply_markup=inline_markup,
-                # ), timeout=1)
-                return await message.edit_reply_markup(
-                        reply_markup=inline_markup,
-                    )
+                return await asyncio.wait_for(message.edit_reply_markup(
+                    reply_markup=inline_markup,
+                ), timeout=0.5)
+                # return await message.edit_reply_markup(
+                #         reply_markup=inline_markup,
+                #     )
             else:
-                # message = await asyncio.wait_for(bot.edit_message_text(
-                #     chat_id=user_id,
-                #     message_id=message.message_id,
-                #     text=text,
-                #     reply_markup=inline_markup,
-                # ), timeout=1)
-                message = await bot.edit_message_text(
-                        chat_id=user_id,
-                        message_id=message.message_id,
-                        text=text,
-                        reply_markup=inline_markup,
-                    )
+                message = await asyncio.wait_for(bot.edit_message_text(
+                    chat_id=user_id,
+                    message_id=message.message_id,
+                    text=text,
+                    reply_markup=inline_markup,
+                ), timeout=0.5)
+                # message = await bot.edit_message_text(
+                #         chat_id=user_id,
+                #         message_id=message.message_id,
+                #         text=text,
+                #         reply_markup=inline_markup,
+                #     )
 
             success = True
             await delete_wait_message(user_id, wait_message)

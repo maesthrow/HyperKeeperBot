@@ -2,6 +2,7 @@ import asyncio
 import copy
 
 from aiogram import Router, F
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton
 
@@ -27,7 +28,11 @@ async def edit_item_handler(call: CallbackQuery):
     inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
 
     await call.answer()
-    await call.message.edit_text(text=f"{call.message.text}{edit_question}", reply_markup=inline_markup)
+    await call.message.edit_text(
+        text=f"{call.message.text}{edit_question}",
+        reply_markup=inline_markup,
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
 
 
 # async def on_edit_item_state_handler(edit_text, state: FSMContext):
@@ -47,25 +52,28 @@ async def edit_item_title_handler(call: CallbackQuery, state: FSMContext):
 
     item: Item = await get_item(user_id, item_id)
     if item.title and item.title != "":
-        item_title = f"<b>{item.title}</b>"
+        item_title = f"{item.title}"
     else:
         item_title = "[пусто]"
 
-    edit_item_message_1 = await bot.send_message(call.message.chat.id, f"Текущий заголовок:",
+    edit_item_message_1 = await bot.send_message(call.message.chat.id,
+                                                 f"Нажмите на текст ниже, чтобы скопировать текущий заголовок:"
+                                                 f"\n\n`{item_title}`",
+                                                 parse_mode=ParseMode.MARKDOWN_V2,
                                                  reply_markup=ReplyKeyboardRemove())
-    edit_item_message_2 = await bot.send_message(call.message.chat.id, f"{item_title}")
+    #edit_item_message_2 = await bot.send_message(call.message.chat.id, f"{item_title}")
 
     await asyncio.sleep(0.4)
 
     buttons = [[add_none_title_item_button, cancel_edit_item_button]]
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=buttons)
 
-    edit_item_message_3 = await bot.send_message(call.message.chat.id,
+    edit_item_message_2 = await bot.send_message(call.message.chat.id,
                                                  f"Придумайте новый заголовок:",
                                                  reply_markup=inline_markup)
 
     data = await get_data(user_id)
-    data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2, edit_item_message_3)
+    data['edit_item_messages'] = (edit_item_message_1, edit_item_message_2)
     await set_data(user_id, data)
 
     await state.set_state(states.Item.EditTitle)

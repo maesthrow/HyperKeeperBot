@@ -11,7 +11,7 @@ from utils.utils_files import dict_to_location, dict_to_contact, dict_to_sticker
 
 
 async def show_item_files(user_id, item: Item):
-    media_files = await item.get_all_media_values()
+    media_files = item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builders = [MediaGroupBuilder()]
         location_builders = [ContentGroupBuilder()]

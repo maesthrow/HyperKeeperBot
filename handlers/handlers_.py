@@ -1,6 +1,7 @@
 import concurrent.futures
 import asyncio
 import functools
+import re
 from typing import List
 
 import aiogram
@@ -29,6 +30,7 @@ from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_id_by_content_type
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id, get_item
+from utils.utils_parse_mode_converter import to_markdown_text
 from utils.utils_sender_message_loop import send_storage, send_storage_folders, send_storage_with_items
 
 # from aiogram_media_group import media_group_handler, MediaGroupFilter
@@ -54,6 +56,7 @@ async def start(message: Message, state: FSMContext):
 
 
 async def start_handler(message: Message, state: FSMContext, tg_user):
+    print("start_handler")
     await state.clear()
 
     await add_user(tg_user)
@@ -229,8 +232,10 @@ async def back_to_folder(message: aiogram.types.Message):
 @router.message(F.content_type == 'text')
 async def any_message(message: aiogram.types.Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
-        return
+            return
 
+    entities = message.entities #parse_entities()  # Получаем список сущностей разметки сообщения
+    print(f"entities\n{entities}")
     add_item_messages = [message]
 
     buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
@@ -245,8 +250,9 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
                                reply_markup=inline_markup)
     )
 
-    # if message.content_type == aiogram.types.ContentType.TEXT:
-    item = Item(id="", text=message.text)
+    format_message_text = to_markdown_text(message.text, message.entities)
+    print(f"format_message_text\n{format_message_text}")
+    item = Item(id="", text=format_message_text)
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
 
