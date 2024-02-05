@@ -7,21 +7,16 @@ def to_markdown_text(text: str, message_entities: List[MessageEntity]) -> str:
     return escape_markdown(preformat_text(text, message_entities))
 
 
-def to_markdown_text_show(text: str, message_entities: List[MessageEntity]) -> str:
-    return escape_markdown(preformat_text(text, message_entities, is_show=True))
-
-
-def preformat_text(text: str, message_entities: List[MessageEntity], is_show=False) -> str:
+def preformat_text(text: str, message_entities: List[MessageEntity], is_show=False, is_double=False) -> str:
     if not message_entities:
         return text
     for entity in message_entities:
         offset = entity.offset
-        decr = 1 if offset > 0 else 0
-        print(f"offset = {offset}")
+        while offset > 1 and text[offset - 1] != "\n":
+            offset -= 1
         if entity.type == 'pre':
-            pre_text = '' if is_show else '\n'
-            text = (f"{text[:offset - decr]}"
-                    f"{pre_text}```\n{text[offset - decr:offset + entity.length - decr]}"
+            text = (f"{text[:offset]}"
+                    f"```\n{text[offset:offset + entity.length]}"
                     f"```{text[offset + entity.length:]}")
     return text
 

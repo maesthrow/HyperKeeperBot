@@ -16,7 +16,7 @@ from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
 from utils.utils_items_reader import get_folder_id
-from utils.utils_parse_mode_converter import to_markdown_text_show
+from utils.utils_parse_mode_converter import to_markdown_text
 
 # import handlers.handlers_item_edit_inline_buttons
 
@@ -136,8 +136,7 @@ async def delete_item_handler(call: CallbackQuery):
     ]
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
-    format_message_text = to_markdown_text_show(call.message.text, call.message.entities)
-    print(f"format_message_text\n{format_message_text}")
+    format_message_text = to_markdown_text(call.message.text, call.message.entities)
 
     await call.answer()
     await call.message.edit_text(
@@ -156,7 +155,6 @@ async def cancel_delete_item_handler(call: CallbackQuery):
     if item:
         inline_markup = await get_current_inline_markup(user_id)
         item_body = item.get_body_markdown()
-        print(f"cancel_delete_item_body\n{item_body}")
         await call.message.edit_text(
             text=item_body,
             reply_markup=inline_markup,

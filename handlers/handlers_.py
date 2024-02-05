@@ -251,7 +251,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
     )
 
     format_message_text = to_markdown_text(message.text, message.entities)
-    print(f"format_message_text\n{format_message_text}")
+    #print(f"format_message_text\n{format_message_text}")
     item = Item(id="", text=format_message_text)
 
     await state.update_data(item=item, add_item_messages=add_item_messages)

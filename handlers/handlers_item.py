@@ -70,13 +70,6 @@ async def show_item(user_id, item_id, author_user_id=None):
 
     inline_markup = await get_item_inline_markup(author_user_id, item)
     message_text = item.get_body_markdown()
-    print(f"send message_text:\n{message_text}")
-    #message_text = message_text.replace("import aiohttp", "```\nimport aiohttp").replace("skip_updates=True)", "skip_updates=True)\n```")
-    #message_text = ((message_text.replace(">", "\>").replace("-", "\-").replace(".","\.").replace("!", "\!")))
-    # message_text = ((message_text.replace(">", "\>").replace(".","\.").replace("-", "\-").replace("_", "\_").
-    #                 replace("=", "\=").replace("#", "\#")).replace("(", "\(").replace(")", "\)").
-    #                 replace("{", "\{").replace("}", "\}"))
-    #print(message_text)
     bot_message = await bot.send_message(
         chat_id=user_id,
         text=message_text,

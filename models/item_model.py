@@ -2,7 +2,7 @@ import copy
 import json
 from datetime import datetime
 
-from utils.utils_parse_mode_converter import escape_markdown, to_markdown_text_show
+from utils.utils_parse_mode_converter import escape_markdown
 
 invisible_char = "\u00A0"
 
@@ -75,7 +75,12 @@ class Item:
     def get_body_markdown(self):
         title = escape_markdown(self.get_title())
         title += '\n' if title[-1] != '\n' else ''
-        return f"📄 *{title}*{self.text}"
+        text = escape_markdown(self.text)
+        return f"📄 *{title}*{text}"
+
+
+    def get_text_markdown(self):
+        return escape_markdown(self.text)
 
 
     # def get_short_parse_title(self):
