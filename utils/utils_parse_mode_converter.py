@@ -34,3 +34,19 @@ def escape_markdown(text) -> str:
         else:
             escaped_text += char
     return escaped_text
+
+
+def full_escape_markdown(text) -> str:
+    text = text.replace("```", "")
+    escape_chars = '\\*_[]()<>#+-=|{}.!'
+    escaped_text = ''
+    for char in text:
+        if char in escape_chars:
+            escaped_text += '\\' + char
+        else:
+            escaped_text += char
+    return escaped_text
+
+
+def markdown_without_code(text) -> str:
+    return text.replace("```", "````").strip()

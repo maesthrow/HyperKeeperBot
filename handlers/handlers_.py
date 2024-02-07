@@ -30,7 +30,7 @@ from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_id_by_content_type
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id, get_item
-from utils.utils_parse_mode_converter import to_markdown_text
+from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
 from utils.utils_sender_message_loop import send_storage, send_storage_folders, send_storage_with_items
 
 # from aiogram_media_group import media_group_handler, MediaGroupFilter
@@ -250,7 +250,7 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
                                reply_markup=inline_markup)
     )
 
-    format_message_text = to_markdown_text(message.text, message.entities)
+    format_message_text = preformat_text(message.text, message.entities)
     #print(f"format_message_text\n{format_message_text}")
     item = Item(id="", text=format_message_text)
 

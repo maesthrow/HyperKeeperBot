@@ -12,7 +12,8 @@ from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import item_edit_buttons
 from utils.utils_items_reader import get_item
-from utils.utils_parse_mode_converter import to_markdown_text
+from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, full_escape_markdown, \
+    markdown_without_code
 
 edit_question = f"\n\n\n_*Что будете редактировать?*_"
 
@@ -95,18 +96,15 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
 
     item: Item = await get_item(user_id, item_id)
     if item.text and item.text != "":
-        item_text = item.text
+        item_text = markdown_without_code(item.text)
     else:
         item_text = "[пусто]"
-
-    #item_text = to_markdown_text(call.message.text, call.message.entities)
-    #print(f"item_text\n{item_text}")
 
     edit_item_messages = []
     edit_item_messages.append(
         await bot.send_message(call.message.chat.id,
-                                                 f"Нажмите на текущий текст записи, чтобы скопировать его:"
-                                                 f"\n`\n{item_text}\n`",
+                                                 f"Нажмите на текущий текст записи, чтобы скопировать:"
+                                                 f"\n\n`{item_text}`",
                                                  parse_mode=ParseMode.MARKDOWN_V2,
                                                  reply_markup=ReplyKeyboardRemove())
     )

@@ -24,7 +24,7 @@ from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
     util_move_item
 from utils.utils_items_reader import get_item, get_folder_id
-from utils.utils_parse_mode_converter import to_markdown_text
+from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
 
 cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
@@ -258,7 +258,7 @@ async def delete_all_items_handler(message: aiogram.types.Message):
 
     inline_markup = await get_inline_markup_for_accept_cancel(
         text_accept="Да, удалить", text_cancel="Не удалять",
-        callback_data=f"delete_all_items_request_{current_folder_id}")
+        callback_data=f"delete_all_items_request")
 
     # await asyncio.sleep(0.5)
     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
@@ -269,7 +269,7 @@ async def delete_all_items_handler(message: aiogram.types.Message):
     await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
 
 
-@router.callback_query(F.data == "delete_all_items_request")
+@router.callback_query(F.data.contains("delete_all_items_request"))
 async def delete_all_items_request(call: CallbackQuery):
     user_id = call.from_user.id
     current_folder_id = await get_current_folder_id(user_id)
@@ -285,6 +285,7 @@ async def delete_all_items_request(call: CallbackQuery):
     try:
         # Вызываем метод для удаления папки
         result = await util_delete_all_items_in_folder(user_id, current_folder_id)
+        print(f"result {result}")
         if result:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # await call.answer(f"Запись удалена") #всплывающее сообщение сверху
@@ -449,7 +450,8 @@ async def edit_item_handler(message: aiogram.types.Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
     item_id = data.get('item_id')
-    await on_edit_item(user_id, message.text, state)
+    format_message_text = preformat_text(message.text, message.entities)
+    await on_edit_item(user_id, format_message_text, state)
     await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id)
 
