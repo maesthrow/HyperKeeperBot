@@ -68,7 +68,7 @@ async def get_current_inline_markup(user_id):
 @router.callback_query(F.data == "show_item_files")
 async def show_item_files_handler(call: CallbackQuery):
     inline_markup = call.message.reply_markup
-    inline_markup.inline_keyboard[-1][-1] = hide_item_files_button
+    inline_markup.inline_keyboard[-1][-2] = hide_item_files_button
 
     data = await get_data(call.from_user.id)
     item = data.get('current_item', None)
@@ -84,7 +84,7 @@ async def show_item_files_handler(call: CallbackQuery):
 @router.callback_query(F.data == "hide_item_files")
 async def hide_item_files_handler(call: CallbackQuery):
     inline_markup = call.message.reply_markup
-    inline_markup.inline_keyboard[-1][-1] = show_item_files_button
+    inline_markup.inline_keyboard[-1][-2] = show_item_files_button
 
     user_id = call.from_user.id
 

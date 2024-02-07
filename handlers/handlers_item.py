@@ -93,7 +93,7 @@ async def get_item_inline_markup(user_id, item: Item):
         item_inlines = item_inline_buttons
     else:
         item_inlines = item_inline_buttons_with_files
-        item_inlines[-1][-1] = hide_item_files_button
+        item_inlines[-1][-2] = hide_item_files_button
     item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}" #item.get_inline_title()
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
