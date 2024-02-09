@@ -81,7 +81,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
 
     author_user_id = int(query_data[0])
     item_id = query_data[1]
-    item: Item = Item("", "")
+    item: Item = Item("", [""])
     user_id = 0
     result_id = 0
     if isinstance(query, types.InlineQuery):
@@ -107,7 +107,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
         InlineQueryResultArticle(
             id=result_id,
             title=item_title,
-            description=item.text,
+            description=item.get_text(),
             input_message_content=input_message_content,
             reply_markup=inline_markup,
             thumbnail_url=photo_url
@@ -250,7 +250,7 @@ async def create_audio_results(item: Item, media_results: list, inline_markup):
             id=hashlib.md5(file_id.encode()).hexdigest(),
             audio_url=file_id,
             title=file.file_path,
-            # caption=item.text,
+            #caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
@@ -265,7 +265,7 @@ async def create_voice_results(item: Item, media_results: list, inline_markup):
             id=hashlib.md5(file_id.encode()).hexdigest(),
             voice_url=file_id,
             title=file.file_path,
-            # caption=item.text,
+            #caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
@@ -283,8 +283,8 @@ async def create_video_results(item: Item, media_results: list, inline_markup):
             thumbnail_url=file_id,
             mime_type='video/mp4',
             title=file.file_path,
-            # description=item.text,
-            # caption=item.text,
+            #description=item.get_text(),
+            #caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
@@ -302,7 +302,7 @@ async def create_video_note_results(item: Item, media_results: list, inline_mark
             thumbnail_url=file_id,
             mime_type='video/mp4',
             title=file.file_path,
-            # caption=item.text,
+            #caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )

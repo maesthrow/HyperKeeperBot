@@ -21,7 +21,8 @@ from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, hide_item_files_button, \
-    cancel_edit_item_button, clean_title_buttons, clean_text_buttons
+    cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, new_item_buttons, \
+    without_title_button
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -31,16 +32,16 @@ from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
 
 #cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
-choose_edit_item_content_buttons = [
-    InlineKeyboardButton(text="📝 Текст", callback_data=f"edit_content_text"),
-    InlineKeyboardButton(text="📸 Медиафайлы", callback_data=f"edit_content_media")
-]
-
-choose_type_edit_item_buttons = [
-    InlineKeyboardButton(text="➕ Добавить", callback_data=f"new_text_type_add"),
-    InlineKeyboardButton(text="🔄 Перезаписать", callback_data=f"new_text_type_rewrite")
-]
-add_none_title_item_button = InlineKeyboardButton(text="🪧 Пустой заголовок", callback_data=f"add_none_title_item")
+# choose_edit_item_content_buttons = [
+#     InlineKeyboardButton(text="📝 Текст", callback_data=f"edit_content_text"),
+#     InlineKeyboardButton(text="📸 Медиафайлы", callback_data=f"edit_content_media")
+# ]
+#
+# choose_type_edit_item_buttons = [
+#     InlineKeyboardButton(text="➕ Добавить", callback_data=f"new_text_type_add"),
+#     InlineKeyboardButton(text="🔄 Перезаписать", callback_data=f"new_text_type_rewrite")
+# ]
+# add_none_title_item_button = InlineKeyboardButton(text="🪧 Пустой заголовок", callback_data=f"add_none_title_item")
 
 
 router = Router()
@@ -131,28 +132,28 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(user_id, folder_id, need_to_resend=True)
 
 
-@router.callback_query(states.Item.NewStepTitle, F.data == "cancel_add_new_item")
-async def cancel_add_new_item(call: CallbackQuery, state: FSMContext):
+#@router.callback_query(states.Item.NewStepTitle, F.data == "cancel_add_new_item")
+@router.message(states.Item.NewStepTitle, F.text == cancel_save_new_item_button.text)
+async def cancel_add_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
     if add_item_messages:
         for message in add_item_messages:
             await bot.delete_message(message.chat.id, message.message_id)
+            await asyncio.sleep(0.1)
 
     await state.clear()
-    await show_folders(call.from_user.id)
-    await call.answer()
+    await show_folders(message.chat.id)
 
 
-@router.callback_query(states.Item.NewStepTitle, F.data == "skip_enter_item_title")
-async def skip_enter_item_title_handler(call: CallbackQuery, state: FSMContext):
+@router.message(states.Item.NewStepTitle, F.text == without_title_button.text)
+async def skip_enter_item_title_handler(message: Message, state: FSMContext):
     data = await state.get_data()
     item: Item = data.get('item')
-    await on_add_new_item(state, item, call=call)
-    await call.answer()
+    await on_add_new_item(state, item, message=message)
 
 
-@router.message(states.Item.NewStepTitle)
+@router.message(states.Item.NewStepTitle, NotInButtonsFilter(new_item_buttons))
 async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')

@@ -1,6 +1,7 @@
 import copy
 import json
 from datetime import datetime
+from typing import List
 
 from utils.utils_parse_mode_converter import escape_markdown
 
@@ -20,7 +21,7 @@ class Item:
         "sticker": [],
     }
 
-    def __init__(self, id: str, text: str, title=None, media: dict = None, date_created=None, date_modified=None):
+    def __init__(self, id: str, text: List[str], title=None, media: dict = None, date_created=None, date_modified=None):
         self.id = id
         self.title = title
         self.text = text
@@ -65,22 +66,24 @@ class Item:
 
     def get_inline_title(self):
         return self.title if self.title and self.title != "" else \
-            (self.text.splitlines()[0] if self.text and self.text != "" else "")
+            (self.text[0].splitlines()[0] if self.text and self.text != "" else "")
 
-    def get_body(self):
+    def get_body(self, page=0):
         title = self.get_title()
-        return f"📄 <b>{title}</b>\n{self.text}"
+        return f"📄 <b>{title}</b>\n{self.text[page]}"
 
 
-    def get_body_markdown(self):
+    def get_body_markdown(self, page=0):
         title = escape_markdown(self.get_title())
         title += '\n' if title[-1] != '\n' else ''
-        text = escape_markdown(self.text)
+        text = escape_markdown(self.text[page])
         return f"📄 *{title}*{text}"
 
+    def get_text(self, page=0):
+        return self.text[page]
 
-    def get_text_markdown(self):
-        return escape_markdown(self.text)
+    def get_text_markdown(self, page=0):
+        return escape_markdown(self.text[page])
 
 
     # def get_short_parse_title(self):
@@ -119,7 +122,8 @@ class Item:
 
     def select_search_text(self, search_text: str, left_teg: str = '<b><i><u>', right_teg: str = '</u></i></b>'):
         self.title = get_selected_search_text(self.title, search_text, left_teg, right_teg)
-        self.text = get_selected_search_text(self.text, search_text, left_teg, right_teg)
+        for page in range(len(self.text)):
+            self.text[page] = get_selected_search_text(self.text[page], search_text, left_teg, right_teg)
 
     def __str__(self):
         return f"{self.id} {self.get_inline_title()} ({self.date_created.strftime('%Y-%m-%d %H:%M:%S')})"
@@ -130,6 +134,7 @@ def serialize_datetime(dt):
     if dt is None:
         return None
     return dt.isoformat()
+
 
 def get_selected_search_text(text: str, search_text: str, left_teg: str = '<b><i><u>', right_teg: str = '</u></i></b>'):
     # Ищем все вхождения search_text в тексте

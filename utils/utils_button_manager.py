@@ -1,6 +1,19 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+without_title_button = KeyboardButton(text="💾 Без заголовка")
+add_to_item_button = KeyboardButton(text="❇️ Дополнить")
+cancel_save_new_item_button = KeyboardButton(text="❌ Не сохранять запись")
+
+new_item_buttons = [
+        [
+            without_title_button,
+            add_to_item_button,
+        ],
+        [
+            cancel_save_new_item_button
+        ],
+    ]
 
 cancel_edit_item_button = KeyboardButton(text="❌ Отменить редактирование")
 clean_title_buttons = [
