@@ -241,15 +241,16 @@ async def any_message(message: aiogram.types.Message, state: FSMContext):
 
     #buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
     #inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+
+    markup = create_general_reply_markup(new_item_buttons)
     add_item_messages.append(
-        await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌")
+        await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌", reply_markup=markup)
         # reply_markup=ReplyKeyboardRemove())
     )
-    markup = create_general_reply_markup(new_item_buttons)
+
     await asyncio.sleep(0.5)
     add_item_messages.append(
-        await bot.send_message(message.chat.id, "Добавьте заголовок:",
-                               reply_markup=markup)
+        await bot.send_message(message.chat.id, "Добавьте заголовок:") #, reply_markup=markup)
     )
 
     format_message_text = preformat_text(message.text, message.entities)
@@ -297,13 +298,11 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
     # inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     markup = create_general_reply_markup(new_item_buttons)
     add_item_messages.append(
-       await bot.send_message(messages[0].chat.id, "Сейчас сохраним Вашу новую запись 👌",
-                               reply_markup=ReplyKeyboardRemove())
+       await bot.send_message(messages[0].chat.id, "Сейчас сохраним Вашу новую запись 👌", reply_markup=markup)
     )
     await asyncio.sleep(0.5)
     add_item_messages.append(
-        await bot.send_message(messages[0].chat.id, "Добавьте заголовок:",
-                               reply_markup=markup)
+        await bot.send_message(messages[0].chat.id, "Добавьте заголовок:") #, reply_markup=markup)
     )
 
     new_item: Item = Item(id="", text=[""])

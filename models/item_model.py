@@ -66,7 +66,7 @@ class Item:
 
     def get_inline_title(self):
         return self.title if self.title and self.title != "" else \
-            (self.text[0].splitlines()[0] if self.text and self.text != "" else "")
+            (self.text[0].splitlines()[0] if self.text and self.text[0] != "" else "")
 
     def get_body(self, page=0):
         title = self.get_title()
