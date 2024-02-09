@@ -370,8 +370,8 @@ async def cancel_create_new_folder(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@router.message(F.text.contains("Новая папка"))
-async def create_new_folder(message: aiogram.types.Message, state: FSMContext):
+@router.message(F.text == "➕ Новая папка")
+async def create_new_folder(message: Message, state: FSMContext):
     await bot.delete_message(
         chat_id=message.chat.id,
         message_id=message.message_id,

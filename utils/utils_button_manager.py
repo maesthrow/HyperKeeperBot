@@ -1,6 +1,17 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+
+cancel_edit_item_button = KeyboardButton(text="❌ Отменить редактирование")
+clean_title_buttons = [
+        KeyboardButton(text="🪧 Сделать пустой заголовок"),
+        KeyboardButton(text="💾 Сохранить без заголовка"),
+    ]
+clean_text_buttons = [
+        KeyboardButton(text="🚿 Очистить текст и сохранить"),
+        KeyboardButton(text="💾 Сохранить без текста"),
+    ]
+
 general_buttons_folder = [
         [KeyboardButton(text="➕ Новая папка"), KeyboardButton(text="🔍 Поиск")],
         [KeyboardButton(text="️📊 Статистика"), KeyboardButton(text="️🧹 Удалить все записи в папке")],
@@ -37,6 +48,9 @@ general_buttons_statistic_folder = [
     ]
 
 
+
+
+
 ok_info_button = InlineKeyboardButton(text="👌 Понятно", callback_data="ok_info")
 skip_enter_item_title_button = InlineKeyboardButton(text="Без заголовка", callback_data="skip_enter_item_title")
 cancel_add_new_item_button = InlineKeyboardButton(text="Не добавлять запись", callback_data="cancel_add_new_item")
@@ -50,7 +64,7 @@ item_inline_buttons = [
         ],
         [
             InlineKeyboardButton(text="📝 Редактировать", callback_data="edit_item"),
-            InlineKeyboardButton(text="❇️ Дополнить", callback_data="edit_item"),
+            InlineKeyboardButton(text="❇️ Дополнить", callback_data="add_to_item"),
         ],
 
         [
@@ -69,7 +83,7 @@ item_inline_buttons_with_files = [
         ],
         [
             InlineKeyboardButton(text="📝 Редактировать", callback_data="edit_item"),
-            InlineKeyboardButton(text="❇️ Дополнить", callback_data="edit_item"),
+            InlineKeyboardButton(text="❇️ Дополнить", callback_data="add_to_item"),
         ],
 
         [
@@ -134,3 +148,29 @@ def merge_keyboards(*markups):
     for markup in markups:
         keyboard_builder.attach(InlineKeyboardBuilder.from_markup(markup))
     return keyboard_builder.as_markup()
+
+
+def get_edit_item_title_keyboard(item_title):
+    if item_title:
+        return [
+            [clean_title_buttons[0]],
+            [cancel_edit_item_button],
+        ]
+    else:
+        return [
+            [clean_title_buttons[1]],
+            [cancel_edit_item_button],
+        ]
+
+
+def get_edit_item_text_keyboard(item_text):
+    if item_text:
+        return [
+            [clean_text_buttons[0]],
+            [cancel_edit_item_button],
+        ]
+    else:
+        return [
+            [clean_text_buttons[1]],
+            [cancel_edit_item_button],
+        ]
