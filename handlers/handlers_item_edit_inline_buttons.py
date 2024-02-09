@@ -98,11 +98,11 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
     item: Item = await get_item(user_id, item_id)
 
     edit_item_messages = []
-    if item.text:
+    if item.get_text():
         edit_item_messages.append(
             await bot.send_message(call.message.chat.id,
                                                  f"Нажмите на текущий текст записи, чтобы скопировать:"
-                                                 f"\n\n`{item.text}`",
+                                                 f"\n\n`{item.get_text()}`",
                                                  parse_mode=ParseMode.MARKDOWN_V2)
         )
 

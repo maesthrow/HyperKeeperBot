@@ -9,6 +9,7 @@ from aiogram import Router, F
 from aiogram.enums import ContentType
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, CallbackQuery, KeyboardButton, Message
 
 from handlers import states
@@ -24,7 +25,7 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
 from utils.utils_bot import from_url_data_item
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
-    get_folders_with_items_inline_markup, save_file_buttons
+    get_folders_with_items_inline_markup, save_file_buttons, new_item_buttons
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_id_by_content_type
@@ -232,27 +233,28 @@ async def back_to_folder(message: aiogram.types.Message):
 @router.message(F.content_type == 'text')
 async def any_message(message: aiogram.types.Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
-            return
+        return
 
     entities = message.entities #parse_entities()  # Получаем список сущностей разметки сообщения
     print(f"entities\n{entities}")
     add_item_messages = [message]
 
-    buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
-    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+    #buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
+    #inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     add_item_messages.append(
         await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌")
         # reply_markup=ReplyKeyboardRemove())
     )
-    await asyncio.sleep(0.7)
+    markup = create_general_reply_markup(new_item_buttons)
+    await asyncio.sleep(0.5)
     add_item_messages.append(
         await bot.send_message(message.chat.id, "Добавьте заголовок:",
-                               reply_markup=inline_markup)
+                               reply_markup=markup)
     )
 
     format_message_text = preformat_text(message.text, message.entities)
     #print(f"format_message_text\n{format_message_text}")
-    item = Item(id="", text=format_message_text)
+    item = Item(id="", text=[format_message_text])
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
 
@@ -291,19 +293,20 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
     for message in messages:
         add_item_messages.append(message)
 
-    buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
-    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+    # buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
+    # inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
+    markup = create_general_reply_markup(new_item_buttons)
     add_item_messages.append(
        await bot.send_message(messages[0].chat.id, "Сейчас сохраним Вашу новую запись 👌",
                                reply_markup=ReplyKeyboardRemove())
     )
-    await asyncio.sleep(0.7)
+    await asyncio.sleep(0.5)
     add_item_messages.append(
         await bot.send_message(messages[0].chat.id, "Добавьте заголовок:",
-                               reply_markup=inline_markup)
+                               reply_markup=markup)
     )
 
-    new_item: Item = Item(id="", text="")
+    new_item: Item = Item(id="", text=[""])
     for message in messages:
         new_item = await get_new_item_from_state_data(message, state)
         file_id = get_file_id_by_content_type(message)
@@ -320,14 +323,14 @@ async def get_new_item_from_state_data(message: aiogram.types.Message, state: FS
     data = await state.get_data()
     new_item: Item = data.get('item', None)
     if new_item:
-        if new_item.text == "" and message.caption:
-            new_item.text = message.caption
+        if new_item.get_text() == "" and message.caption:
+            new_item.text = [message.caption]
     else:
         if message.caption:
             message_text = message.caption
         else:
             message_text = ""
-        new_item = Item(id="", text=message_text)
+        new_item = Item(id="", text=[message_text])
 
     await state.update_data(item=new_item)
     return new_item

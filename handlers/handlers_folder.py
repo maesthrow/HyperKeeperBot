@@ -107,7 +107,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         need_to_resend = True
 
     try:
-        if not need_to_resend:
+        if not need_to_resend and folders_message:
             # Изменение существующего сообщения
             folders_message = await folders_message.edit_text(
                 text=f"🗂️ <b>{current_folder_path_names}</b>",
