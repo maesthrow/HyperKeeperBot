@@ -1,3 +1,5 @@
+from typing import List
+
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -87,8 +89,8 @@ item_inline_buttons = [
 ]
 
 #repost_item_button = InlineKeyboardButton("Поделиться", switch_inline_query="none")
-show_item_files_button = InlineKeyboardButton(text="🔽 Вложения", callback_data="show_item_files")   #  »
-hide_item_files_button = InlineKeyboardButton(text="🔼 Вложения", callback_data="hide_item_files")   #  «
+show_item_files_button = InlineKeyboardButton(text="🔽", callback_data="show_item_files")   #  »
+hide_item_files_button = InlineKeyboardButton(text="🔼", callback_data="hide_item_files")   #  «
 item_inline_buttons_with_files = [
         [
             InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
@@ -163,7 +165,7 @@ def merge_keyboards(*markups):
     return keyboard_builder.as_markup()
 
 
-def get_edit_item_title_keyboard(item_title):
+def get_edit_item_title_keyboard(item_title: str):
     if item_title:
         return [
             [clean_title_buttons[0]],
@@ -176,8 +178,8 @@ def get_edit_item_title_keyboard(item_title):
         ]
 
 
-def get_edit_item_text_keyboard(item_text):
-    if item_text:
+def get_edit_item_text_keyboard(item_text: List[str]):
+    if item_text[0]:
         return [
             [clean_text_buttons[0]],
             [cancel_edit_item_button],

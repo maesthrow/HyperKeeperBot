@@ -10,6 +10,8 @@ class Folder(StatesGroup):
 class Item(StatesGroup):
     NewStepTitle = State()
     NewStepFolder = State()
+    NewStepAdd = State()
+    AddTo = State()
     EditTitle = State()
     EditText = State()
     Search = State()

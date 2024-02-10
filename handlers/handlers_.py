@@ -9,10 +9,11 @@ from aiogram import Router, F
 from aiogram.enums import ContentType
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State
+from aiogram.fsm.state import State, any_state
 from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, CallbackQuery, KeyboardButton, Message
 
 from handlers import states
+from handlers.filters import NotAddToFilter
 from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item import movement_item_handler, show_item
 from load_all import dp, bot
@@ -230,35 +231,31 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@router.message(F.content_type == 'text')
-async def any_message(message: aiogram.types.Message, state: FSMContext):
+@router.message(NotAddToFilter(), F.content_type == 'text')
+async def any_message(message: Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return
 
-    entities = message.entities #parse_entities()  # Получаем список сущностей разметки сообщения
-    print(f"entities\n{entities}")
+    format_message_text = preformat_text(message.text, message.entities)
+
+    data = await state.get_data()
+    item: Item = data.get('item', None)
+    if not item:
+        response_text = "Сейчас сохраним новую запись 👌"
+        item = Item(id="", text=[format_message_text])
+    else:
+        response_text = "Дополнил новую запись ✅"
+        item.add_text(format_message_text)
+
     add_item_messages = [message]
-
-    #buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
-    #inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
-
     markup = create_general_reply_markup(new_item_buttons)
-    add_item_messages.append(
-        await bot.send_message(message.chat.id, "Сейчас сохраним Вашу новую запись 👌", reply_markup=markup)
-        # reply_markup=ReplyKeyboardRemove())
-    )
-
+    add_item_messages.append(await bot.send_message(message.chat.id, response_text, reply_markup=markup))
     await asyncio.sleep(0.5)
     add_item_messages.append(
-        await bot.send_message(message.chat.id, "Добавьте заголовок:") #, reply_markup=markup)
+        await bot.send_message(message.chat.id, "Напишите заголовок или выберите действие на клавиатуре:") #, reply_markup=markup)
     )
 
-    format_message_text = preformat_text(message.text, message.entities)
-    #print(f"format_message_text\n{format_message_text}")
-    item = Item(id="", text=[format_message_text])
-
     await state.update_data(item=item, add_item_messages=add_item_messages)
-
     await state.set_state(states.Item.NewStepTitle)
 
 

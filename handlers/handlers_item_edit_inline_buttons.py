@@ -43,15 +43,6 @@ async def edit_item_handler(call: CallbackQuery):
     )
 
 
-# async def on_edit_item_state_handler(edit_text, state: FSMContext):
-#     tg_user = User.get_current()
-#     chat = Chat.get_current(())
-#     data = await dp.storage.get_data(chat=chat, user=tg_user)
-#     item_id = data.get('item_id')
-#
-#     await on_edit_item(edit_text, state)
-#     await show_item(item_id)
-
 @router.callback_query(F.data == "edit_item_title")
 async def edit_item_title_handler(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
@@ -108,7 +99,7 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
 
     await asyncio.sleep(0.4)
 
-    buttons = get_edit_item_text_keyboard(item.title)
+    buttons = get_edit_item_text_keyboard(item.text)
     markup = create_general_reply_markup(buttons)
 
     edit_item_messages.append(

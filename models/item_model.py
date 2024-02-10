@@ -48,12 +48,14 @@ class Item:
         item_json = json.dumps(item_dict).replace(':', '>').replace("sep", ">")
         return item_json
 
-
     def get_all_media_values(self):
         all_values = []
         for key, value in self.media.items():
             all_values.extend(value)
         return all_values
+
+    def files_count(self):
+        return len(self.get_all_media_values())
 
     def get_title(self):
         title = self.title if self.title else ""
@@ -84,6 +86,17 @@ class Item:
 
     def get_text_markdown(self, page=0):
         return escape_markdown(self.text[page])
+
+    def add_text(self, text_added: str):
+        if not self.text[0]:
+            self.text[0] = text_added
+            return
+        new_text_block = f"{self.text[len(self.text) - 1]}\n\n{text_added}"
+        if len(new_text_block) > 4000:
+            self.text.append(text_added)
+        else:
+            self.text[len(self.text) - 1] = new_text_block
+
 
 
     # def get_short_parse_title(self):

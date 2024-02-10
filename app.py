@@ -23,6 +23,8 @@ if __name__ == '__main__':
     from handlers.handlers_ import dp
     import handlers.handlers_file
     import handlers.handlers_item_edit_inline_buttons
+    import handlers.handlers_item_add_mode
+    import handlers.handlers_inline_query
     asyncio.run(main())
 
 

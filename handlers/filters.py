@@ -1,7 +1,11 @@
 from typing import Any, Union, Dict, List
 
 from aiogram.filters import Filter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State
 from aiogram.types import KeyboardButton, Message
+
+from handlers.states import Item
 
 
 class InButtonsFilter(Filter):
@@ -22,6 +26,10 @@ class InButtonsFilter(Filter):
 class NotInButtonsFilter(InButtonsFilter):
 
     async def __call__(self, message: Message) -> bool:
-        return not await InButtonsFilter.contains(self, message)
+        return not await self.contains(message)
 
 
+class NotAddToFilter(Filter):
+    async def __call__(self, message: Message, state: FSMContext) -> bool:
+        current_state = await state.get_state()
+        return current_state != Item.AddTo.state

@@ -12,7 +12,7 @@ from callbacks.callbackdata import SendItemCallback
 from enums.enums import Environment
 from handlers import states
 from handlers.filters import NotInButtonsFilter, InButtonsFilter
-from handlers.handlers_edit_item_title import on_edit_item
+from handlers.handlers_edit_item_title_text import on_edit_item
 from handlers.handlers_folder import show_folders
 from handlers.handlers_search import show_search_results
 from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_selected_current_setting
@@ -22,7 +22,7 @@ from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, hide_item_files_button, \
     cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, new_item_buttons, \
-    without_title_button
+    without_title_button, add_to_item_button
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -92,12 +92,14 @@ async def show_item(user_id, item_id, author_user_id=None):
 
 
 async def get_item_inline_markup(user_id, item: Item):
-    all_media_values = item.get_all_media_values()
-    if len(all_media_values) == 0:
+    if item.files_count() == 0:
         item_inlines = item_inline_buttons
     else:
         item_inlines = item_inline_buttons_with_files
-        item_inlines[-1][-2] = hide_item_files_button
+        files_button: InlineKeyboardButton = hide_item_files_button.copy()
+        files_button.text = f"{files_button.text} ({item.files_count()})"
+        item_inlines[-1][-2] = files_button
+
     item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}" #item.get_inline_title()
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
@@ -132,7 +134,6 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(user_id, folder_id, need_to_resend=True)
 
 
-#@router.callback_query(states.Item.NewStepTitle, F.data == "cancel_add_new_item")
 @router.message(states.Item.NewStepTitle, F.text == cancel_save_new_item_button.text)
 async def cancel_add_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -150,7 +151,13 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
 async def skip_enter_item_title_handler(message: Message, state: FSMContext):
     data = await state.get_data()
     item: Item = data.get('item')
-    await on_add_new_item(state, item, message=message)
+    await on_create_new_item(state, item, message=message)
+
+
+@router.message(states.Item.NewStepTitle, F.text == add_to_item_button.text)
+async def skip_enter_item_title_handler(message: Message, state: FSMContext):
+    await bot.send_message(message.chat.id, "Отправьте в сообщении то, чем хотите дополнить новую запись:")
+    await state.set_state(states.Item.NewStepAdd)
 
 
 @router.message(states.Item.NewStepTitle, NotInButtonsFilter(new_item_buttons))
@@ -158,11 +165,11 @@ async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
     item.title = message.text #to_markdown_text(message.text, message.entities)
-    await on_add_new_item(state, item, message=message)
+    await on_create_new_item(state, item, message=message)
     await bot.delete_message(message.chat.id, message.message_id)
 
 
-async def on_add_new_item(state: FSMContext, item: Item, message: Message=None, call: CallbackQuery=None):
+async def on_create_new_item(state: FSMContext, item: Item, message: Message = None, call: CallbackQuery = None):
     user_id = message.from_user.id if message else call.from_user.id if call else 0
     current_folder_id = await get_current_folder_id(user_id)
     new_item_id = await util_add_item_to_folder(user_id, current_folder_id, item)
@@ -255,7 +262,7 @@ async def delete_item_request(call: CallbackQuery):
 
 
 @router.message(F.text == "️🧹 Удалить все записи в папке")
-async def delete_all_items_handler(message: aiogram.types.Message):
+async def delete_all_items_handler(message: Message):
     current_folder_id = await get_current_folder_id(message.from_user.id)
 
     sent_message = await bot.send_message(message.chat.id, "⌛️")  # , reply_markup=ReplyKeyboardRemove())
