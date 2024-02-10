@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from handlers.handlers_ import files_in_message_handler
+from handlers.handlers_ import files_to_message_handler
 from load_all import dp, bot
 
 router = Router()
@@ -17,4 +17,4 @@ async def close_file_handler(call: CallbackQuery):
 
 @router.callback_query(F.data == "save_file")
 async def save_file_handler(call: CallbackQuery, state: FSMContext):
-    await files_in_message_handler([call.message], state)
+    await files_to_message_handler([call.message], state)

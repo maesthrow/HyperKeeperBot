@@ -1,9 +1,9 @@
 from aiogram import types
-from aiogram.types import Location, Sticker
+from aiogram.types import Location, Sticker, Document
 
 
 class ContentGroupBuilder:
-    def __init__(self, caption=''):
+    def     __init__(self, caption=''):
         self._media = []
         self.caption = caption
 
@@ -35,9 +35,9 @@ class ContentGroupBuilder:
         media = types.InputMediaAudio(media=file_id, caption=self.caption)
         self._media.append(media)
 
-    def add_document(self, file_id):
+    def add_document(self, document: Document):
         self.check_caption()
-        media = types.InputMediaDocument(media=file_id, caption=self.caption)
+        media = document
         self._media.append(media)
 
     def add_voice(self, file_id):

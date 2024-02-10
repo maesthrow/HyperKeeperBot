@@ -16,6 +16,7 @@ from handlers import states
 from handlers.filters import NotAddToFilter
 from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item import movement_item_handler, show_item
+from handlers.handlers_item_add_mode import add_files_to_message_handler
 from load_all import dp, bot
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
@@ -259,43 +260,40 @@ async def any_message(message: Message, state: FSMContext):
     await state.set_state(states.Item.NewStepTitle)
 
 
+# @router.message(states.Item.AddTo, F.content_type.in_(
+#     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
+# ))
 @router.message(F.content_type.in_(
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
-    if message.content_type == 'photo':
-        print(f"message: {message.photo}")
-    if message.media_group_id:
-        data = await state.get_data()
-        file_messages = data.get('file_messages', [])
-
-        if len(file_messages) == 0:
-            file_messages = [message]
-            data['file_messages'] = file_messages
-            await state.update_data(file_messages=file_messages)
-            await asyncio.sleep(1)
-            data = await state.get_data()
-            await files_in_message_handler(data['file_messages'], state)
-        else:
-            file_messages.append(message)
-            await state.update_data(file_messages=file_messages)
+    print(f"content_type = {message.content_type}\nmessage.document = {message.document}")
+    if await state.get_state() == states.Item.AddTo:
+        func = add_files_to_message_handler
     else:
-        await files_in_message_handler([message], state)
+        func = files_to_message_handler
+    data = await state.get_data()
+    file_messages = data.get('file_messages', [])
+    file_messages.append(message)
+    if message.media_group_id:
+        await state.update_data(file_messages=file_messages)
+        if len(file_messages) == 1:
+            await func(file_messages, state)
+            #await files_to_message_handler(file_messages, state)
+    else:
+        await func(file_messages, state)
+        #await files_to_message_handler(file_messages, state)
 
 
-async def files_in_message_handler(messages: List[aiogram.types.Message], state: FSMContext):
+async def files_to_message_handler(messages: List[aiogram.types.Message], state: FSMContext):
     if not await is_message_allowed_new_item(messages[0]):
         return
 
-    add_item_messages = []
-    for message in messages:
-        add_item_messages.append(message)
+    add_item_messages = messages
 
-    # buttons = [[skip_enter_item_title_button, cancel_add_new_item_button]]
-    # inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
     markup = create_general_reply_markup(new_item_buttons)
     add_item_messages.append(
-       await bot.send_message(messages[0].chat.id, "Сейчас сохраним Вашу новую запись 👌", reply_markup=markup)
+       await bot.send_message(messages[0].chat.id, "Сейчас сохраним файлы в новую запись 👌", reply_markup=markup)
     )
     await asyncio.sleep(0.5)
     add_item_messages.append(
@@ -315,7 +313,7 @@ async def files_in_message_handler(messages: List[aiogram.types.Message], state:
     await state.set_state(states.Item.NewStepTitle)
 
 
-async def get_new_item_from_state_data(message: aiogram.types.Message, state: FSMContext):
+async def get_new_item_from_state_data(message: Message, state: FSMContext):
     data = await state.get_data()
     new_item: Item = data.get('item', None)
     if new_item:

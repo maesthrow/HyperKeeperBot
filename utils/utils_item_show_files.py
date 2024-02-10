@@ -1,25 +1,28 @@
 import asyncio
+from typing import List
 
-from aiogram.types import Location, Contact, InputFile, Sticker
+from aiogram.types import Location, Contact, InputFile, Sticker, Document
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from load_all import bot
 from models.item_model import Item
 from utils.ContentGroupBuilder import ContentGroupBuilder
 from utils.data_manager import get_data, set_data
-from utils.utils_files import dict_to_location, dict_to_contact, dict_to_sticker
+from utils.utils_files import dict_to_location, dict_to_contact, dict_to_sticker, dict_to_document
 
 
 async def show_item_files(user_id, item: Item):
     media_files = item.get_all_media_values()
     if len(media_files) > 0:
         media_group_builders = [MediaGroupBuilder()]
+        document_builders = [ContentGroupBuilder()]
         location_builders = [ContentGroupBuilder()]
         contact_builders = [ContentGroupBuilder()]
         sticker_builders = [ContentGroupBuilder()]
         await fill_builders(
             item=item,
             media_group_builders=media_group_builders,
+            document_builders=document_builders,
             location_builders=location_builders,
             contact_builders=contact_builders,
             sticker_builders=sticker_builders
@@ -27,6 +30,7 @@ async def show_item_files(user_id, item: Item):
 
         item_files_messages = []
         await send_media_group(user_id, media_group_builders, item_files_messages)
+        await send_document(user_id, document_builders, item_files_messages)
         await send_locations(user_id, location_builders, item_files_messages)
         await send_contacts(user_id, contact_builders, item_files_messages)
         await send_stickers(user_id, sticker_builders, item_files_messages)
@@ -48,6 +52,17 @@ async def send_media_group(user_id, media_group_builders, item_files_messages):
             item_files_messages.append(
                 await bot.send_media_group(chat_id=user_id, media=media_group)
             )
+
+
+async def send_document(user_id, document_builders, item_files_messages):
+    for d_builder in document_builders:
+        documents = d_builder.build()
+        if len(documents) > 0:
+            for document in documents:
+                await asyncio.sleep(0.25)
+                item_files_messages.append(
+                    await bot.send_document(chat_id=user_id, document=document.file_id)
+                )
 
 
 async def send_locations(user_id, location_builders, item_files_messages):
@@ -100,11 +115,20 @@ async def send_stickers(user_id, sticker_builders, item_files_messages):
                 )
 
 
-async def fill_builders(item: Item, media_group_builders, location_builders, contact_builders, sticker_builders):
+async def fill_builders(
+        item: Item,
+        media_group_builders,
+        document_builders,
+        location_builders,
+        contact_builders,
+        sticker_builders):
     #tasks = []
     for content_type, files in item.media.items():
         for file_info in files:
-            if content_type == 'location':
+            if content_type == 'document':
+                document: Document = dict_to_document(file_info)
+                await process_document_group(document, document_builders)
+            elif content_type == 'location':
                 location: Location = dict_to_location(file_info)
                 await process_location_group(location, location_builders)
             elif content_type == 'contact':
@@ -114,10 +138,7 @@ async def fill_builders(item: Item, media_group_builders, location_builders, con
                 sticker = dict_to_sticker(file_info)
                 await process_sticker_group(sticker, sticker_builders)
             else:
-                if content_type == 'document':
-                    file_id = file_info.get('file_id')
-                else:
-                    file_id = file_info
+                file_id = file_info
                 if content_type == 'voice':
                     content_type = 'audio'
                 elif content_type == 'video_note':
@@ -133,6 +154,12 @@ async def process_media_group(content_type, file_id, media_group_builders):
     if len(media_group_builders[-1]._media) >= 10:
         media_group_builders.append(MediaGroupBuilder())
     media_group_builders[-1].add(type=content_type, media=str(file_id))
+
+
+async def process_document_group(document: Document, document_builders: List[ContentGroupBuilder]):
+    if len(document_builders[-1]._media) >= 10:
+        document_builders.append(ContentGroupBuilder())
+    document_builders[-1].add('document', document)
 
 
 async def process_location_group(location: Location, location_builders):

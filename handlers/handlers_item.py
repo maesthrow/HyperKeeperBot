@@ -81,6 +81,7 @@ async def show_item(user_id, item_id, author_user_id=None):
         parse_mode=ParseMode.MARKDOWN_V2
     )
 
+    print(f"item {item}")
     await show_item_files(user_id, item)
 
     data = await get_data(author_user_id)

@@ -29,6 +29,7 @@ def get_file_id_by_content_type(message: Message):
 def document_to_dict(document: Document):
     return {
         'file_id': document.file_id,
+        'file_unique_id': document.file_unique_id,
         'file_name': document.file_name,
         'mime_type': document.mime_type
     }
