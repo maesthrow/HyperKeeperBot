@@ -22,7 +22,7 @@ from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, hide_item_files_button, \
     cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, new_item_buttons, \
-    without_title_button, add_to_item_button
+    without_title_button, add_to_item_button, show_item_files_button
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -82,7 +82,7 @@ async def show_item(user_id, item_id, author_user_id=None):
     )
 
     print(f"item {item}")
-    await show_item_files(user_id, item)
+    #await show_item_files(user_id, item)
 
     data = await get_data(author_user_id)
     data['bot_message'] = bot_message
@@ -97,7 +97,8 @@ async def get_item_inline_markup(user_id, item: Item):
         item_inlines = item_inline_buttons
     else:
         item_inlines = item_inline_buttons_with_files
-        files_button: InlineKeyboardButton = hide_item_files_button.copy()
+        files_button: InlineKeyboardButton = show_item_files_button.copy()
+
         files_button.text = f"{files_button.text} ({item.files_count()})"
         item_inlines[-1][-2] = files_button
 

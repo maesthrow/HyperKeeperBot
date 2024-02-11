@@ -1,8 +1,9 @@
 import asyncio
 
 from aiogram.methods import DeleteWebhook
+from aiogram.types import BotCommand
 
-from load_all import bot, setup_bot_commands
+from load_all import bot
 
 
 async def on_shutdown(dp):
@@ -11,11 +12,11 @@ async def on_shutdown(dp):
 
 async def on_startup(dp):
     #await setup_bot()
-    #await setup_bot_commands()
+    await setup_bot_commands()
     pass
 
 async def main():
-    #await bot(DeleteWebhook(drop_pending_updates=True))
+    await bot(DeleteWebhook(drop_pending_updates=True))
     await dp.start_polling(bot, on_shutdown=on_shutdown, on_startup=on_startup)
 
 
@@ -28,4 +29,12 @@ if __name__ == '__main__':
     asyncio.run(main())
 
 
-
+async def setup_bot_commands():
+    bot_commands = [
+        BotCommand(command="/start", description="🚀️ начало работы"),
+        BotCommand(command="/storage", description="🗂️ открыть хранилище"),
+        BotCommand(command="/settings", description="⚙️ настройки"),
+        #BotCommand(command="/profile", description="👤 мой профиль"),
+        #BotCommand(command="/help", description="справка"),
+    ]
+    await bot.set_my_commands(bot_commands)

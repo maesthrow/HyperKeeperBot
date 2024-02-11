@@ -91,7 +91,7 @@ item_inline_buttons = [
 #repost_item_button = InlineKeyboardButton("Поделиться", switch_inline_query="none")
 show_item_files_button = InlineKeyboardButton(text="🔽", callback_data="show_item_files")   #  »
 hide_item_files_button = InlineKeyboardButton(text="🔼", callback_data="hide_item_files")   #  «
-item_inline_buttons_with_files = [
+_item_inline_buttons_with_files = [
         [
             InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
             InlineKeyboardButton(text="🔀 Переместить", callback_data="move_item"),
@@ -105,6 +105,28 @@ item_inline_buttons_with_files = [
             InlineKeyboardButton(text="🗑 Удалить", callback_data="delete_item"),
             hide_item_files_button,
             InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+        ]
+]
+
+item_inline_buttons_with_files = [
+        [
+            InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
+            InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+        ],
+        [
+            InlineKeyboardButton(text="🔀", callback_data="move_item"),
+            InlineKeyboardButton(text="📝", callback_data="edit_item"),
+            InlineKeyboardButton(text="❇️", callback_data="add_to_item"),
+            InlineKeyboardButton(text="🗑", callback_data="delete_item"),
+        ],
+
+        [
+
+            show_item_files_button,
+            show_item_files_button,
+            show_item_files_button,
+            show_item_files_button,
+
         ]
 ]
 

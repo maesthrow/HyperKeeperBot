@@ -90,12 +90,12 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
         result_id = hashlib.md5(query.query.encode()).hexdigest()
 
     if item:
-        item_body = item.get_body()
+        item_body = item.get_body_markdown()
     else:
-        item_body = "пусто"
+        item_body = ""
     item_title = item.get_inline_title()
 
-    input_message_content = InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.HTML)
+    input_message_content = InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2)
 
     photo_url = (f"https://avatars.mds.yandex.net/i?id=e915ed8674cf1b1719106eef318b439f5f63d37f-"
                  f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
@@ -110,7 +110,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
             description=item.get_text(),
             input_message_content=input_message_content,
             reply_markup=inline_markup,
-            thumbnail_url=photo_url
+            thumbnail_url=photo_url,
         )
     )
 

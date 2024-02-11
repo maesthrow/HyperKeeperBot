@@ -15,7 +15,7 @@ from utils.utils_button_manager import show_item_files_button, hide_item_files_b
 from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
-from utils.utils_items_reader import get_folder_id
+from utils.utils_items_reader import get_folder_id, get_item
 from utils.utils_parse_mode_converter import to_markdown_text
 
 # import handlers.handlers_item_edit_inline_buttons
@@ -68,17 +68,24 @@ async def get_current_inline_markup(user_id):
 @router.callback_query(F.data == "show_item_files")
 async def show_item_files_handler(call: CallbackQuery):
     user_id = call.from_user.id
-    data = await get_data(user_id)
     inline_markup = call.message.reply_markup
+
+    author_user_id, item_id = inline_markup.inline_keyboard[0][0].switch_inline_query.split('_')
+    print(f"author_user_id {author_user_id}\nitem_id {item_id}")
+
+    item: Item = await get_item(int(author_user_id), item_id) #  data.get('current_item', None)
+    data = await get_data(user_id)
+    data['current_item'] = item
+    await set_data(user_id, data)
+
     files_button = hide_item_files_button.copy()
-    item: Item = data.get('current_item', None)
     if item:
         files_button.text = f"{files_button.text} ({item.files_count()})"
     inline_markup.inline_keyboard[-1][-2] = files_button
 
     await call.message.edit_reply_markup(reply_markup=inline_markup)
     await asyncio.gather(
-        show_item_files(call.from_user.id, item),
+        show_item_files(user_id, item),
         update_inline_markup_data(call.from_user.id, inline_markup)
     )
 
@@ -90,10 +97,12 @@ async def hide_item_files_handler(call: CallbackQuery):
     user_id = call.from_user.id
     data = await get_data(user_id)
     inline_markup = call.message.reply_markup
-    files_button = show_item_files_button.copy()
+    author_user_id, item_id = inline_markup.inline_keyboard[0][0].switch_inline_query.split('_')
     item: Item = data.get('current_item', None)
+    #item: Item = await get_item(int(author_user_id), item_id)  # data.get('current_item', None)
+
+    files_button = show_item_files_button.copy()
     if item:
-        all_media_values = item.get_all_media_values()
         files_button.text = f"{files_button.text} ({item.files_count()})"
     inline_markup.inline_keyboard[-1][-2] = files_button
 
