@@ -158,6 +158,7 @@ async def skip_enter_item_title_handler(message: Message, state: FSMContext):
 @router.message(states.Item.NewStepTitle, F.text == add_to_item_button.text)
 async def skip_enter_item_title_handler(message: Message, state: FSMContext):
     await bot.send_message(message.chat.id, "Отправьте в сообщении то, чем хотите дополнить новую запись:")
+    await state.update_data(file_messages=[])
     await state.set_state(states.Item.NewStepAdd)
 
 

@@ -267,49 +267,86 @@ async def any_message(message: Message, state: FSMContext):
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
-    print(f"content_type = {message.content_type}\nmessage.document = {message.document}")
-    if await state.get_state() == states.Item.AddTo:
+    #print(f"content_type = {message.content_type}\nmessage.document = {message.document}")
+    _state = await state.get_state()
+    if _state == states.Item.AddTo:
         func = add_files_to_message_handler
     else:
         func = files_to_message_handler
+
     data = await state.get_data()
     file_messages = data.get('file_messages', [])
+
     file_messages.append(message)
     if message.media_group_id:
         await state.update_data(file_messages=file_messages)
         if len(file_messages) == 1:
             await func(file_messages, state)
-            #await files_to_message_handler(file_messages, state)
     else:
         await func(file_messages, state)
-        #await files_to_message_handler(file_messages, state)
+
+
+# async def files_to_message_handler(messages: List[aiogram.types.Message], state: FSMContext):
+#     if not await is_message_allowed_new_item(messages[0]):
+#         return
+#
+#     add_item_messages = messages
+#
+#     markup = create_general_reply_markup(new_item_buttons)
+#     add_item_messages.append(
+#        await bot.send_message(messages[0].chat.id, "Сейчас сохраним файлы в новую запись 👌", reply_markup=markup)
+#     )
+#     await asyncio.sleep(0.5)
+#     add_item_messages.append(
+#         await bot.send_message(messages[0].chat.id, "Добавьте заголовок:") #, reply_markup=markup)
+#     )
+#
+#     data = await state.get_data()
+#     new_item: Item = data.get('item', None)
+#     #new_item: Item = Item(id="", text=[""])
+#     for message in messages:
+#         new_item = await get_new_item_from_state_data(message, state)
+#         file_id = get_file_id_by_content_type(message)
+#         if file_id:
+#             new_item.media[message.content_type].append(file_id)
+#     # if new_item.text == "":
+#     #     new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
+#
+#     await state.update_data(item=new_item, add_item_messages=add_item_messages)
+#     await state.set_state(states.Item.NewStepTitle)
 
 
 async def files_to_message_handler(messages: List[aiogram.types.Message], state: FSMContext):
     if not await is_message_allowed_new_item(messages[0]):
         return
 
+    data = await state.get_data()
+    item: Item = data.get('item', None)
+    if not item:
+        response_text = "Сейчас сохраним файлы в новую запись 👌"
+    else:
+        response_text = "Дополнил файлами новую запись ✅"
+
     add_item_messages = messages
 
     markup = create_general_reply_markup(new_item_buttons)
     add_item_messages.append(
-       await bot.send_message(messages[0].chat.id, "Сейчас сохраним файлы в новую запись 👌", reply_markup=markup)
+        await bot.send_message(messages[0].chat.id, response_text, reply_markup=markup)
     )
     await asyncio.sleep(0.5)
     add_item_messages.append(
-        await bot.send_message(messages[0].chat.id, "Добавьте заголовок:") #, reply_markup=markup)
+        await bot.send_message(messages[0].chat.id, "Добавьте заголовок или выберите действие на клавиатуре:")
     )
 
-    new_item: Item = Item(id="", text=[""])
     for message in messages:
-        new_item = await get_new_item_from_state_data(message, state)
+        item = await get_new_item_from_state_data(message, state)
         file_id = get_file_id_by_content_type(message)
         if file_id:
-            new_item.media[message.content_type].append(file_id)
+            item.media[message.content_type].append(file_id)
     # if new_item.text == "":
     #     new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
 
-    await state.update_data(item=new_item, add_item_messages=add_item_messages)
+    await state.update_data(item=item, add_item_messages=add_item_messages)
     await state.set_state(states.Item.NewStepTitle)
 
 
