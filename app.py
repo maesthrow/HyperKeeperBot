@@ -3,17 +3,20 @@ import asyncio
 from aiogram.methods import DeleteWebhook
 from aiogram.types import BotCommand
 
-from load_all import bot
+from load_all import bot, dp
+from mongo_db.mongo import close_client
 
 
-async def on_shutdown(dp):
+async def on_shutdown():
+    await close_client()
     await bot.close()
 
 
-async def on_startup(dp):
+async def on_startup():
     #await setup_bot()
     await setup_bot_commands()
     pass
+
 
 async def main():
     await bot(DeleteWebhook(drop_pending_updates=True))
@@ -21,12 +24,15 @@ async def main():
 
 
 if __name__ == '__main__':
-    from handlers.handlers_ import dp
+    import handlers.handlers_
     import handlers.handlers_file
     import handlers.handlers_item_edit_inline_buttons
     import handlers.handlers_item_add_mode
     import handlers.handlers_inline_query
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print('Бот был остановлен вручную.')
 
 
 async def setup_bot_commands():

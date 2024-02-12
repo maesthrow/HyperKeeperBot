@@ -10,7 +10,7 @@ from aiogram.enums import ContentType
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, any_state
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardRemove, CallbackQuery, KeyboardButton, Message
+from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove
 
 from handlers import states
 from handlers.filters import NotAddToFilter
