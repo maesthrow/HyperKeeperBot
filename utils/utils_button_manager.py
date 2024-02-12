@@ -3,6 +3,8 @@ from typing import List
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback
+
 without_title_button = KeyboardButton(text="💾 Без заголовка")
 add_to_item_button = KeyboardButton(text="❇️ Дополнить")
 cancel_save_new_item_button = KeyboardButton(text="❌ Не сохранять запись")
@@ -88,9 +90,27 @@ item_inline_buttons = [
         ]
 ]
 
-#repost_item_button = InlineKeyboardButton("Поделиться", switch_inline_query="none")
-show_item_files_button = InlineKeyboardButton(text="🔽", callback_data="show_item_files")   #  »
-hide_item_files_button = InlineKeyboardButton(text="🔼", callback_data="hide_item_files")   #  «
+show_smile = "🔽"
+hide_smile = "🔼"
+show_item_files_buttons = (
+    [
+        InlineKeyboardButton(text=f"🖼️ {show_smile}", callback_data=ShowItemFilesCallback(type='photo').pack()),
+        InlineKeyboardButton(text=f"🎞️ {show_smile}", callback_data=ShowItemFilesCallback(type='video').pack()),
+        InlineKeyboardButton(text=f"🎧 {show_smile}", callback_data=ShowItemFilesCallback(type='audio').pack()),
+        InlineKeyboardButton(text=f"🗃️ {show_smile}", callback_data=ShowItemFilesCallback(type='other').pack()),
+    ]
+)
+hide_item_files_buttons = (
+    [
+        InlineKeyboardButton(text=f"🖼️ {hide_smile}", callback_data=HideItemFilesCallback(type='photo').pack()),
+        InlineKeyboardButton(text=f"🎞️ {hide_smile}", callback_data=HideItemFilesCallback(type='video').pack()),
+        InlineKeyboardButton(text=f"🎧 {hide_smile}", callback_data=HideItemFilesCallback(type='audio').pack()),
+        InlineKeyboardButton(text=f"🗃️ {hide_smile}", callback_data=HideItemFilesCallback(type='other').pack()),
+    ]
+)
+
+
+hide_item_files_button = InlineKeyboardButton(text="🔼", callback_data="hide_item_files")
 _item_inline_buttons_with_files = [
         [
             InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
@@ -120,14 +140,7 @@ item_inline_buttons_with_files = [
             InlineKeyboardButton(text="🗑", callback_data="delete_item"),
         ],
 
-        [
-
-            show_item_files_button,
-            show_item_files_button,
-            show_item_files_button,
-            show_item_files_button,
-
-        ]
+        show_item_files_buttons
 ]
 
 item_edit_buttons = [

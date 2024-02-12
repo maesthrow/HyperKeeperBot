@@ -11,7 +11,7 @@ from handlers.handlers_folder import show_folders
 from load_all import bot, dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
-from utils.utils_button_manager import show_item_files_button, hide_item_files_button
+from utils.utils_button_manager import show_item_files_buttons, hide_item_files_buttons
 from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
@@ -78,10 +78,10 @@ async def show_item_files_handler(call: CallbackQuery):
     data['current_item'] = item
     await set_data(user_id, data)
 
-    files_button = hide_item_files_button.copy()
+    files_button = hide_item_files_buttons[-1].copy()
     if item:
-        files_button.text = f"{files_button.text} ({item.files_count()})"
-    inline_markup.inline_keyboard[-1][-2] = files_button
+        files_button.text = f"{files_button.text} {item.files_count()}"
+    inline_markup.inline_keyboard[-1][-1] = files_button
 
     await call.message.edit_reply_markup(reply_markup=inline_markup)
     await asyncio.gather(
@@ -101,10 +101,10 @@ async def hide_item_files_handler(call: CallbackQuery):
     item: Item = data.get('current_item', None)
     #item: Item = await get_item(int(author_user_id), item_id)  # data.get('current_item', None)
 
-    files_button = show_item_files_button.copy()
+    files_button = show_item_files_buttons[-1].copy()
     if item:
-        files_button.text = f"{files_button.text} ({item.files_count()})"
-    inline_markup.inline_keyboard[-1][-2] = files_button
+        files_button.text = f"{files_button.text} {item.files_count()}"
+    inline_markup.inline_keyboard[-1][-1] = files_button
 
     item_files_messages = data.get('item_files_messages', [])
 

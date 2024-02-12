@@ -26,3 +26,11 @@ class SwitchInlineQueryCallback(CallbackData, prefix="switch_inline_query"):
     author_user_id: int
     item_id: str
     file_id: str
+
+
+class ShowItemFilesCallback(CallbackData, prefix="show_item_files"):
+    type: str
+
+
+class HideItemFilesCallback(CallbackData, prefix="hide_item_files"):
+    type: str
