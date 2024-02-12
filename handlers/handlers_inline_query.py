@@ -28,7 +28,7 @@ router = Router()
 dp.include_router(router)
 
 
-@router.inline_query(lambda query: len(query.query.split("_")) > 2)
+@router.inline_query(lambda query: len(query.query.split("_")) > 3)
 async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]):
     query_data = query.query.split('_')
     author_user_id = int(query_data[0])
@@ -72,39 +72,38 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     )
 
 
-@router.inline_query(lambda query: len(query.query.split("_")) <= 2)
+@router.inline_query(lambda query: len(query.query.split("_")) <= 3)
 async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]):
     print(f"query {query.query}")
     query_data = query.query.split('_')
     if not query_data or len(query_data) == 0:
         return
 
-    author_user_id = int(query_data[0])
-    item_id = query_data[1]
+    author_user_id, item_id = int(query_data[0]), query_data[1]
+    tag = query_data[2] if len(query_data) > 2 else None
     item: Item = Item("", [""])
-    user_id = 0
-    result_id = 0
+    user_id = result_id = 0
     if isinstance(query, types.InlineQuery):
         user_id = query.from_user.id
         item: Item = await get_item(author_user_id, item_id)
         result_id = hashlib.md5(query.query.encode()).hexdigest()
 
-    if item:
-        item_body = item.get_body_markdown()
-    else:
-        item_body = ""
-    item_title = item.get_inline_title()
-
-    input_message_content = InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2)
-
-    photo_url = (f"https://avatars.mds.yandex.net/i?id=e915ed8674cf1b1719106eef318b439f5f63d37f-"
-                 f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
-
     media_results = []
 
-    inline_markup = await get_main_inline_markup(user_id, author_user_id, item, result_id)
-    media_results.append(
-        InlineQueryResultArticle(
+    if not tag:
+        if item:
+            item_body = item.get_body_markdown()
+        else:
+            item_body = ""
+        item_title = item.get_inline_title()
+
+        input_message_content = InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2)
+
+        photo_url = (f"https://avatars.mds.yandex.net/i?id=e915ed8674cf1b1719106eef318b439f5f63d37f-"
+                    f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
+
+        inline_markup = await get_main_inline_markup(user_id, author_user_id, item, result_id)
+        item_body_result = InlineQueryResultArticle(
             id=result_id,
             title=item_title,
             description=item.get_text(),
@@ -112,7 +111,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
             reply_markup=inline_markup,
             thumbnail_url=photo_url,
         )
-    )
+        media_results.append(item_body_result)
 
     repost_switch_inline_query = f"{author_user_id}_{item.id}"
     bot_name = await get_bot_name()
@@ -124,16 +123,30 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
             switch_inline_query=repost_switch_inline_query,
         )
     )
-    builder.add(
-        InlineKeyboardButton(
-            text=bot_name,
-            url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
+    if tag == 'files':
+        builder.add(
+            InlineKeyboardButton(
+                text="❌ Закрыть",
+                callback_data='close_item',
+            )
         )
-    )
+    else:
+        builder.add(
+            InlineKeyboardButton(
+                text=bot_name,
+                url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
+            )
+        )
     inline_markup_media = builder.as_markup()
 
     await create_document_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
-    await create_photo_results(author_user_id=author_user_id, item=item, media_results=media_results, inline_markup=inline_markup_media)
+    await create_photo_results(
+        author_user_id=author_user_id,
+        item=item,
+        media_results=media_results,
+        inline_markup=inline_markup_media,
+        tag=tag
+    )
     await create_audio_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
     await create_voice_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
     await create_video_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
@@ -213,7 +226,7 @@ async def create_document_results(item: Item, media_results: list, inline_markup
     return media_results
 
 
-async def create_photo_results(author_user_id, item: Item, media_results: list, inline_markup):
+async def create_photo_results(author_user_id, item: Item, media_results: list, inline_markup, tag):
     item_title = item.get_inline_title()
     for file_id in item.media['photo']:
         this_inline_markup = copy.deepcopy(inline_markup)
@@ -221,12 +234,13 @@ async def create_photo_results(author_user_id, item: Item, media_results: list, 
         switch_inline_query += f"_photo_{file_id}"
         this_inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
 
-        bot_link = await get_bot_link()
-        file_data = to_url_data_item("_".join([str(author_user_id), item.id, "photo", file_id[16:24]]))
-        url = f"{bot_link}?start={file_data}"
-        inline_button: InlineKeyboardButton = this_inline_markup.inline_keyboard[-1][1]
-        #print(f"old_url {inline_button.url}")
-        inline_button.url = url
+        if not tag:
+            bot_link = await get_bot_link()
+            file_data = to_url_data_item("_".join([str(author_user_id), item.id, "photo", file_id[16:24]]))
+            url = f"{bot_link}?start={file_data}"
+            inline_button: InlineKeyboardButton = this_inline_markup.inline_keyboard[-1][1]
+            #print(f"old_url {inline_button.url}")
+            inline_button.url = url
 
         media_results.append(InlineQueryResultPhoto(
             id=hashlib.md5(file_id.encode()).hexdigest(),
