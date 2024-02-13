@@ -19,6 +19,7 @@ from load_all import bot, dp
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import get_user_folders_data
 from utils.data_manager import get_data
+from utils.utils_ import smile_item
 from utils.utils_bot import get_bot_link, get_bot_name, to_url_data_item
 from utils.utils_files import dict_to_sticker, dict_to_location, dict_to_contact
 from utils.utils_item_show_files import show_item_files
@@ -117,20 +118,34 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
     bot_name = await get_bot_name()
     bot_link = await get_bot_link()
     builder = InlineKeyboardBuilder()
-    builder.add(
-        InlineKeyboardButton(
-            text="Поделиться",
-            switch_inline_query=repost_switch_inline_query,
-        )
-    )
+
     if tag == 'files':
         builder.add(
             InlineKeyboardButton(
-                text="❌ Закрыть",
-                callback_data='close_item',
+                text=f"▶️ Показать запись {smile_item}",
+                callback_data=f'item_{item_id}_with-folders',
             )
         )
+        builder.add(
+            InlineKeyboardButton(
+                text="🧐 Обзор файлов",
+                switch_inline_query_current_chat = f"{user_id}_{item_id}_files"
+            )
+        )
+
+        # builder.add(
+        #     InlineKeyboardButton(
+        #         text="❌ Закрыть",
+        #         callback_data='close_item',
+        #     )
+        # )
     else:
+        builder.add(
+            InlineKeyboardButton(
+                text="Поделиться",
+                switch_inline_query=repost_switch_inline_query,
+            )
+        )
         builder.add(
             InlineKeyboardButton(
                 text=bot_name,
@@ -229,12 +244,15 @@ async def create_document_results(item: Item, media_results: list, inline_markup
 async def create_photo_results(author_user_id, item: Item, media_results: list, inline_markup, tag):
     item_title = item.get_inline_title()
     for file_id in item.media['photo']:
+
         this_inline_markup = copy.deepcopy(inline_markup)
-        switch_inline_query = "_".join(this_inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:2])
-        switch_inline_query += f"_photo_{file_id}"
-        this_inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
 
         if not tag:
+
+            switch_inline_query = "_".join(this_inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:2])
+            switch_inline_query += f"_photo_{file_id}"
+            this_inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
+
             bot_link = await get_bot_link()
             file_data = to_url_data_item("_".join([str(author_user_id), item.id, "photo", file_id[16:24]]))
             url = f"{bot_link}?start={file_data}"

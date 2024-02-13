@@ -30,13 +30,13 @@ dp.include_router(router)
 @router.callback_query(F.data.contains("close_item"))
 async def close_item_handler(call: CallbackQuery = None, message: Message = None):
     print(f"call {call}\nmessage {message}")
-    message_id = None
     if message is None:
         message = call.message
         if not message:
-            return 
+            return
 
     user_id = call.from_user.id if call else message.from_user.id if message else None
+    message_id = message.message_id
     data = await get_data(user_id)
     item_files_messages = data.get('item_files_messages', [])
     accept_add_item_message = data.get('accept_add_item_message', None)

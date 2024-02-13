@@ -62,7 +62,12 @@ async def show_item_button(callback_query: CallbackQuery):
         return
 
     # Получаем item_id из callback_data
-    item_id = callback_query.data.split('_')[1]
+    callback_data = callback_query.data.split('_')
+    print(f'callback_data {callback_data}')
+    item_id = callback_data[1]
+    if len(callback_data) > 2 and callback_data[2] == 'with-folders':
+        await show_folders(user_id, need_to_resend=True)
+
     await show_item(user_id, item_id)
     await callback_query.answer()
 
