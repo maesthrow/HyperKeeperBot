@@ -5,13 +5,13 @@ import functools
 import aiogram.types
 from aiogram import Router, F
 from aiogram.enums import ParseMode
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from handlers.handlers_folder import show_folders
 from load_all import bot, dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
-from utils.utils_button_manager import show_item_files_button, hide_item_files_button
+from utils.utils_button_manager import FilesButtons
 from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
@@ -27,19 +27,24 @@ router = Router()
 dp.include_router(router)
 
 
-@router.callback_query(F.data == "close_item")
-async def close_item_handler(call: CallbackQuery = None, message: aiogram.types.Message = None):
+@router.callback_query(F.data.contains("close_item"))
+async def close_item_handler(call: CallbackQuery = None, message: Message = None):
+    print(f"call {call}\nmessage {message}")
     if message is None:
         message = call.message
+        if not message:
+            return
 
     user_id = call.from_user.id if call else message.from_user.id if message else None
+    message_id = message.message_id
     data = await get_data(user_id)
     item_files_messages = data.get('item_files_messages', [])
     accept_add_item_message = data.get('accept_add_item_message', None)
 
+    chat_id = message.chat.id if message else call.from_user.id
     tasks = [
         close_files(item_files_messages),
-        bot.delete_message(message.chat.id, message.message_id)
+        bot.delete_message(chat_id, message_id)
     ]
     if accept_add_item_message:
         tasks.insert(0, bot.delete_message(chat_id=user_id, message_id=accept_add_item_message.message_id))
@@ -78,10 +83,8 @@ async def show_item_files_handler(call: CallbackQuery):
     data['current_item'] = item
     await set_data(user_id, data)
 
-    files_button = hide_item_files_button.copy()
-    if item:
-        files_button.text = f"{files_button.text} ({item.files_count()})"
-    inline_markup.inline_keyboard[-1][-2] = files_button
+    files_button = FilesButtons.get_hide_button(item.files_count())
+    inline_markup.inline_keyboard[-1][-1] = files_button
 
     await call.message.edit_reply_markup(reply_markup=inline_markup)
     await asyncio.gather(
@@ -101,10 +104,8 @@ async def hide_item_files_handler(call: CallbackQuery):
     item: Item = data.get('current_item', None)
     #item: Item = await get_item(int(author_user_id), item_id)  # data.get('current_item', None)
 
-    files_button = show_item_files_button.copy()
-    if item:
-        files_button.text = f"{files_button.text} ({item.files_count()})"
-    inline_markup.inline_keyboard[-1][-2] = files_button
+    files_button = FilesButtons.get_show_button(item.files_count())
+    inline_markup.inline_keyboard[-1][-1] = files_button
 
     item_files_messages = data.get('item_files_messages', [])
 

@@ -20,9 +20,9 @@ from load_all import dp, bot
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
-from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, hide_item_files_button, \
+from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, \
     cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, new_item_buttons, \
-    without_title_button, add_to_item_button, show_item_files_button
+    without_title_button, add_to_item_button, FilesButtons
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -62,7 +62,12 @@ async def show_item_button(callback_query: CallbackQuery):
         return
 
     # Получаем item_id из callback_data
-    item_id = callback_query.data.split('_')[1]
+    callback_data = callback_query.data.split('_')
+    print(f'callback_data {callback_data}')
+    item_id = callback_data[1]
+    if len(callback_data) > 2 and callback_data[2] == 'with-folders':
+        await show_folders(user_id, need_to_resend=True)
+
     await show_item(user_id, item_id)
     await callback_query.answer()
 
@@ -97,12 +102,11 @@ async def get_item_inline_markup(user_id, item: Item):
         item_inlines = item_inline_buttons
     else:
         item_inlines = item_inline_buttons_with_files
-        files_button: InlineKeyboardButton = show_item_files_button.copy()
+        files_button: InlineKeyboardButton = FilesButtons.get_show_button(item.files_count())
+        item_inlines[-1][-1] = files_button
 
-        files_button.text = f"{files_button.text} ({item.files_count()})"
-        item_inlines[-1][-2] = files_button
-
-    item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}" #item.get_inline_title()
+    item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}"
+    item_inlines[-1][0].switch_inline_query_current_chat = f"{user_id}_{item.id}_files"
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
 

@@ -228,7 +228,7 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@router.message(NotAddToFilter(), F.content_type == 'text')
+@router.message(F.via_bot == None, NotAddToFilter(), F.content_type == 'text')
 async def any_message(message: Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return
@@ -256,13 +256,13 @@ async def any_message(message: Message, state: FSMContext):
     await state.set_state(states.Item.NewStepTitle)
 
 
-# @router.message(states.Item.AddTo, F.content_type.in_(
-#     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
-# ))
-@router.message(F.content_type.in_(
+@router.message(F.via_bot == None, F.content_type.in_(
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
+    # if message.via_bot:
+    #     return
+    print(f"message.text  {message}")
     _state = await state.get_state()
     func = add_files_to_message_handler if _state == states.Item.AddTo else files_to_message_handler
 

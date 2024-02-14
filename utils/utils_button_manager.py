@@ -3,6 +3,8 @@ from typing import List
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback
+
 without_title_button = KeyboardButton(text="💾 Без заголовка")
 add_to_item_button = KeyboardButton(text="❇️ Дополнить")
 cancel_save_new_item_button = KeyboardButton(text="❌ Не сохранять запись")
@@ -63,71 +65,78 @@ general_buttons_statistic_folder = [
     ]
 
 
-
-
-
 ok_info_button = InlineKeyboardButton(text="👌 Понятно", callback_data="ok_info")
 skip_enter_item_title_button = InlineKeyboardButton(text="Без заголовка", callback_data="skip_enter_item_title")
 cancel_add_new_item_button = InlineKeyboardButton(text="Не добавлять запись", callback_data="cancel_add_new_item")
 
-
+text_pages_buttons = [
+            InlineKeyboardButton(text="◀️", callback_data="prev_text_page"),
+            InlineKeyboardButton(text="1 из 5", switch_inline_query_current_chat="none"),
+            InlineKeyboardButton(text="▶️", callback_data="next_text_page"),
+        ]
 
 item_inline_buttons = [
+        # text_pages_buttons,
         [
             InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
-            InlineKeyboardButton(text="🔀 Переместить", callback_data="move_item"),
+            InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+
+
         ],
         [
-            InlineKeyboardButton(text="📝 Редактировать", callback_data="edit_item"),
             InlineKeyboardButton(text="❇️ Дополнить", callback_data="add_to_item"),
+            InlineKeyboardButton(text="📝 Редактировать", callback_data="edit_item"),
+
         ],
 
         [
+            InlineKeyboardButton(text="🔀 Переместить", callback_data="move_item"),
             InlineKeyboardButton(text="🗑 Удалить", callback_data="delete_item"),
-            InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+
         ]
 ]
 
-#repost_item_button = InlineKeyboardButton("Поделиться", switch_inline_query="none")
-show_item_files_button = InlineKeyboardButton(text="🔽", callback_data="show_item_files")   #  »
-hide_item_files_button = InlineKeyboardButton(text="🔼", callback_data="hide_item_files")   #  «
-_item_inline_buttons_with_files = [
-        [
-            InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
-            InlineKeyboardButton(text="🔀 Переместить", callback_data="move_item"),
-        ],
-        [
-            InlineKeyboardButton(text="📝 Редактировать", callback_data="edit_item"),
-            InlineKeyboardButton(text="❇️ Дополнить", callback_data="add_to_item"),
-        ],
+show_smile = "📤"
+hide_smile = "📥"
 
-        [
-            InlineKeyboardButton(text="🗑 Удалить", callback_data="delete_item"),
-            hide_item_files_button,
-            InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
-        ]
-]
+show_item_files_button = InlineKeyboardButton(text=f"Открыть файлы", callback_data="show_item_files")
+hide_item_files_button = InlineKeyboardButton(text=f"Скрыть файлы", callback_data="hide_item_files")
+
+
+class FilesButtons:
+
+    @staticmethod
+    def get_button(button_source: InlineKeyboardButton, files_count):
+        button = button_source.model_copy()
+        button.text = f"{button.text} ({files_count})"
+        return button
+
+    @staticmethod
+    def get_show_button(files_count):
+        return FilesButtons.get_button(show_item_files_button, files_count)
+
+    @staticmethod
+    def get_hide_button(files_count):
+        return FilesButtons.get_button(hide_item_files_button, files_count)
+
 
 item_inline_buttons_with_files = [
+        # text_pages_buttons,
         [
             InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
             InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
         ],
         [
-            InlineKeyboardButton(text="🔀", callback_data="move_item"),
-            InlineKeyboardButton(text="📝", callback_data="edit_item"),
             InlineKeyboardButton(text="❇️", callback_data="add_to_item"),
+            InlineKeyboardButton(text="📝", callback_data="edit_item"),
+            InlineKeyboardButton(text="🔀", callback_data="move_item"),
             InlineKeyboardButton(text="🗑", callback_data="delete_item"),
         ],
-
         [
-
+            InlineKeyboardButton(text="🧐 Обзор файлов", switch_inline_query_current_chat="none"),
             show_item_files_button,
-            show_item_files_button,
-            show_item_files_button,
-            show_item_files_button,
-
-        ]
+        ],
+        # show_item_files_buttons
 ]
 
 item_edit_buttons = [
