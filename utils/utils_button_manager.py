@@ -1,9 +1,10 @@
 from typing import List
 
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback
+from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback
+from models.item_model import Item
 
 without_title_button = KeyboardButton(text="💾 Без заголовка")
 add_to_item_button = KeyboardButton(text="❇️ Дополнить")
@@ -71,7 +72,7 @@ cancel_add_new_item_button = InlineKeyboardButton(text="Не добавлять 
 
 text_pages_buttons = [
             InlineKeyboardButton(text="◀️", callback_data="prev_text_page"),
-            InlineKeyboardButton(text="1 из 5", switch_inline_query_current_chat="none"),
+            InlineKeyboardButton(text="", callback_data="all_text_pages"),
             InlineKeyboardButton(text="▶️", callback_data="next_text_page"),
         ]
 
@@ -133,7 +134,7 @@ item_inline_buttons_with_files = [
             InlineKeyboardButton(text="🗑", callback_data="delete_item"),
         ],
         [
-            InlineKeyboardButton(text="🧐 Обзор файлов", switch_inline_query_current_chat="none"),
+            InlineKeyboardButton(text="🧐 Обзор контента", switch_inline_query_current_chat="none"),
             show_item_files_button,
         ],
         # show_item_files_buttons
@@ -220,3 +221,25 @@ def get_edit_item_text_keyboard(item_text: List[str]):
             [clean_text_buttons[1]],
             [cancel_edit_item_button],
         ]
+
+
+def get_text_pages_buttons(item: Item, page_number: int):
+    pages_buttons = text_pages_buttons.copy()
+    display_page_number = page_number + 1
+    pages_buttons[1].text = f'{display_page_number} из {len(item.text)}'
+
+    prev_page = page_number - 1 if page_number - 1 >= 0 else len(item.text) - 1
+    next_page = page_number + 1 if page_number + 1 < len(item.text) else 0
+    pages_buttons[0].callback_data = TextPagesCallback(item_id=item.id, action='prev', page=prev_page).pack()
+    pages_buttons[1].callback_data = TextPagesCallback(item_id=item.id, action='all', page=None).pack()
+    pages_buttons[2].callback_data = TextPagesCallback(item_id=item.id, action='next', page=next_page).pack()
+
+    return pages_buttons
+
+
+def get_repost_button_in_markup(inline_markup: InlineKeyboardMarkup):
+    for keyboard in inline_markup.inline_keyboard:
+        for button in keyboard:
+            btn: InlineKeyboardButton = button
+            if btn.text == 'Поделиться' and btn.switch_inline_query:
+                return btn

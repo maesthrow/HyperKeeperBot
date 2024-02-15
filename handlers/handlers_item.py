@@ -22,7 +22,7 @@ from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, \
     cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, new_item_buttons, \
-    without_title_button, add_to_item_button, FilesButtons
+    without_title_button, add_to_item_button, FilesButtons, text_pages_buttons, get_text_pages_buttons
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -99,14 +99,17 @@ async def show_item(user_id, item_id, author_user_id=None):
 
 async def get_item_inline_markup(user_id, item: Item):
     if item.files_count() == 0:
-        item_inlines = item_inline_buttons
+        item_inlines = copy.deepcopy(item_inline_buttons)
     else:
-        item_inlines = item_inline_buttons_with_files
+        item_inlines = copy.deepcopy(item_inline_buttons_with_files)
         files_button: InlineKeyboardButton = FilesButtons.get_show_button(item.files_count())
         item_inlines[-1][-1] = files_button
 
     item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}"
-    item_inlines[-1][0].switch_inline_query_current_chat = f"{user_id}_{item.id}_files"
+    item_inlines[-1][0].switch_inline_query_current_chat = f"{user_id}_{item.id}_content"
+    if len(item.text) > 1:
+        item_inlines.insert(0, get_text_pages_buttons(item, 0))
+
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
 
 

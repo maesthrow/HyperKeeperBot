@@ -119,7 +119,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
     bot_link = await get_bot_link()
     builder = InlineKeyboardBuilder()
 
-    if tag == 'files':
+    if tag == 'content':
         builder.add(
             InlineKeyboardButton(
                 text=f"▶️ Показать запись {smile_item}",
@@ -128,17 +128,10 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
         )
         builder.add(
             InlineKeyboardButton(
-                text="🧐 Обзор файлов",
-                switch_inline_query_current_chat = f"{user_id}_{item_id}_files"
+                text="🧐 Обзор контента",
+                switch_inline_query_current_chat = f"{user_id}_{item_id}_content"
             )
         )
-
-        # builder.add(
-        #     InlineKeyboardButton(
-        #         text="❌ Закрыть",
-        #         callback_data='close_item',
-        #     )
-        # )
     else:
         builder.add(
             InlineKeyboardButton(
@@ -154,6 +147,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
         )
     inline_markup_media = builder.as_markup()
 
+    await create_text_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
     await create_document_results(item=item, media_results=media_results, inline_markup=inline_markup_media)
     await create_photo_results(
         author_user_id=author_user_id,
@@ -221,6 +215,30 @@ async def get_main_inline_markup(user_id, author_user_id, item: Item, result_id)
 #     item: Item = await get_item(autor_user_id, item_id)
 #
 #     #await show_item_files(current_chat_id, item)
+
+async def create_text_results(item: Item, media_results: list, inline_markup):
+    for page in range(len(item.text)):
+        if not item.get_text(page):
+            continue
+
+        input_text_message_content = InputTextMessageContent(
+            message_text=item.get_body_markdown(page),
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
+
+        result_id = hashlib.md5(f'{item.title}_{page}'.encode()).hexdigest()
+        display_page = page + 1
+        title_pages = f'{display_page} из {len(item.text)}'
+        item_text_result = InlineQueryResultArticle(
+            id=result_id,
+            title=title_pages,
+            description=item.get_text(page),
+            input_message_content=input_text_message_content,
+            reply_markup=inline_markup,
+        )
+        media_results.append(item_text_result)
+
+    return media_results
 
 
 async def create_document_results(item: Item, media_results: list, inline_markup):

@@ -29,10 +29,11 @@ if __name__ == '__main__':
     import handlers.handlers_item_edit_inline_buttons
     import handlers.handlers_item_add_mode
     import handlers.handlers_inline_query
+    import handlers.handlers_item_text_pages
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print('Бот был остановлен вручную.')
+        print('Бот был остановлен вручную')
 
 
 async def setup_bot_commands():

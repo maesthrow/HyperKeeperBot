@@ -72,14 +72,17 @@ class Item:
 
     def get_body(self, page=0):
         title = self.get_title()
-        return f"📄 <b>{title}</b>\n{self.text[page]}"
-
+        display_page = page + 1
+        page_info = f'{display_page} из {len(self.text)}\n\n' if (len(self.text) > 1) else ''
+        return f"📄 <b>{title}</b>\n{page_info}{self.text[page]}"
 
     def get_body_markdown(self, page=0):
         title = escape_markdown(self.get_title())
         title += '\n' if title[-1] != '\n' else ''
+        display_page = page + 1
+        page_info = f'{display_page} из {len(self.text)}\n\n' if (len(self.text) > 1) else ''
         text = escape_markdown(self.text[page])
-        return f"📄 *{title}*{text}"
+        return f"📄 *{title}*{page_info}{text}"
 
     def get_text(self, page=0):
         return self.text[page]

@@ -34,3 +34,9 @@ class ShowItemFilesCallback(CallbackData, prefix="show_item_files"):
 
 class HideItemFilesCallback(CallbackData, prefix="hide_item_files"):
     type: str
+
+
+class TextPagesCallback(CallbackData, prefix="text_pages"):
+    item_id: str
+    action: str
+    page: int | None
