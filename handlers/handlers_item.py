@@ -77,7 +77,7 @@ async def show_item(user_id, item_id, author_user_id=None):
         author_user_id = user_id
     item = await get_item(author_user_id, item_id)
 
-    inline_markup = await get_item_inline_markup(author_user_id, item)
+    inline_markup = await get_item_inline_markup(author_user_id, item, page=0)
     message_text = item.get_body_markdown()
     bot_message = await bot.send_message(
         chat_id=user_id,
@@ -97,7 +97,7 @@ async def show_item(user_id, item_id, author_user_id=None):
     await set_data(author_user_id, data)
 
 
-async def get_item_inline_markup(user_id, item: Item):
+async def get_item_inline_markup(user_id, item: Item, page: int):
     if item.files_count() == 0:
         item_inlines = copy.deepcopy(item_inline_buttons)
     else:
@@ -108,9 +108,9 @@ async def get_item_inline_markup(user_id, item: Item):
     item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}"
     item_inlines[-1][0].switch_inline_query_current_chat = f"{user_id}_{item.id}_content"
     if len(item.text) > 1:
-        item_inlines.insert(0, get_text_pages_buttons(item, 0))
+        item_inlines.insert(0, get_text_pages_buttons(user_id, item, page))
 
-    return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
+    return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines, resize_keyboard=True)
 
 
 @router.message(F.text == "️↩️ Назад к папке")

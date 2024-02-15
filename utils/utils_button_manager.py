@@ -223,16 +223,16 @@ def get_edit_item_text_keyboard(item_text: List[str]):
         ]
 
 
-def get_text_pages_buttons(item: Item, page_number: int):
+def get_text_pages_buttons(author_user_id: int, item: Item, page_number: int):
     pages_buttons = text_pages_buttons.copy()
     display_page_number = page_number + 1
     pages_buttons[1].text = f'{display_page_number} из {len(item.text)}'
 
     prev_page = page_number - 1 if page_number - 1 >= 0 else len(item.text) - 1
     next_page = page_number + 1 if page_number + 1 < len(item.text) else 0
-    pages_buttons[0].callback_data = TextPagesCallback(item_id=item.id, action='prev', page=prev_page).pack()
-    pages_buttons[1].callback_data = TextPagesCallback(item_id=item.id, action='all', page=None).pack()
-    pages_buttons[2].callback_data = TextPagesCallback(item_id=item.id, action='next', page=next_page).pack()
+    pages_buttons[0].callback_data = TextPagesCallback(author_user_id=author_user_id, item_id=item.id, action='prev', page=prev_page).pack()
+    pages_buttons[1].callback_data = TextPagesCallback(author_user_id=author_user_id, item_id=item.id, action='all', page=page_number).pack()
+    pages_buttons[2].callback_data = TextPagesCallback(author_user_id=author_user_id, item_id=item.id, action='next', page=next_page).pack()
 
     return pages_buttons
 

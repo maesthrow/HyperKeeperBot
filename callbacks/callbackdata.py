@@ -37,6 +37,7 @@ class HideItemFilesCallback(CallbackData, prefix="hide_item_files"):
 
 
 class TextPagesCallback(CallbackData, prefix="text_pages"):
+    author_user_id: int
     item_id: str
     action: str
     page: int | None
