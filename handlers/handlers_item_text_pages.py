@@ -13,8 +13,9 @@ from utils.utils_items_reader import get_item
 router = Router()
 dp.include_router(router)
 
-
-numbers = {'0': '0️⃣', '1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣', '7': '7️⃣', '8': '8️⃣', '9': '9️⃣'}
+select_smile = '✅'
+numbers = {'0': '0️⃣', '1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣', '7': '7️⃣', '8': '8️⃣',
+           '9': '9️⃣'}
 
 
 @router.callback_query(TextPagesCallback.filter())
@@ -37,23 +38,28 @@ async def text_pages_handler(call: CallbackQuery):
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup
         )
-    elif data.action == 'all':
-        await text_all_pages(author_user_id, item, page, message)
+    elif data.action == 'all' or data.action == 'this':
+        await text_all_pages(author_user_id, item, page, data.action, message)
     elif data.action == 'back':
         inline_markup = await get_item_inline_markup(author_user_id, item, page)
         await message.edit_reply_markup(reply_markup=inline_markup)
 
+    await call.answer()
 
-async def text_all_pages(author_user_id: int, item: Item, page: int, message: Message):
+
+async def text_all_pages(author_user_id: int, item: Item, page_number: int, action: str, message: Message):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='↩️ Назад',
-        callback_data=TextPagesCallback(author_user_id=author_user_id, item_id=item.id, action='back', page=page).pack()
+        callback_data=TextPagesCallback(author_user_id=author_user_id, item_id=item.id, action='back',
+                                        page=page_number).pack()
     )
     for page in range(len(item.text)):
         display_page = ''.join([numbers[n] for n in str(page + 1)])
+        text = f'{display_page} {item.get_inline_page_text(page)}'
+        text = f'{select_smile} {text}' if page == page_number else text
         builder.button(
-            text=f'{display_page} {item.get_inline_page_text(page)}',
+            text=text,
             callback_data=TextPagesCallback(
                 author_user_id=author_user_id,
                 item_id=item.id,
@@ -62,4 +68,17 @@ async def text_all_pages(author_user_id: int, item: Item, page: int, message: Me
             .pack()
         )
     builder.adjust(1)
-    await message.edit_reply_markup(reply_markup=builder.as_markup(resize_keyboard=True))
+    new_body = item.get_body_markdown(page_number)
+    inline_markup = builder.as_markup(resize_keyboard=True)
+    if action == 'all':
+        await message.edit_reply_markup(reply_markup=inline_markup)
+    elif action == 'this':
+        # if message.reply_markup != inline_markup:
+        try:
+            await message.edit_text(
+                text=new_body,
+                parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=inline_markup
+            )
+        except:
+            pass
