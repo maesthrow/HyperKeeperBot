@@ -25,8 +25,12 @@ clean_title_buttons = [
         KeyboardButton(text="🪧 Сделать пустой заголовок"),
         KeyboardButton(text="💾 Сохранить без заголовка"),
     ]
+
+delete_page_button = KeyboardButton(text="🗑 Удалить текущую страницу")
+delete_page_inline_button = InlineKeyboardButton(text="🗑 Удалить страницу", callback_data="remove_page")
+
 clean_text_buttons = [
-        KeyboardButton(text="🚿 Очистить текст и сохранить"),
+        KeyboardButton(text="🚿 Очистить текст записи и сохранить"),
         KeyboardButton(text="💾 Сохранить без текста"),
     ]
 
@@ -212,15 +216,18 @@ def get_edit_item_title_keyboard(item_title: str):
 
 def get_edit_item_text_keyboard(item_text: List[str]):
     if item_text[0]:
-        return [
+        buttons = [
             [clean_text_buttons[0]],
             [cancel_edit_item_button],
         ]
+        # if len(item_text) > 1:
+        #     buttons.insert(0, [delete_page_button])
     else:
-        return [
+        buttons = [
             [clean_text_buttons[1]],
             [cancel_edit_item_button],
         ]
+    return buttons
 
 
 def get_text_pages_buttons(author_user_id: int, item: Item, page_number: int):

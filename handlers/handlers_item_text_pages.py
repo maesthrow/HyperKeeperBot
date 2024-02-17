@@ -5,10 +5,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import TextPagesCallback
 from handlers.handlers_item import get_item_inline_markup
-from load_all import dp, bot
+from handlers.handlers_item_edit_inline_buttons import edit_question, edit_question_text, get_instruction_copy_edit_text
+from load_all import dp
 from models.item_model import Item
 from utils.utils_button_manager import get_text_pages_buttons, get_repost_button_in_markup
 from utils.utils_items_reader import get_item
+from utils.utils_parse_mode_converter import markdown_without_code
 
 router = Router()
 dp.include_router(router)
@@ -29,12 +31,13 @@ async def text_pages_handler(call: CallbackQuery):
     print(f'author_user_id {author_user_id}\nitem_id {item_id}\npage {page}')
 
     item: Item = await get_item(int(author_user_id), item_id)
+    new_body = get_item_body_of_page(item, page, message)
 
     if data.action == 'prev' or data.action == 'next':
         inline_markup.inline_keyboard.pop(0)
         inline_markup.inline_keyboard.insert(0, get_text_pages_buttons(author_user_id, item, page))
         await message.edit_text(
-            text=item.get_body_markdown(page),
+            text=new_body,
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup
         )
@@ -68,7 +71,7 @@ async def text_all_pages(author_user_id: int, item: Item, page_number: int, acti
             .pack()
         )
     builder.adjust(1)
-    new_body = item.get_body_markdown(page_number)
+    new_body = get_item_body_of_page(item, page_number, message)
     inline_markup = builder.as_markup(resize_keyboard=True)
     if action == 'all':
         await message.edit_reply_markup(reply_markup=inline_markup)
@@ -82,3 +85,19 @@ async def text_all_pages(author_user_id: int, item: Item, page_number: int, acti
             )
         except:
             pass
+
+
+def get_item_body_of_page(item: Item, page_number: int, message: Message):
+    inline_markup = message.reply_markup
+    if len(inline_markup.inline_keyboard) > 1:
+        item_body = item.get_body_markdown(page_number)
+    else:
+        item_body = get_instruction_copy_edit_text(item, page_number)
+    last_row = message.text.split('\n')[-1]
+    print(f'last_row\n{last_row}')
+    if edit_question in last_row:
+        item_body += edit_question_text
+    return item_body
+
+
+
