@@ -7,6 +7,7 @@ from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 
+from callbacks.callbackdata import TextPagesCallback
 from handlers.handlers_folder import show_folders
 from load_all import bot, dp
 from models.item_model import Item
@@ -21,7 +22,7 @@ from utils.utils_parse_mode_converter import to_markdown_text
 # import handlers.handlers_item_edit_inline_buttons
 
 
-delete_question = f"\n\n\n_*Хотите удалить запись?*_"
+delete_question = f"\n\n_*Хотите удалить запись?*_"
 
 router = Router()
 dp.include_router(router)
@@ -152,32 +153,42 @@ async def delete_item_handler(call: CallbackQuery):
         ]
     ]
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
+    item_body, current_markup = await get_item_body_and_current_markup(call.from_user.id)
 
-    format_message_text = to_markdown_text(call.message.text, call.message.entities)
-
-    await call.answer()
     await call.message.edit_text(
-        text=f"{format_message_text}{delete_question}",
+        text=f'{item_body}{delete_question}',
         reply_markup=inline_markup,
         parse_mode=ParseMode.MARKDOWN_V2
     )
+    await call.answer()
 
 
 @router.callback_query(F.data == "edit_item_back")
 @router.callback_query(F.data == "delete_item_no")
 async def cancel_delete_item_handler(call: CallbackQuery):
-    user_id = call.from_user.id
+    item_body, current_markup = await get_item_body_and_current_markup(call.from_user.id)
+    await call.message.edit_text(
+        text=item_body,
+        reply_markup=current_markup,
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
+    await call.answer()
+
+
+async def get_item_body_and_current_markup(user_id):
     data = await get_data(user_id)
     item: Item = data.get('current_item', None)
+    item_body = ''
+    current_markup = None
     if item:
-        inline_markup = await get_current_inline_markup(user_id)
-        item_body = item.get_body_markdown()
-        await call.message.edit_text(
-            text=item_body,
-            reply_markup=inline_markup,
-            parse_mode=ParseMode.MARKDOWN_V2
-        )
-    await call.answer()
+        page = 0
+        current_markup = await get_current_inline_markup(user_id)
+        middle_btn = current_markup.inline_keyboard[0][1]
+        if middle_btn.callback_data and TextPagesCallback.__prefix__ in middle_btn.callback_data:
+            callback_data: TextPagesCallback = TextPagesCallback.unpack(middle_btn.callback_data)
+            page = callback_data.page
+        item_body = item.get_body_markdown(page)
+    return item_body, current_markup
 
 
 @router.callback_query(F.data == "delete_item_yes")

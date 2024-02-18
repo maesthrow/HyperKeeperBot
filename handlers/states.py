@@ -12,6 +12,7 @@ class Item(StatesGroup):
     NewStepFolder = State()
     NewStepAdd = State()
     AddTo = State()
+    ChooseTypeAddText = State()
     EditTitle = State()
     EditText = State()
     Search = State()

@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import KeyboardButton, Message
 
+from handlers import states
 from handlers.states import Item
 
 
@@ -33,3 +34,9 @@ class NotAddToFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
         return current_state != Item.AddTo.state
+
+
+class ItemAddModeFilter(Filter):
+    async def __call__(self, message: Message, state: FSMContext) -> bool:
+        current_state = await state.get_state()
+        return current_state in (states.Item.AddTo, states.Item.ChooseTypeAddText)

@@ -72,13 +72,13 @@ async def show_item_button(callback_query: CallbackQuery):
     await callback_query.answer()
 
 
-async def show_item(user_id, item_id, author_user_id=None):
+async def show_item(user_id, item_id, author_user_id=None, page=0):
     if not author_user_id:
         author_user_id = user_id
     item = await get_item(author_user_id, item_id)
 
-    inline_markup = await get_item_inline_markup(author_user_id, item, page=0)
-    message_text = item.get_body_markdown()
+    inline_markup = await get_item_inline_markup(author_user_id, item, page=page)
+    message_text = item.get_body_markdown(page)
     bot_message = await bot.send_message(
         chat_id=user_id,
         text=message_text,
@@ -166,7 +166,7 @@ async def skip_enter_item_title_handler(message: Message, state: FSMContext):
 @router.message(states.Item.NewStepTitle, F.text == add_to_item_button.text)
 async def skip_enter_item_title_handler(message: Message, state: FSMContext):
     await bot.send_message(message.chat.id, "Отправьте в сообщении то, чем хотите дополнить новую запись:")
-    await state.update_data(file_messages=[])
+    await state.update_data(file_messages=[], text_messages=[])
     await state.set_state(states.Item.NewStepAdd)
 
 

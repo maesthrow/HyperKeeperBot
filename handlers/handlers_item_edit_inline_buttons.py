@@ -10,6 +10,7 @@ from callbacks.callbackdata import TextPagesCallback
 from handlers import states
 from handlers.handlers_folder import show_folders
 from handlers.handlers_item import show_item
+from handlers.handlers_item_inline_buttons import get_item_body_and_current_markup
 from load_all import bot, dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
@@ -21,7 +22,7 @@ from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, f
     markdown_without_code
 
 edit_question = 'Что будете редактировать?'
-edit_question_text = f"\n\n\n_*{edit_question}*_"
+edit_question_text = f"\n\n_*{edit_question}*_"
 
 # add_none_title_item_button = InlineKeyboardButton(text="🪧 Пустой заголовок", callback_data=f"add_none_title_item")
 # cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
@@ -34,19 +35,25 @@ dp.include_router(router)
 async def edit_item_handler(call: CallbackQuery):
     item_inlines = copy.deepcopy(item_edit_buttons)
     current_markup = call.message.reply_markup
-    first_btn = current_markup.inline_keyboard[0][0]
-    if first_btn.callback_data and TextPagesCallback.unpack(first_btn.callback_data):
+    middle_btn = current_markup.inline_keyboard[0][1]
+    if middle_btn.callback_data and TextPagesCallback.__prefix__ in middle_btn.callback_data:
+        for btn in current_markup.inline_keyboard[0]:
+            callback_data: TextPagesCallback = TextPagesCallback.unpack(btn.callback_data)
+            action = callback_data.action.split('_')[0]
+            callback_data.action = f'{action}_pre_edit'
+            btn.callback_data = callback_data.pack()
         item_inlines.insert(0, current_markup.inline_keyboard[0])
     inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
 
-    format_message_text = to_markdown_text(call.message.text, call.message.entities)
+    item_body, current_markup = await get_item_body_and_current_markup(call.from_user.id)
+    #format_message_text = to_markdown_text(call.message.text, call.message.entities)
 
-    await call.answer()
     await call.message.edit_text(
-        text=f"{format_message_text}{edit_question_text}",
+        text=f"{item_body}{edit_question_text}",
         reply_markup=inline_markup,
         parse_mode=ParseMode.MARKDOWN_V2
     )
+    await call.answer()
 
 
 @router.callback_query(F.data == "edit_item_title")
@@ -96,11 +103,17 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
 
     current_markup = call.message.reply_markup
     middle_btn = current_markup.inline_keyboard[0][1]
-    data: TextPagesCallback = TextPagesCallback.unpack(middle_btn.callback_data) if middle_btn.callback_data else None
     inline_markup = None
     page = 0
-    if data:
-        page = data.page
+    if middle_btn.callback_data and TextPagesCallback.__prefix__ in middle_btn.callback_data:
+        for btn in current_markup.inline_keyboard[0]:
+            callback_data: TextPagesCallback = TextPagesCallback.unpack(btn.callback_data)
+            if btn == middle_btn:
+                page = callback_data.page
+            action = callback_data.action.split('_')[0]
+            callback_data.action = f'{action}_edit'
+            btn.callback_data = callback_data.pack()
+
         buttons = [current_markup.inline_keyboard[0], [delete_page_inline_button]]
         inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
 
@@ -125,7 +138,7 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
                                reply_markup=markup)
     )
 
-    data = await get_data(user_id)
+    data['item_text_page'] = page
     data['edit_item_messages'] = edit_item_messages
     await set_data(user_id, data)
 
@@ -134,11 +147,11 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
 
 
 def get_instruction_copy_edit_text(item: Item, page_number: int):
-    entity = f'старницы {(page_number + 1)}' if len(item.text) > 1 else 'записи'
-    return f"Нажмите на текущий текст {entity}, чтобы скопировать:" \
+    entity = f'страницы {(page_number + 1)}' if len(item.text) > 1 else 'записи'
+    return f"_Нажмите на текущий текст {entity}, чтобы скопировать:_ ↙️" \
            f"\n\n`{markdown_without_code(item.get_text(page_number))}`"
 
 
 def get_instruction_new_edit_text(item: Item):
-    addiction = f' для текущей старницы' if len(item.text) > 1 else ''
+    addiction = f' для выбранной страницы' if len(item.text) > 1 else ''
     return f"Напишите новый текст{addiction} или выберите действие:"

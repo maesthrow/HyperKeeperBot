@@ -1,7 +1,7 @@
 import copy
 import json
 from datetime import datetime
-from typing import List
+from typing import List, Union
 
 from utils.utils_parse_mode_converter import escape_markdown
 
@@ -77,15 +77,15 @@ class Item:
         title = self.get_title()
         display_page = page + 1
         page_info = f'{display_page} из {len(self.text)}\n\n' if (len(self.text) > 1) else ''
-        return f"📄 <b>{title}</b>\n{page_info}{self.text[page]}"
+        return f"📄 <b>{title}</b>\n{page_info}{self.text[page]}\n{invisible_char}"
 
     def get_body_markdown(self, page=0):
         title = escape_markdown(self.get_title())
         title += '\n' if title[-1] != '\n' else ''
         display_page = page + 1
-        page_info = f'{display_page} из {len(self.text)}\n\n' if (len(self.text) > 1) else ''
+        page_info = f'_*{display_page} из {len(self.text)}*_\n\n' if (len(self.text) > 1) else ''
         text = escape_markdown(self.text[page])
-        return f"📄 *{title}*{page_info}{text}"
+        return f"📄 *{title}*{page_info}{text}\n{invisible_char}"
 
     def get_text(self, page=0):
         return self.text[page]
@@ -93,16 +93,57 @@ class Item:
     def get_text_markdown(self, page=0):
         return escape_markdown(self.text[page])
 
-    def add_text(self, text_added: str):
-        if not self.text[0]:
-            self.text[0] = text_added
-            return
-        new_text_block = f"{self.text[len(self.text) - 1]}\n\n{text_added}"
-        if len(new_text_block) > 4000:
-            self.text.append(text_added)
-        else:
-            self.text[len(self.text) - 1] = new_text_block
+    def pages_count(self):
+        return len(self.text)
 
+    def last_page_number(self):
+        return self.pages_count() - 1
+
+    def add_text(self, text_added: Union[str, List[str]], on_new_page=False):
+        if len(self.text) > 0 and not on_new_page:
+            if isinstance(text_added, list):
+                text_added.insert(0, f'{self.text.pop()}\n')
+            else:
+                text_added = f'{self.text.pop()}\n\n{text_added}'
+
+        new_pages = Item.split_text(text_added)
+        if len(new_pages) > 0:
+            if len(self.text) > 0 and self.text[0] == '':
+                self.text.pop()
+            self.text.extend(new_pages)
+
+    @staticmethod
+    def split_text(text: str | List[str]) -> List[str]:
+        print(f'split_text\n{len(text)}')
+
+        BASE_SPLIT_INDEX = 4000
+        if isinstance(text, list):
+            text = '\n'.join(text)
+
+        text_pages = []
+        while text:
+            if len(text) <= BASE_SPLIT_INDEX:
+                text_pages.append(text.strip())
+                break
+
+            split_index = BASE_SPLIT_INDEX
+            while True:
+                if ((split_index - 100 > 100) and
+                        (len(text[split_index + 1:]) < 100 or
+                         ('\n' not in text[split_index + 1:] and '.' not in text[split_index + 1:]))):
+                    split_index -= 100
+                else:
+                    break
+            analyze_text = text[split_index - 100:split_index + 1]
+            find_index = analyze_text.rfind('\n') if '\n' in analyze_text else analyze_text.rfind(
+                '.') if '.' in analyze_text else analyze_text.rfind(' ')
+            if find_index >= 0:
+                split_index = split_index - 100 + find_index
+
+            text_pages.append(text[:split_index].strip())
+            text = text[split_index + 1:]
+
+        return text_pages
 
 
     # def get_short_parse_title(self):

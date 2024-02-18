@@ -22,12 +22,8 @@ async def on_edit_item(user_id, edit_text, state: FSMContext):
         message_success_text = "Новый заголовок сохранен ✅"
         message_failure_text = "Что то пошло не так при сохранении заголовка ❌"
     else:
-        data = await state.get_data()
-        type_edit_text = data.get('type_edit_text', None)
-        # if type_edit_text == 'new_text_type_add':
-        #     item.text = f"{item.text}\n{edit_text}" if item.text != "" else f"{edit_text}"
-        # else:
-        item.text = [edit_text]
+        text_page = data.get('item_text_page', None)
+        item.text[text_page] = edit_text
 
         message_success_text = "Новый текст сохранен ✅"
         message_failure_text = "Что то пошло не так при сохранении текста ❌"
@@ -47,5 +43,5 @@ async def on_edit_item(user_id, edit_text, state: FSMContext):
 
     await asyncio.sleep(0.4)
 
-    await state.set_state()
+    await state.get_state()
     # await show_item(item_id)

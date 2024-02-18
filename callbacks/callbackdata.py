@@ -40,4 +40,9 @@ class TextPagesCallback(CallbackData, prefix="text_pages"):
     author_user_id: int
     item_id: str
     action: str
-    page: int | None
+    page: int
+
+
+class ChooseTypeAddText(CallbackData, prefix='choose_type_add_text'):
+    type: str
+

@@ -13,10 +13,9 @@ from aiogram.fsm.state import State, any_state
 from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove
 
 from handlers import states
-from handlers.filters import NotAddToFilter
 from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item import movement_item_handler, show_item
-from handlers.handlers_item_add_mode import add_files_to_message_handler
+from handlers.handlers_item_add_mode import add_files_to_message_handler, add_text_to_message_handler
 from load_all import dp, bot
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
@@ -228,28 +227,46 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@router.message(F.via_bot == None, NotAddToFilter(), F.content_type == 'text')
+@router.message(F.via_bot == None, F.content_type == 'text')  # NotAddToFilter(),
 async def any_message(message: Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return
 
-    format_message_text = preformat_text(message.text, message.entities)
+    _state = await state.get_state()
+    func = add_text_to_message_handler if _state == states.Item.AddTo else text_to_message_handler
 
+    data = await state.get_data()
+    text_messages = data.get('text_messages', [])
+    print(f'text_messages {text_messages}')
+    text_messages.append(message)
+    await state.update_data(text_messages=text_messages)
+    if len(text_messages) == 1:
+        await func(text_messages, state)
+
+
+async def text_to_message_handler(messages: List[Message], state: FSMContext):
     data = await state.get_data()
     item: Item = data.get('item', None)
     if not item:
         response_text = "Сейчас сохраним новую запись 👌"
-        item = Item(id="", text=[format_message_text])
+        item = Item(id="", text=[])
     else:
         response_text = "Дополнил новую запись ✅"
-        item.add_text(format_message_text)
 
-    add_item_messages = [message]
+    add_item_messages = []
     markup = create_general_reply_markup(new_item_buttons)
-    add_item_messages.append(await bot.send_message(message.chat.id, response_text, reply_markup=markup))
+    add_item_messages.append(await bot.send_message(messages[0].chat.id, response_text, reply_markup=markup))
     await asyncio.sleep(0.5)
+
+    texts = []
+    for message in messages:
+        add_item_messages.append(message)
+        format_message_text = preformat_text(message.text, message.entities)
+        texts.append(format_message_text)
+    item.add_text(texts)
+
     add_item_messages.append(
-        await bot.send_message(message.chat.id, "Напишите заголовок или выберите действие на клавиатуре:") #, reply_markup=markup)
+        await bot.send_message(messages[0].chat.id, "Напишите заголовок или выберите действие на клавиатуре:")
     )
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
@@ -262,7 +279,7 @@ async def any_message(message: Message, state: FSMContext):
 async def media_files_handler(message: Message, state: FSMContext):
     # if message.via_bot:
     #     return
-    print(f"message.text  {message}")
+    print(f"message.text {message}")
     _state = await state.get_state()
     func = add_files_to_message_handler if _state == states.Item.AddTo else files_to_message_handler
 
@@ -277,7 +294,7 @@ async def media_files_handler(message: Message, state: FSMContext):
         await func(file_messages, state)
 
 
-async def files_to_message_handler(messages: List[aiogram.types.Message], state: FSMContext):
+async def files_to_message_handler(messages: List[Message], state: FSMContext):
     if not await is_message_allowed_new_item(messages[0]):
         return
 
