@@ -100,22 +100,7 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
     item_id = data.get('item_id')
 
     item: Item = await get_item(user_id, item_id)
-
-    current_markup = call.message.reply_markup
-    middle_btn = current_markup.inline_keyboard[0][1]
-    inline_markup = None
-    page = 0
-    if middle_btn.callback_data and TextPagesCallback.__prefix__ in middle_btn.callback_data:
-        for btn in current_markup.inline_keyboard[0]:
-            callback_data: TextPagesCallback = TextPagesCallback.unpack(btn.callback_data)
-            if btn == middle_btn:
-                page = callback_data.page
-            action = callback_data.action.split('_')[0]
-            callback_data.action = f'{action}_edit'
-            btn.callback_data = callback_data.pack()
-
-        buttons = [current_markup.inline_keyboard[0], [delete_page_inline_button]]
-        inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
+    inline_markup, page = await get_inline_markup_and_page(call.message)
 
     edit_item_messages = []
     if item.get_text():
@@ -145,6 +130,50 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
     await state.set_state(states.Item.EditText)
     await call.answer()
 
+
+async def get_inline_markup_and_page(message: Message):
+    current_markup = message.reply_markup
+    middle_btn = current_markup.inline_keyboard[0][1]
+    inline_markup = None
+    page = 0
+    if middle_btn.callback_data and TextPagesCallback.__prefix__ in middle_btn.callback_data:
+        for btn in current_markup.inline_keyboard[0]:
+            callback_data: TextPagesCallback = TextPagesCallback.unpack(btn.callback_data)
+            if btn == middle_btn:
+                page = callback_data.page
+            action = callback_data.action.split('_')[0]
+            callback_data.action = f'{action}_edit'
+            btn.callback_data = callback_data.pack()
+
+        buttons = [current_markup.inline_keyboard[0], [delete_page_inline_button]]
+        inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
+    return inline_markup, page
+
+
+@router.callback_query(F.data == "remove_page")
+async def remove_text_page_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    data = await get_data(user_id)
+    item_id = data.get('item_id')
+
+    item: Item = await get_item(user_id, item_id)
+    inline_markup, page = await get_inline_markup_and_page(call.message)
+
+    item_inlines = [
+        [
+            InlineKeyboardButton(text="☑️ Да", callback_data="delete_page_yes"),
+            InlineKeyboardButton(text="✖️ Нет", callback_data="delete_page_no"),
+        ]
+    ]
+    inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
+
+    await bot.edit_message_text(
+        chat_id=user_id,
+        message_id=call.message.message_id,
+        text=f'{get_instruction_copy_edit_text(item, page)}\n\n\n _*Хотите удалить {page + 1} страницу?*_',
+        reply_markup=inline_markup,
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
 
 def get_instruction_copy_edit_text(item: Item, page_number: int):
     entity = f'страницы {(page_number + 1)}' if len(item.text) > 1 else 'записи'
