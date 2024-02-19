@@ -6,7 +6,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, Message
 
-from callbacks.callbackdata import TextPagesCallback
+from callbacks.callbackdata import TextPagesCallback, RemoveTextPageCallback
 from handlers import states
 from handlers.handlers_folder import show_folders
 from handlers.handlers_item import show_item
@@ -16,7 +16,8 @@ from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_ import invisible_char
 from utils.utils_button_manager import item_edit_buttons, create_general_reply_markup, \
-    get_edit_item_title_keyboard, cancel_edit_item_button, get_edit_item_text_keyboard, delete_page_inline_button
+    get_edit_item_title_keyboard, cancel_edit_item_button, get_edit_item_text_keyboard, delete_page_inline_button, \
+    get_text_pages_buttons
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, full_escape_markdown, \
     markdown_without_code
@@ -46,7 +47,7 @@ async def edit_item_handler(call: CallbackQuery):
     inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=item_inlines)
 
     item_body, current_markup = await get_item_body_and_current_markup(call.from_user.id)
-    #format_message_text = to_markdown_text(call.message.text, call.message.entities)
+    # format_message_text = to_markdown_text(call.message.text, call.message.entities)
 
     await call.message.edit_text(
         text=f"{item_body}{edit_question_text}",
@@ -161,8 +162,18 @@ async def remove_text_page_handler(call: CallbackQuery, state: FSMContext):
 
     item_inlines = [
         [
-            InlineKeyboardButton(text="☑️ Да", callback_data="delete_page_yes"),
-            InlineKeyboardButton(text="✖️ Нет", callback_data="delete_page_no"),
+            InlineKeyboardButton(text="☑️ Да", callback_data=RemoveTextPageCallback(
+                author_user_id=user_id,
+                item_id=item_id,
+                action='yes',
+                page=page
+            ).pack()),
+            InlineKeyboardButton(text="✖️ Нет", callback_data=RemoveTextPageCallback(
+                author_user_id=user_id,
+                item_id=item_id,
+                action='no',
+                page=page
+            ).pack()),
         ]
     ]
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines)
@@ -174,6 +185,33 @@ async def remove_text_page_handler(call: CallbackQuery, state: FSMContext):
         reply_markup=inline_markup,
         parse_mode=ParseMode.MARKDOWN_V2
     )
+
+
+@router.callback_query(RemoveTextPageCallback.filter())
+async def action_remove_text_page_handler(call: CallbackQuery):
+    call_data: RemoveTextPageCallback = RemoveTextPageCallback.unpack(call.data)
+    user_id = call_data.author_user_id
+    item_id = call_data.item_id
+    action = call_data.action
+    page = call_data.page
+    item: Item = await get_item(user_id, item_id)
+
+    if action == 'yes':
+        item.remove_page(page)
+        page -= 1
+
+    inline_markup = None
+    if item.pages_count() > 1:
+        buttons = [get_text_pages_buttons(user_id, item, page), [delete_page_inline_button]]
+        inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
+
+    await call.message.edit_text(
+        text=get_instruction_copy_edit_text(item, page),
+        reply_markup=inline_markup,
+        parse_mode=ParseMode.MARKDOWN_V2
+    )
+    await call.answer()
+
 
 def get_instruction_copy_edit_text(item: Item, page_number: int):
     entity = f'страницы {(page_number + 1)}' if len(item.text) > 1 else 'записи'

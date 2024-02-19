@@ -145,6 +145,8 @@ class Item:
 
         return text_pages
 
+    def remove_page(self, page: int):
+        self.text.pop(page)
 
     # def get_short_parse_title(self):
     #     urls = re.findall(r'https?://[^\s]+', self.text)

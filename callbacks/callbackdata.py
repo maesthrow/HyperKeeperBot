@@ -43,6 +43,10 @@ class TextPagesCallback(CallbackData, prefix="text_pages"):
     page: int
 
 
+class RemoveTextPageCallback(TextPagesCallback, prefix="remove_text_page"):
+    pass
+
+
 class ChooseTypeAddText(CallbackData, prefix='choose_type_add_text'):
     type: str
 

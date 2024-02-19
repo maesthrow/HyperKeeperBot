@@ -20,7 +20,7 @@ new_item_buttons = [
         ],
     ]
 
-cancel_edit_item_button = KeyboardButton(text="❌ Отменить редактирование")
+cancel_edit_item_button = KeyboardButton(text="🚫 Завершить редактирование")
 clean_title_buttons = [
         KeyboardButton(text="🪧 Сделать пустой заголовок"),
         KeyboardButton(text="💾 Сохранить без заголовка"),
