@@ -12,7 +12,7 @@ from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
 
 
-async def on_edit_item(user_id, edit_text, state: FSMContext):
+async def edit_item(user_id, state: FSMContext, edit_text=None):
     data = await get_data(user_id)
     item_id = data.get('item_id')
     item: Item = await get_item(user_id, item_id)
@@ -24,7 +24,12 @@ async def on_edit_item(user_id, edit_text, state: FSMContext):
     else:
         state_data = await state.get_data()
         text_page = state_data.get('item_text_page', 0)
-        item.text[text_page] = edit_text
+        #item.text[text_page] = edit_text
+        if edit_text:
+            item.insert_text(page=text_page, text_inserted=edit_text, rewrite_page=True)
+        else:
+            item.clear_text()
+            await state.update_data(item_text_page=0)
 
         message_success_text = "Новый текст сохранен ✅"
         message_failure_text = "Что то пошло не так при сохранении текста ❌"

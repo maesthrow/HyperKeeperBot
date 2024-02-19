@@ -12,17 +12,19 @@ from callbacks.callbackdata import SendItemCallback
 from enums.enums import Environment
 from handlers import states
 from handlers.filters import NotInButtonsFilter, InButtonsFilter
-from handlers.handlers_edit_item_title_text import on_edit_item
+from handlers.handlers_edit_item_title_text import edit_item
 from handlers.handlers_folder import show_folders
 from handlers.handlers_search import show_search_results
 from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_selected_current_setting
 from load_all import dp, bot
-from models.item_model import Item
+from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, \
-    cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, new_item_buttons, \
-    without_title_button, add_to_item_button, FilesButtons, text_pages_buttons, get_text_pages_buttons
+    cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, \
+    general_new_item_buttons, \
+    without_title_button, add_to_item_button, FilesButtons, text_pages_buttons, get_text_pages_buttons, \
+    create_general_reply_markup, general_add_to_new_item_mode_buttons, cancel_add_mode_button
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -107,7 +109,7 @@ async def get_item_inline_markup(user_id, item: Item, page: int):
 
     item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}"
     item_inlines[-1][0].switch_inline_query_current_chat = f"{user_id}_{item.id}_content"
-    if len(item.text) > 1:
+    if item.pages_count() > 1:
         item_inlines.insert(0, get_text_pages_buttons(user_id, item, page))
 
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines, resize_keyboard=True)
@@ -144,6 +146,7 @@ async def back_to_folder(message: aiogram.types.Message):
 
 
 @router.message(states.Item.NewStepTitle, F.text == cancel_save_new_item_button.text)
+@router.message(states.Item.NewStepAdd, F.text == cancel_save_new_item_button.text)
 async def cancel_add_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
@@ -156,6 +159,27 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
     await show_folders(message.chat.id)
 
 
+@router.message(states.Item.NewStepAdd, F.text == cancel_add_mode_button.text)
+async def cancel_add_mode_on_new_item(message: Message, state: FSMContext):
+    data = await state.get_data()
+    item: Item = data.get('item', None)
+
+    state_data = await state.get_data()
+    add_item_messages = state_data.get('add_item_messages', [])
+
+    markup = create_general_reply_markup(general_new_item_buttons)
+    add_item_messages.append(
+        await bot.send_message(
+            chat_id=message.chat.id,
+            text="Напишите заголовок или выберите действие на клавиатуре:",
+            reply_markup=markup
+        )
+    )
+
+    await state.update_data(item=item, add_item_messages=add_item_messages)
+    await state.set_state(states.Item.NewStepTitle)
+
+
 @router.message(states.Item.NewStepTitle, F.text == without_title_button.text)
 async def skip_enter_item_title_handler(message: Message, state: FSMContext):
     data = await state.get_data()
@@ -164,13 +188,18 @@ async def skip_enter_item_title_handler(message: Message, state: FSMContext):
 
 
 @router.message(states.Item.NewStepTitle, F.text == add_to_item_button.text)
-async def skip_enter_item_title_handler(message: Message, state: FSMContext):
-    await bot.send_message(message.chat.id, "Отправьте в сообщении то, чем хотите дополнить новую запись:")
+async def add_to_new_item_handler(message: Message, state: FSMContext):
+    markup = create_general_reply_markup(general_add_to_new_item_mode_buttons)
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text="Отправьте в сообщении то, чем хотите дополнить новую запись:",
+        reply_markup=markup
+    )
     await state.update_data(file_messages=[], text_messages=[])
     await state.set_state(states.Item.NewStepAdd)
 
 
-@router.message(states.Item.NewStepTitle, NotInButtonsFilter(new_item_buttons))
+@router.message(states.Item.NewStepTitle, NotInButtonsFilter(general_new_item_buttons))
 async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
@@ -209,66 +238,66 @@ async def on_create_new_item(state: FSMContext, item: Item, message: Message = N
         await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=True)
 
 
-@router.message(F.text == "🗑 Удалить")
-async def delete_handler(message: aiogram.types.Message):
-    await on_delete_item(message)
+# @router.message(F.text == "🗑 Удалить")
+# async def delete_handler(message: aiogram.types.Message):
+#     await on_delete_item(message)
+#
+#
+# async def on_delete_item(message: aiogram.types.Message):
+#     tg_user = aiogram.types.User.get_current()
+#     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
+#     item_id = data.get('item_id')
+#
+#     # sent_message = await bot.send_message(message.chat.id, "⌛️",
+#     #                                       reply_markup=ReplyKeyboardRemove())
+#
+#     inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
+#                                                               callback_data=f"delete_item_request_{item_id}")
+#
+#     # await asyncio.sleep(0.5)
+#
+#     await bot.send_message(message.chat.id,
+#                            f"Хотите удалить эту запись ?",
+#                            reply_markup=inline_markup)
+#     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
 
-async def on_delete_item(message: aiogram.types.Message):
-    tg_user = aiogram.types.User.get_current()
-    data = await dp.storage.get_data(chat=message.chat, user=tg_user)
-    item_id = data.get('item_id')
-
-    # sent_message = await bot.send_message(message.chat.id, "⌛️",
-    #                                       reply_markup=ReplyKeyboardRemove())
-
-    inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
-                                                              callback_data=f"delete_item_request_{item_id}")
-
-    # await asyncio.sleep(0.5)
-
-    await bot.send_message(message.chat.id,
-                           f"Хотите удалить эту запись ?",
-                           reply_markup=inline_markup)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-
-
-@router.callback_query(F.data == "delete_item_request")
-async def delete_item_request(call: CallbackQuery):
-    user_id = call.from_user.id
-    data = await get_data(user_id)
-    item_id = data.get('item_id')
-
-    if "cancel" in call.data:
-        await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-        # await show_item(item_id)
-        await call.answer()
-        return
-
-    try:
-        # Вызываем метод для удаления папки
-        result = await util_delete_item(user_id, item_id)
-        if result:
-            await bot.send_message(call.message.chat.id,
-                                   f"Запись удалена ☑️")  # , reply_markup=inline_markup)
-            await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-            # await call.answer(text=f"Запись удалена ☑️", show_alert=True)
-
-            await asyncio.sleep(0.4)
-            folder_id = await get_current_folder_id(user_id)
-            await show_folders(user_id, current_folder_id=folder_id, need_to_resend=True)
-            item_message = data.get('bot_message', None)
-            if item_message:
-                await bot.delete_message(chat_id=item_message.chat.id, message_id=item_message.message_id)
-        else:
-            # Отправляем ответ в виде всплывающего уведомления
-            await call.answer(text=f"Не получилось удалить запись.'", show_alert=True)
-
-    except:
-        await call.answer(text=f"Что то пошло не так при удалении записи.", show_alert=True)
-        # await show_folders(need_to_resend=True)
-
-    await call.answer()
+# @router.callback_query(F.data == "delete_item_request")
+# async def delete_item_request(call: CallbackQuery):
+#     user_id = call.from_user.id
+#     data = await get_data(user_id)
+#     item_id = data.get('item_id')
+#
+#     if "cancel" in call.data:
+#         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+#         # await show_item(item_id)
+#         await call.answer()
+#         return
+#
+#     try:
+#         # Вызываем метод для удаления папки
+#         result = await util_delete_item(user_id, item_id)
+#         if result:
+#             await bot.send_message(call.message.chat.id,
+#                                    f"Запись удалена ☑️")  # , reply_markup=inline_markup)
+#             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+#             # await call.answer(text=f"Запись удалена ☑️", show_alert=True)
+#
+#             await asyncio.sleep(0.4)
+#             folder_id = await get_current_folder_id(user_id)
+#             await show_folders(user_id, current_folder_id=folder_id, need_to_resend=True)
+#             item_message = data.get('bot_message', None)
+#             if item_message:
+#                 await bot.delete_message(chat_id=item_message.chat.id, message_id=item_message.message_id)
+#         else:
+#             # Отправляем ответ в виде всплывающего уведомления
+#             await call.answer(text=f"Не получилось удалить запись.'", show_alert=True)
+#
+#     except:
+#         await call.answer(text=f"Что то пошло не так при удалении записи.", show_alert=True)
+#         # await show_folders(need_to_resend=True)
+#
+#     await call.answer()
 
 
 @router.message(F.text == "️🧹 Удалить все записи в папке")
@@ -337,7 +366,7 @@ async def edit_item_handler(message: Message, state: FSMContext):
     item_id = data.get('item_id')
     message_text = message.text if message.text else ""
     format_message_text = preformat_text(message_text, message.entities)
-    await do_edit_item(user_id, item_id, format_message_text, state)
+    await do_edit_item(user_id, item_id, state, edit_text=format_message_text)
 
 
 @router.message(states.Item.EditTitle, InButtonsFilter(clean_title_buttons))
@@ -346,11 +375,11 @@ async def add_none_title_or_text_item_handler(message: Message, state: FSMContex
     user_id = message.from_user.id
     data = await get_data(user_id)
     item_id = data.get('item_id')
-    await do_edit_item(user_id, item_id, "", state)
+    await do_edit_item(user_id, item_id, state, edit_text=None)
 
 
-async def do_edit_item(user_id, item_id, edit_text, state):
-    await on_edit_item(user_id, edit_text, state)
+async def do_edit_item(user_id, item_id, state, edit_text):
+    await edit_item(user_id, state, edit_text)
     state_data = await state.get_data()
     text_page = state_data.get('item_text_page', 0)
     await state.clear()
@@ -440,7 +469,7 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
     await show_item(user_id, movement_item_id)
 
 
-@router.message(F.text == "🫡 Завершить режим поиска 🔍️")
+@router.message(F.text == "❎ Завершить режим поиска 🔍️")
 async def search_item_handler(message: aiogram.types.Message):
     user_id = message.from_user.id
     data = await get_data(user_id)

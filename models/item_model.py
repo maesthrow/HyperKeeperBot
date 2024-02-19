@@ -5,7 +5,7 @@ from typing import List, Union
 
 from utils.utils_parse_mode_converter import escape_markdown
 
-invisible_char = "\u00A0"
+INVISIBLE_CHAR = "\u00A0"
 
 
 class Item:
@@ -63,7 +63,7 @@ class Item:
         if need_added_chars > 0:
             for i in range(need_added_chars):
                 title += ' '
-            title += f"\n{invisible_char}"
+            title += f"\n{INVISIBLE_CHAR}"
         return title
 
     def get_inline_title(self):
@@ -77,7 +77,7 @@ class Item:
         title = self.get_title()
         display_page = page + 1
         page_info = f'{display_page} из {len(self.text)}\n\n' if (len(self.text) > 1) else ''
-        return f"📄 <b>{title}</b>\n{page_info}{self.text[page]}\n{invisible_char}"
+        return f"📄 <b>{title}</b>\n{page_info}{self.text[page]}\n{INVISIBLE_CHAR}"
 
     def get_body_markdown(self, page=0):
         title = escape_markdown(self.get_title())
@@ -85,10 +85,13 @@ class Item:
         display_page = page + 1
         page_info = f'_*{display_page} из {len(self.text)}*_\n\n' if (len(self.text) > 1) else ''
         text = escape_markdown(self.text[page])
-        return f"📄 *{title}*{page_info}{text}\n{invisible_char}"
+        return f"📄 *{title}*{page_info}{text}\n{INVISIBLE_CHAR}"
 
     def get_text(self, page=0):
         return self.text[page]
+
+    def page_not_empty(self, page=0):
+        return self.text[page] and self.text[page] != INVISIBLE_CHAR
 
     def get_text_markdown(self, page=0):
         return escape_markdown(self.text[page])
@@ -99,18 +102,36 @@ class Item:
     def last_page_number(self):
         return self.pages_count() - 1
 
-    def add_text(self, text_added: Union[str, List[str]], on_new_page=False):
+    def add_text(self, text_added: str | List[str], on_new_page=False):
         if len(self.text) > 0 and not on_new_page:
             if isinstance(text_added, list):
-                text_added.insert(0, f'{self.text.pop()}\n')
+                text_added.insert(0, f'{self.text.pop().replace(INVISIBLE_CHAR, '')}\n')
             else:
-                text_added = f'{self.text.pop()}\n\n{text_added}'
+                text_added = f'{self.text.pop().replace(INVISIBLE_CHAR, '')}\n\n{text_added}'
 
         new_pages = Item.split_text(text_added)
         if len(new_pages) > 0:
             if len(self.text) > 0 and self.text[0] == '':
                 self.text.pop()
             self.text.extend(new_pages)
+
+    def insert_text(self, page: int, text_inserted: str | List[str], rewrite_page: bool):
+        if not rewrite_page and self.pages_count() > page:
+            if isinstance(text_inserted, list):
+                text_inserted.insert(0, f'{self.text.pop(page).replace(INVISIBLE_CHAR, '')}')
+            else:
+                text_inserted = f'{self.text.pop(page).replace(INVISIBLE_CHAR, '')}\n\n{text_inserted}'
+
+        new_pages = Item.split_text(text_inserted)
+        if len(text_inserted) > 0:
+            inserted = new_pages + self.text[page + 1:] if page < self.pages_count() - 1 else new_pages
+            self.text = self.text[:page] + inserted
+
+    def insert_page(self, page_index: int):
+        self.text.insert(page_index, INVISIBLE_CHAR)
+
+    def clear_text(self):
+        self.text = [INVISIBLE_CHAR]
 
     @staticmethod
     def split_text(text: str | List[str]) -> List[str]:

@@ -18,7 +18,7 @@ from handlers.states import Folder
 from load_all import bot, dp
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
-    get_page_info, get_folder_name, get_sub_folder_names, get_folder_path_names
+    get_page_info, get_folder_name, get_sub_folder_names, get_folder_path_names, check_current_items_page
 from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
                                         general_buttons_statistic_folder, check_button_exists_part_of_text,
@@ -80,6 +80,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         await show_all_folders(user_id, need_resend=need_to_resend)
         return
 
+    page_item = await check_current_items_page(user_id, current_folder_id, page_item)
     items_page_info = await get_page_info(user_id, current_folder_id, 'items', page_item)
     current_item_page = items_page_info.get('current_page_items')
     new_page_items = items_page_info.get('page_items')

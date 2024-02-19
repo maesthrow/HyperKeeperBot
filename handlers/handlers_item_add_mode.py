@@ -23,8 +23,8 @@ router = Router()
 dp.include_router(router)
 
 choose_type_add_buttons = [
-    InlineKeyboardButton(text="Дополнение страницы", callback_data=ChooseTypeAddText(type='join').pack()),
-    InlineKeyboardButton(text="Новая страница", callback_data=ChooseTypeAddText(type='new_page').pack()),
+    InlineKeyboardButton(text="⤵️ Новый абзац", callback_data=ChooseTypeAddText(type='join').pack()),
+    InlineKeyboardButton(text="🆕 Новая страница", callback_data=ChooseTypeAddText(type='new_page').pack()),
 ]
 
 

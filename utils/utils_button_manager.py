@@ -6,31 +6,18 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback
 from models.item_model import Item
 
-without_title_button = KeyboardButton(text="💾 Без заголовка")
-add_to_item_button = KeyboardButton(text="❇️ Дополнить")
-cancel_save_new_item_button = KeyboardButton(text="❌ Не сохранять запись")
-
-new_item_buttons = [
-        [
-            without_title_button,
-            add_to_item_button,
-        ],
-        [
-            cancel_save_new_item_button
-        ],
-    ]
-
-cancel_edit_item_button = KeyboardButton(text="🚫 Завершить редактирование")
+cancel_edit_item_button = KeyboardButton(text="❎ Завершить редактирование")
 clean_title_buttons = [
         KeyboardButton(text="🪧 Сделать пустой заголовок"),
         KeyboardButton(text="💾 Сохранить без заголовка"),
     ]
 
-delete_page_button = KeyboardButton(text="🗑 Удалить текущую страницу")
-delete_page_inline_button = InlineKeyboardButton(text="🗑 Удалить выбранную страницу", callback_data="remove_page")
+#delete_page_button = KeyboardButton(text="🗑 Удалить текущую страницу")
+insert_page_inline_button = InlineKeyboardButton(text="↔️ Вставить страницу", callback_data="insert_page")
+delete_page_inline_button = InlineKeyboardButton(text="🗑 Удалить страницу", callback_data="remove_page")
 
 clean_text_buttons = [
-        KeyboardButton(text="🚿 Очистить текст записи и сохранить"),
+        KeyboardButton(text="🧹 Очистить весь текст записи и сохранить"),
         KeyboardButton(text="💾 Сохранить без текста"),
     ]
 
@@ -55,10 +42,32 @@ general_buttons_item = [
         [KeyboardButton(text="️↩️ Назад к папке")],
     ]
 
-cancel_add_mode_button = KeyboardButton(text="️🚫 Завершить дополнение записи")
+cancel_add_mode_button = KeyboardButton(text="️🚫 Отменить дополнение записи")
 general_buttons_add_mode = [
     [cancel_add_mode_button],
 ]
+
+without_title_button = KeyboardButton(text="💾 Без заголовка")
+add_to_item_button = KeyboardButton(text="❇️ Дополнить")
+cancel_save_new_item_button = KeyboardButton(text="❌ Не сохранять запись")
+
+general_new_item_buttons = [
+        [
+            without_title_button,
+            add_to_item_button,
+        ],
+        [
+            cancel_save_new_item_button
+        ],
+    ]
+
+general_add_to_new_item_mode_buttons = [
+        [
+            cancel_add_mode_button,
+            cancel_save_new_item_button,
+        ],
+    ]
+
 
 general_buttons_movement_item = [
         [KeyboardButton(text="🔀 Переместить в текущую папку")],
@@ -67,7 +76,7 @@ general_buttons_movement_item = [
 
 general_buttons_search_items = [
         [KeyboardButton(text="🔄 Новый поиск 🔍️")],
-        [KeyboardButton(text="🫡 Завершить режим поиска 🔍️")],
+        [KeyboardButton(text="❎ Завершить режим поиска 🔍️")],
     ]
 
 general_buttons_statistic_folder = [
@@ -219,8 +228,8 @@ def get_edit_item_title_keyboard(item_title: str):
         ]
 
 
-def get_edit_item_text_keyboard(item_text: List[str]):
-    if item_text[0]:
+def get_edit_item_text_keyboard(item: Item):
+    if item.pages_count() > 1 or item.page_not_empty(0):
         buttons = [
             [clean_text_buttons[0]],
             [cancel_edit_item_button],
@@ -250,6 +259,13 @@ def get_text_pages_buttons(author_user_id: int, item: Item, page_number: int, mo
         author_user_id=author_user_id, item_id=item.id, action=f'next{mode}', page=next_page).pack()
 
     return pages_buttons
+
+
+def get_edit_page_buttons():
+    return [
+        insert_page_inline_button,
+        delete_page_inline_button
+    ]
 
 
 def get_repost_button_in_markup(inline_markup: InlineKeyboardMarkup):

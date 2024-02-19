@@ -26,7 +26,7 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
 from utils.utils_bot import from_url_data_item
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
-    get_folders_with_items_inline_markup, save_file_buttons, new_item_buttons
+    get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_id_by_content_type
@@ -254,7 +254,7 @@ async def text_to_message_handler(messages: List[Message], state: FSMContext):
         response_text = "Дополнил новую запись ✅"
 
     add_item_messages = []
-    markup = create_general_reply_markup(new_item_buttons)
+    markup = create_general_reply_markup(general_new_item_buttons)
     add_item_messages.append(await bot.send_message(messages[0].chat.id, response_text, reply_markup=markup))
     await asyncio.sleep(0.5)
 
@@ -302,7 +302,7 @@ async def files_to_message_handler(messages: List[Message], state: FSMContext):
     item: Item = data.get('item', None)
     response_text = "Дополнил файлами новую запись ✅" if item else "Сейчас сохраним файлы в новую запись 👌"
 
-    markup = create_general_reply_markup(new_item_buttons)
+    markup = create_general_reply_markup(general_new_item_buttons)
     add_item_messages = messages
     add_item_messages.append(
         await bot.send_message(messages[0].chat.id, response_text, reply_markup=markup)

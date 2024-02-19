@@ -12,7 +12,7 @@ from load_all import dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import get_text_pages_buttons, get_repost_button_in_markup, item_edit_buttons, \
-    delete_page_inline_button
+    delete_page_inline_button, get_edit_page_buttons
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import markdown_without_code
 
@@ -64,7 +64,7 @@ async def text_pages_handler(call: CallbackQuery):
     elif call_data.action == 'back_edit':
         if len(item.text) > 1:
             page_buttons = get_text_pages_buttons(author_user_id, item, page, mode='_edit')
-            buttons = [page_buttons, [delete_page_inline_button]]
+            buttons = [page_buttons, get_edit_page_buttons()]
             inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons, resize_keyboard=True)
             await message.edit_reply_markup(reply_markup=inline_markup)
 
