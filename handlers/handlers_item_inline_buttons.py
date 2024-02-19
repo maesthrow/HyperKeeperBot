@@ -30,7 +30,7 @@ dp.include_router(router)
 
 @router.callback_query(F.data.contains("close_item"))
 async def close_item_handler(call: CallbackQuery = None, message: Message = None):
-    print(f"call {call}\nmessage {message}")
+    #print(f"call {call}\nmessage {message}")
     if message is None:
         message = call.message
         if not message:
@@ -50,7 +50,10 @@ async def close_item_handler(call: CallbackQuery = None, message: Message = None
     if accept_add_item_message:
         tasks.insert(0, bot.delete_message(chat_id=user_id, message_id=accept_add_item_message.message_id))
 
-    await asyncio.gather(*tasks)
+    try:
+        await asyncio.gather(*tasks)
+    except:
+        print('close_item_handler -> Не был найден message для удаления')
 
     data['item_files_messages'] = []
     data['accept_add_item_message'] = None

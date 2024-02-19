@@ -337,20 +337,25 @@ async def edit_item_handler(message: Message, state: FSMContext):
     item_id = data.get('item_id')
     message_text = message.text if message.text else ""
     format_message_text = preformat_text(message_text, message.entities)
-    await on_edit_item(user_id, format_message_text, state)
-    await show_folders(user_id, need_to_resend=True)
-    await show_item(user_id, item_id)
+    await do_edit_item(user_id, item_id, format_message_text, state)
 
 
 @router.message(states.Item.EditTitle, InButtonsFilter(clean_title_buttons))
 @router.message(states.Item.EditText, InButtonsFilter(clean_text_buttons))
 async def add_none_title_or_text_item_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
-    await on_edit_item(user_id, "", state)
     data = await get_data(user_id)
     item_id = data.get('item_id')
+    await do_edit_item(user_id, item_id, "", state)
+
+
+async def do_edit_item(user_id, item_id, edit_text, state):
+    await on_edit_item(user_id, edit_text, state)
+    state_data = await state.get_data()
+    text_page = state_data.get('item_text_page', 0)
+    await state.clear()
     await show_folders(user_id, need_to_resend=True)
-    await show_item(user_id, item_id)
+    await show_item(user_id, item_id, page=text_page)
 
 
 @router.message(states.Item.EditTitle, F.text == cancel_edit_item_button.text)

@@ -22,7 +22,8 @@ async def on_edit_item(user_id, edit_text, state: FSMContext):
         message_success_text = "Новый заголовок сохранен ✅"
         message_failure_text = "Что то пошло не так при сохранении заголовка ❌"
     else:
-        text_page = data.get('item_text_page', None)
+        state_data = await state.get_data()
+        text_page = state_data.get('item_text_page', 0)
         item.text[text_page] = edit_text
 
         message_success_text = "Новый текст сохранен ✅"
@@ -31,6 +32,7 @@ async def on_edit_item(user_id, edit_text, state: FSMContext):
     item.date_modified = datetime.now()
 
     item_message = data.get('bot_message', None)
+    print(f'item_message = {item_message}')
     if item_message:
         await close_item_handler(message=item_message)
         #await bot.delete_message(chat_id=chat.id, message_id=item_message.message_id)
@@ -43,5 +45,3 @@ async def on_edit_item(user_id, edit_text, state: FSMContext):
 
     await asyncio.sleep(0.4)
 
-    await state.get_state()
-    # await show_item(item_id)

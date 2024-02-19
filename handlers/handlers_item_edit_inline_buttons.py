@@ -18,6 +18,7 @@ from utils.utils_ import invisible_char
 from utils.utils_button_manager import item_edit_buttons, create_general_reply_markup, \
     get_edit_item_title_keyboard, cancel_edit_item_button, get_edit_item_text_keyboard, delete_page_inline_button, \
     get_text_pages_buttons
+from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, full_escape_markdown, \
     markdown_without_code
@@ -106,28 +107,29 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
     edit_item_messages = []
     if item.get_text():
         edit_item_messages.append(
-            await bot.send_message(chat_id=call.message.chat.id,
+            await bot.send_message(chat_id=user_id,
                                    text=get_instruction_copy_edit_text(item, page),
                                    parse_mode=ParseMode.MARKDOWN_V2,
                                    reply_markup=inline_markup
                                    )
         )
 
-    await asyncio.sleep(0.4)
+    await asyncio.sleep(0.3)
 
     buttons = get_edit_item_text_keyboard(item.text)
     markup = create_general_reply_markup(buttons)
 
     edit_item_messages.append(
-        await bot.send_message(call.message.chat.id,
+        await bot.send_message(chat_id=user_id,
                                text=get_instruction_new_edit_text(item),
                                reply_markup=markup)
     )
 
-    data['item_text_page'] = page
+    await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+    data.pop('bot_message')
     data['edit_item_messages'] = edit_item_messages
     await set_data(user_id, data)
-
+    await state.update_data(item_text_page=page)
     await state.set_state(states.Item.EditText)
     await call.answer()
 
@@ -188,7 +190,7 @@ async def remove_text_page_handler(call: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(RemoveTextPageCallback.filter())
-async def action_remove_text_page_handler(call: CallbackQuery):
+async def action_remove_text_page_handler(call: CallbackQuery, state: FSMContext):
     call_data: RemoveTextPageCallback = RemoveTextPageCallback.unpack(call.data)
     user_id = call_data.author_user_id
     item_id = call_data.item_id
@@ -198,11 +200,14 @@ async def action_remove_text_page_handler(call: CallbackQuery):
 
     if action == 'yes':
         item.remove_page(page)
-        page -= 1
+        result = await util_edit_item(user_id, item_id, item)
+        if result:
+            page -= 1
+            await state.update_data(item_text_page=page)
 
     inline_markup = None
     if item.pages_count() > 1:
-        buttons = [get_text_pages_buttons(user_id, item, page), [delete_page_inline_button]]
+        buttons = [get_text_pages_buttons(user_id, item, page, mode='_edit'), [delete_page_inline_button]]
         inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)
 
     await call.message.edit_text(
