@@ -171,13 +171,15 @@ async def check_current_items_page(user_id, current_folder_id, current_page):
 
     current_page = 1 if len(folder_items) <= items_on_page_count else current_page
 
-    return current_page
+    return current_page, folder_items
 
 
-
-async def get_inline_markup_items_in_folder(user_id, current_folder_id, current_page=1, search_text=None):
+async def get_inline_markup_items_in_folder(
+        user_id, current_folder_id, current_page=1, search_text=None, folder_items=None
+):
     # Получаем записи из коллекции items для текущей папки
-    folder_items = await get_folder_items(user_id, current_folder_id, search_text)
+    if not folder_items:
+        folder_items = await get_folder_items(user_id, current_folder_id, search_text)
     list_items_id = [item_id for item_id in folder_items]
 
     settings = await get_from_user_collection(user_id, 'settings')

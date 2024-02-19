@@ -80,7 +80,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         await show_all_folders(user_id, need_resend=need_to_resend)
         return
 
-    page_item = await check_current_items_page(user_id, current_folder_id, page_item)
+    page_item, folder_items = await check_current_items_page(user_id, current_folder_id, page_item)
     items_page_info = await get_page_info(user_id, current_folder_id, 'items', page_item)
     current_item_page = items_page_info.get('current_page_items')
     new_page_items = items_page_info.get('page_items')
@@ -96,7 +96,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
 
     if current_folder_page > 0:
         items_inline_markup = await get_inline_markup_items_in_folder(
-            user_id, current_folder_id, current_page=current_item_page
+            user_id, current_folder_id, current_page=current_item_page, folder_items=folder_items
         )
         if items_inline_markup.inline_keyboard:
             folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup,
