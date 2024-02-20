@@ -30,7 +30,7 @@ from utils.utils_button_manager import create_general_reply_markup, general_butt
     get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_file_finder import FileFinder
-from utils.utils_files import get_file_id_by_content_type
+from utils.utils_files import get_file_info_by_content_type
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id, get_item
 from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
@@ -308,7 +308,9 @@ async def save_text_to_new_item_and_set_title(
 async def media_files_handler(message: Message, state: FSMContext):
     # if message.via_bot:
     #     return
-    print(f"message.text {message}")
+    print(f'message = {message}')
+    if message.content_type == 'photo':
+        print(f"message.photo = {message.photo}")
     _state = await state.get_state()
     func = add_files_to_message_handler if _state == states.Item.AddTo else files_to_message_handler
 
@@ -342,26 +344,29 @@ async def files_to_message_handler(messages: List[Message], state: FSMContext):
     )
 
     for message in messages:
+        if message.content_type == 'text':
+            continue
         item = await get_new_item_from_state_data(message, state)
-        file_id = get_file_id_by_content_type(message)
-        if file_id:
-            item.media[message.content_type].append(file_id)
+        file_info = get_file_info_by_content_type(message)
+        print(f'message.content_type {message.content_type}')
+        if file_info:
+            item.media[message.content_type].append(file_info)
     # if new_item.text == "":
     #     new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
     await state.set_state(states.Item.NewStepTitle)
+    print('await state.set_state(states.Item.NewStepTitle)')
 
 
 async def get_new_item_from_state_data(message: Message, state: FSMContext):
     data = await state.get_data()
     new_item: Item = data.get('item', None)
     if new_item:
-        if not new_item.get_text() and message.caption:
-            new_item.text = [message.caption]
+        if not new_item.get_text():
+            new_item.text = [""]
     else:
-        message_text = message.caption or ""
-        new_item = Item(id="", text=[message_text])
+        new_item = Item(id="", text=[""])
     await state.update_data(item=new_item)
     return new_item
 

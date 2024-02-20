@@ -46,3 +46,9 @@ class ItemAddModeFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
         return current_state in (states.Item.AddTo, states.Item.ChooseTypeAddText)
+
+
+class ItemAllAddModesFilter(Filter):
+    async def __call__(self, message: Message, state: FSMContext) -> bool:
+        current_state = await state.get_state()
+        return current_state in (states.Item.NewStepAdd, states.Item.AddTo)
