@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKe
 
 from callbacks.callbackdata import ChooseTypeAddText
 from handlers import states
-from handlers.filters import ItemAddModeFilter
+from handlers.filters import ItemAddModeFilter, OnlyAddTextToItemFilter
 from handlers.handlers_folder import show_folders
 from handlers.handlers_item import show_item
 from load_all import dp, bot
@@ -52,17 +52,21 @@ async def add_to_item_handler(call: CallbackQuery, state: FSMContext):
 
 
 # @router.message(states.Item.AddTo, F.content_type == 'text')
-async def add_text_to_message_handler(messages: List[Message], state: FSMContext):
+async def add_text_to_item_handler(messages: List[Message], state: FSMContext, is_new_item: bool):
     user_id = messages[0].from_user.id
 
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=[choose_type_add_buttons], resize_keyboard=True)
-    await bot.send_message(user_id, 'Как вы хотите сохранить новый текст?', reply_markup=inline_markup)
+    await bot.send_message(user_id, 'Как вы хотите сохранить добавляемый текст?', reply_markup=inline_markup)
     #await asyncio.sleep(0.5)
 
     await state.update_data(text_messages=messages)
-    await state.set_state(states.Item.ChooseTypeAddText)
+    if is_new_item:
+        await state.set_state(states.Item.ChooseTypeAddTextToNewItem)
+    else:
+        await state.set_state(states.Item.ChooseTypeAddText)
 
 
+@router.message(states.Item.ChooseTypeAddTextToNewItem)
 @router.message(states.Item.ChooseTypeAddText)
 async def message_on_choose_type_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
@@ -70,13 +74,13 @@ async def message_on_choose_type_handler(message: Message, state: FSMContext):
     inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=[choose_type_add_buttons], resize_keyboard=True)
     await bot.send_message(
         chat_id=user_id,
-        text='Выберите один из вариантов.\nКак вы хотите сохранить новый текст?',
+        text='Выберите один из вариантов.\nКак вы хотите сохранить добавляемый текст?',
         reply_markup=inline_markup
     )
 
 
-@router.callback_query(ChooseTypeAddText.filter())
-async def choose_type_add_text_handler(call: CallbackQuery, state: FSMContext):
+@router.callback_query(OnlyAddTextToItemFilter(), ChooseTypeAddText.filter())
+async def on_add_text_to_item_handler(call: CallbackQuery, state: FSMContext):
     callback_data: ChooseTypeAddText = ChooseTypeAddText.unpack(call.data)
 
     user_id = call.from_user.id
@@ -101,6 +105,7 @@ async def choose_type_add_text_handler(call: CallbackQuery, state: FSMContext):
     else:
         sent_message = await bot.send_message(user_id, message_failure_text)
     await state.clear()
+    await call.answer()
     await asyncio.sleep(0.4)
     await show_folders(user_id, need_to_resend=True)
     await asyncio.sleep(0.1)

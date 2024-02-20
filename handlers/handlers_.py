@@ -12,10 +12,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, any_state
 from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove
 
+from callbacks.callbackdata import ChooseTypeAddText
 from handlers import states
 from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item import movement_item_handler, show_item
-from handlers.handlers_item_add_mode import add_files_to_message_handler, add_text_to_message_handler
+from handlers.handlers_item_add_mode import add_files_to_message_handler, add_text_to_item_handler
 from load_all import dp, bot
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
@@ -62,7 +63,7 @@ async def start_handler(message: Message, state: FSMContext, tg_user):
 
     me = await bot.me()
     bot_username = me.username
-    #await asyncio.sleep(1)
+    # await asyncio.sleep(1)
     text = (f"Привет👋, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
             f"которое доступно с помощью команды /storage\n\n"
             f"Управляйте вашими данными 🗃️, создавайте папки 🗂️ и записи 📄, сохраняйте медиафайлы 📸, "
@@ -111,7 +112,7 @@ async def start_url_data_file_handler(message, state, tg_user):
         short_file_id = url_data[-8:]
         file_type: ContentType = ContentType(url_data[:-8].split('_')[-2])
 
-        #print(f"author_user_id {author_user_id}\nitem_id {item_id}\nfile_type {file_type}\nfile_id {short_file_id}")
+        # print(f"author_user_id {author_user_id}\nitem_id {item_id}\nfile_type {file_type}\nfile_id {short_file_id}")
 
         inline_markup = InlineKeyboardMarkup(inline_keyboard=save_file_buttons)
 
@@ -163,7 +164,7 @@ async def show_storage(message: Message, state: FSMContext):
     await bot.send_message(user_id, f"🗂️", reply_markup=markup)
     folders_message: Message
     folders_message = await bot.send_message(user_id, "⏳")
-    #await asyncio.sleep(0.3)
+    # await asyncio.sleep(0.3)
     folders_message = await send_storage_folders(
         user_id=user_id,
         message=folders_message,
@@ -188,7 +189,7 @@ async def show_storage(message: Message, state: FSMContext):
         inline_markup=folders_inline_markup,
         max_attempts=1
     )
-    #await asyncio.sleep(0.3)
+    # await asyncio.sleep(0.3)
     print(len(folders_message.reply_markup.inline_keyboard))
     data['folders_message'] = folders_message
     data['current_keyboard'] = markup
@@ -232,8 +233,8 @@ async def any_message(message: Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return
 
-    _state = await state.get_state()
-    func = add_text_to_message_handler if _state == states.Item.AddTo else text_to_message_handler
+    #_state = await state.get_state()
+    # is_new_item = states.Item.NewStepAdd
 
     data = await state.get_data()
     text_messages = data.get('text_messages', [])
@@ -241,16 +242,44 @@ async def any_message(message: Message, state: FSMContext):
     text_messages.append(message)
     await state.update_data(text_messages=text_messages)
     if len(text_messages) == 1:
-        await func(text_messages, state)
+        await text_to_new_item_handler(text_messages, state)
 
 
-async def text_to_message_handler(messages: List[Message], state: FSMContext):
+async def text_to_new_item_handler(messages: List[Message], state: FSMContext):
     data = await state.get_data()
     item: Item = data.get('item', None)
-    if not item:
+
+    _state = await state.get_state()
+
+    if not item and _state != states.Item.AddTo:
         response_text = "Сейчас сохраним новую запись 👌"
         item = Item(id="", text=[])
+        await save_text_to_new_item_and_set_title(state=state, item=item, messages=messages,
+                                                  response_text=response_text)
     else:
+        is_new_item = _state == states.Item.NewStepAdd
+        await add_text_to_item_handler(messages, state, is_new_item=is_new_item)
+
+
+@router.callback_query(states.Item.ChooseTypeAddTextToNewItem, ChooseTypeAddText.filter())
+async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
+    callback_data: ChooseTypeAddText = ChooseTypeAddText.unpack(call.data)
+    is_new_page = callback_data.type == 'new_page'
+    data = await state.get_data()
+    item: Item = data.get('item')
+    messages = data.get('text_messages', [])
+    await save_text_to_new_item_and_set_title(state=state, item=item, messages=messages, is_new_page=is_new_page)
+    await call.answer()
+
+
+async def save_text_to_new_item_and_set_title(
+        state: FSMContext,
+        item: Item,
+        messages: List[Message],
+        response_text: str = None,
+        is_new_page=False
+):
+    if not response_text:
         response_text = "Дополнил новую запись ✅"
 
     add_item_messages = []
@@ -263,7 +292,7 @@ async def text_to_message_handler(messages: List[Message], state: FSMContext):
         add_item_messages.append(message)
         format_message_text = preformat_text(message.text, message.entities)
         texts.append(format_message_text)
-    item.add_text(texts)
+    item.add_text(texts, on_new_page=is_new_page)
 
     add_item_messages.append(
         await bot.send_message(messages[0].chat.id, "Напишите заголовок или выберите действие на клавиатуре:")
