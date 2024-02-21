@@ -3,7 +3,7 @@ from aiogram.types import Location, Sticker, Document
 
 
 class ContentGroupBuilder:
-    def     __init__(self, caption=''):
+    def     __init__(self, caption=None):
         self._media = []
         self.caption = caption
 
@@ -20,24 +20,25 @@ class ContentGroupBuilder:
     def check_caption(self):
         self.caption = None if len(self._media) else self.caption
 
-    def add_photo(self, file_id):
-        self.check_caption()
-        media = types.InputMediaPhoto(media=file_id, caption=self.caption)
+    def add_photo(self, file_id, caption=None):
+        caption = self.caption if not caption else caption
+        media = types.InputMediaPhoto(media=file_id, caption=caption)
         self._media.append(media)
 
-    def add_video(self, file_id):
-        self.check_caption()
-        media = types.InputMediaVideo(media=file_id, caption=self.caption)
+    def add_video(self, file_id, caption=None):
+        caption = self.caption if not caption else caption
+        media = types.InputMediaVideo(media=file_id, caption=caption)
         self._media.append(media)
 
-    def add_audio(self, file_id):
-        self.check_caption()
-        media = types.InputMediaAudio(media=file_id, caption=self.caption)
+    def add_audio(self, file_id, caption=None):
+        caption = self.caption if not caption else caption
+        media = types.InputMediaAudio(media=file_id, caption=caption)
         self._media.append(media)
 
-    def add_document(self, document: Document):
-        self.check_caption()
-        media = document
+    def add_document(self, document: Document, caption=None):
+        caption = self.caption if not caption else caption
+        #media = document
+        media = types.InputMediaDocument(media=document.file_id, caption=caption)
         self._media.append(media)
 
     def add_voice(self, file_id):

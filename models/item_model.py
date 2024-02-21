@@ -59,7 +59,7 @@ class Item:
 
     def get_title(self):
         title = self.title if self.title else ""
-        need_added_chars = 70 - len(title)
+        need_added_chars = 69 - len(title)
         if need_added_chars > 0:
             for i in range(need_added_chars):
                 title += ' '

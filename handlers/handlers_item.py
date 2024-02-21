@@ -203,7 +203,7 @@ async def add_to_new_item_handler(message: Message, state: FSMContext):
 async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
-    item.title = message.text #to_markdown_text(message.text, message.entities)
+    item.title = message.text.strip()  #to_markdown_text(message.text, message.entities)
     await on_create_new_item(state, item, message=message)
     await bot.delete_message(message.chat.id, message.message_id)
 

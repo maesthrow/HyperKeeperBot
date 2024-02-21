@@ -7,14 +7,14 @@ from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKe
 
 from callbacks.callbackdata import ChooseTypeAddText
 from handlers import states
-from handlers.filters import ItemAddModeFilter, OnlyAddTextToItemFilter
+from handlers.filters import ItemAddModeFilter, OnlyAddTextToItemFilter, ItemAllAddModesFilter
 from handlers.handlers_folder import show_folders
 from handlers.handlers_item import show_item
 from load_all import dp, bot
 from models.item_model import Item
 from utils.data_manager import get_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_add_mode, cancel_add_mode_button
-from utils.utils_files import get_file_id_by_content_type
+from utils.utils_files import get_file_info_by_content_type
 from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import preformat_text
@@ -51,7 +51,7 @@ async def add_to_item_handler(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-# @router.message(states.Item.AddTo, F.content_type == 'text')
+#@router.message(F.content_type == 'text')
 async def add_text_to_item_handler(messages: List[Message], state: FSMContext, is_new_item: bool):
     user_id = messages[0].from_user.id
 
@@ -121,9 +121,9 @@ async def add_files_to_message_handler(messages: List[Message], state: FSMContex
     item: Item = await get_item(user_id, item_id)
 
     for message in messages:
-        file_id = get_file_id_by_content_type(message)
-        if file_id:
-            item.media[message.content_type].append(file_id)
+        file_info = get_file_info_by_content_type(message)
+        if file_info:
+            item.media[message.content_type].append(file_info)
         await bot.delete_message(message.from_user.id, message.message_id)
     # if new_item.text == "":
     #     new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")

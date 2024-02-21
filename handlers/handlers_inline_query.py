@@ -74,8 +74,10 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
 
 
 @router.inline_query(lambda query: len(query.query.split("_")) <= 3)
-async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]):
+async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuery]):
     print(f"query {query.query}")
+    if not query.query:
+        return
     query_data = query.query.split('_')
     if not query_data or len(query_data) == 0:
         return
@@ -101,7 +103,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
         input_message_content = InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2)
 
         photo_url = (f"https://avatars.mds.yandex.net/i?id=e915ed8674cf1b1719106eef318b439f5f63d37f-"
-                    f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
+                     f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
 
         inline_markup = await get_main_inline_markup(user_id, author_user_id, item, result_id)
         item_body_result = InlineQueryResultArticle(
@@ -129,7 +131,7 @@ async def inline_query(query: Union[types.InlineQuery]): #, types.CallbackQuery]
         builder.add(
             InlineKeyboardButton(
                 text="🧐 Обзор контента",
-                switch_inline_query_current_chat = f"{user_id}_{item_id}_content"
+                switch_inline_query_current_chat=f"{user_id}_{item_id}_content"
             )
         )
     else:
@@ -191,7 +193,7 @@ async def get_main_inline_markup(user_id, author_user_id, item: Item, result_id)
     )
     builder.add(
         InlineKeyboardButton(
-            text="Показать весь контент 📲",
+            text="🧐 Обзор контента 📲",
             switch_inline_query_current_chat=repost_switch_inline_query,
         )
     )
@@ -244,9 +246,9 @@ async def create_text_results(item: Item, media_results: list, inline_markup):
 async def create_document_results(item: Item, media_results: list, inline_markup):
     for file_info in item.media['document']:
         # print(f"item.media[document] = {item.media['document']}")
-        file_id = file_info.get('file_id')
-        file_name = file_info.get('file_name')
-        mime_type = file_info.get('mime_type')
+        file_id = file_info['fields'].get('file_id')
+        file_name = file_info['fields'].get('file_name')
+        mime_type = file_info['fields'].get('mime_type')
         result = InlineQueryResultDocument(
             id=hashlib.md5(file_id.encode()).hexdigest(),
             title=file_name,
@@ -261,12 +263,14 @@ async def create_document_results(item: Item, media_results: list, inline_markup
 
 async def create_photo_results(author_user_id, item: Item, media_results: list, inline_markup, tag):
     item_title = item.get_inline_title()
-    for file_id in item.media['photo']:
+    for file_info in item.media['photo']:
+
+        file_id = file_info['file_id']
+        caption = file_info['caption']
 
         this_inline_markup = copy.deepcopy(inline_markup)
 
         if not tag:
-
             switch_inline_query = "_".join(this_inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:2])
             switch_inline_query += f"_photo_{file_id}"
             this_inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
@@ -275,32 +279,44 @@ async def create_photo_results(author_user_id, item: Item, media_results: list, 
             file_data = to_url_data_item("_".join([str(author_user_id), item.id, "photo", file_id[16:24]]))
             url = f"{bot_link}?start={file_data}"
             inline_button: InlineKeyboardButton = this_inline_markup.inline_keyboard[-1][1]
-            #print(f"old_url {inline_button.url}")
+            # print(f"old_url {inline_button.url}")
             inline_button.url = url
 
-        media_results.append(InlineQueryResultPhoto(
-            id=hashlib.md5(file_id.encode()).hexdigest(),
-            photo_url=file_id,
-            thumb_url=file_id,
-            thumbnail_url=file_id,
-            title=item_title,
-            parse_mode=ParseMode.HTML,
-            reply_markup=this_inline_markup
-        ))
-        #media_results.append(result)
-        #print(f"buttons -> {result.reply_markup.inline_keyboard[-1]}")
+        # input_text_message_content = InputTextMessageContent(
+        #     message_text=item.get_body_markdown(0),
+        #     parse_mode=ParseMode.MARKDOWN_V2
+        # )
+        #result_id = hashlib.md5(f'{item.title}'.encode()).hexdigest()
+
+        item_inline_title = item.get_inline_title()
+        media_results.append(
+            InlineQueryResultPhoto(
+                id=hashlib.md5(file_id.encode()).hexdigest(),
+                photo_url=file_id,
+                thumb_url=file_id,
+                thumbnail_url=file_id,
+                title=caption,
+                description=caption,
+                caption=caption,
+                parse_mode=ParseMode.MARKDOWN,
+                reply_markup=this_inline_markup,
+            )
+        )
+        # media_results.append(result)
+        # print(f"buttons -> {result.reply_markup.inline_keyboard[-1]}")
     return media_results
 
 
 async def create_audio_results(item: Item, media_results: list, inline_markup):
-    for file_id in item.media['audio']:
+    for file_info in item.media['audio']:
+        file_id = file_info['file_id']
         file: InputMediaAudio = await bot.get_file(file_id)
         # file = await bot.get_file(file_id)
         result = InlineQueryResultAudio(
             id=hashlib.md5(file_id.encode()).hexdigest(),
             audio_url=file_id,
             title=file.file_path,
-            #caption=item.get_text(),
+            # caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
@@ -309,13 +325,14 @@ async def create_audio_results(item: Item, media_results: list, inline_markup):
 
 
 async def create_voice_results(item: Item, media_results: list, inline_markup):
-    for file_id in item.media['voice']:
+    for file_info in item.media['voice']:
+        file_id = file_info['file_id']
         file = await bot.get_file(file_id)
         result = InlineQueryResultVoice(
             id=hashlib.md5(file_id.encode()).hexdigest(),
             voice_url=file_id,
             title=file.file_path,
-            #caption=item.get_text(),
+            # caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
@@ -324,7 +341,8 @@ async def create_voice_results(item: Item, media_results: list, inline_markup):
 
 
 async def create_video_results(item: Item, media_results: list, inline_markup):
-    for file_id in item.media['video']:
+    for file_info in item.media['video']:
+        file_id = file_info['file_id']
         file = await bot.get_file(file_id)
         result = InlineQueryResultVideo(
             id=hashlib.md5(file_id.encode()).hexdigest(),
@@ -333,8 +351,8 @@ async def create_video_results(item: Item, media_results: list, inline_markup):
             thumbnail_url=file_id,
             mime_type='video/mp4',
             title=file.file_path,
-            #description=item.get_text(),
-            #caption=item.get_text(),
+            # description=item.get_text(),
+            # caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
@@ -343,7 +361,8 @@ async def create_video_results(item: Item, media_results: list, inline_markup):
 
 
 async def create_video_note_results(item: Item, media_results: list, inline_markup):
-    for file_id in item.media['video_note']:
+    for file_info in item.media['video_note']:
+        file_id = file_info['file_id']
         file = await bot.get_file(file_id)
         result = InlineQueryResultVideo(
             id=hashlib.md5(file_id.encode()).hexdigest(),
@@ -352,7 +371,7 @@ async def create_video_note_results(item: Item, media_results: list, inline_mark
             thumbnail_url=file_id,
             mime_type='video/mp4',
             title=file.file_path,
-            #caption=item.get_text(),
+            # caption=item.get_text(),
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
@@ -361,7 +380,8 @@ async def create_video_note_results(item: Item, media_results: list, inline_mark
 
 
 async def create_sticker_results(item: Item, media_results: list, inline_markup):
-    for sticker_dict in item.media['sticker']:
+    for file_info in item.media['sticker']:
+        sticker_dict = file_info['fields']
         sticker = await bot.get_file(sticker_dict.get("file_id"))
         result = InlineQueryResultCachedSticker(
             id=hashlib.md5(sticker.file_id.encode()).hexdigest(),
@@ -373,7 +393,8 @@ async def create_sticker_results(item: Item, media_results: list, inline_markup)
 
 
 async def create_location_results(item: Item, media_results: list, inline_markup):
-    for location_dict in item.media['location']:
+    for file_info in item.media['location']:
+        location_dict = file_info['fields']
         location: Location = dict_to_location(location_dict)
         result = InlineQueryResultLocation(
             id=hashlib.md5((str(location.latitude) + str(location.longitude)).encode()).hexdigest(),
@@ -387,7 +408,8 @@ async def create_location_results(item: Item, media_results: list, inline_markup
 
 
 async def create_contact_results(item: Item, media_results: list, inline_markup):
-    for contact_dict in item.media['contact']:
+    for file_info in item.media['contact']:
+        contact_dict = file_info['fields']
         contact: Contact = dict_to_contact(contact_dict)
         result = InlineQueryResultContact(
             id=hashlib.md5(contact.phone_number.encode()).hexdigest(),

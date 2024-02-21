@@ -1,29 +1,37 @@
 from aiogram.types import Message, Location, Contact, Document, Sticker
 
+from utils.utils_parse_mode_converter import preformat_text
 
-def get_file_id_by_content_type(message: Message):
+
+def get_file_info_by_content_type(message: Message, page: int = -1):
     content_type = message.content_type
-    file_id = None
+    file_info = {
+        'file_id': None,
+        'media_group_id': message.media_group_id,
+        'fields': None,
+        'caption': preformat_text(message.caption, message.caption_entities),
+        'page': page
+    }
     if content_type == 'photo':
-        file_id = message.photo[-1].file_id
+        file_info['file_id'] = message.photo[-1].file_id
     elif content_type == 'video':
-        file_id = message.video.file_id
+        file_info['file_id'] = message.video.file_id
     elif content_type == 'audio':
-        file_id = message.audio.file_id
+        file_info['file_id'] = message.audio.file_id
     elif content_type == 'document':
-        file_id = document_to_dict(message.document)
+        file_info['fields'] = document_to_dict(message.document)
     elif content_type == 'voice':
-        file_id = message.voice.file_id
+        file_info['file_id'] = message.voice.file_id
     elif content_type == 'video_note':
-        file_id = message.video_note.file_id
+        file_info['file_id'] = message.video_note.file_id
     elif content_type == 'location':
-        file_id = location_to_dict(message.location)
+        file_info['fields'] = location_to_dict(message.location)
     elif content_type == 'contact':
-        file_id = contact_to_dict(message.contact)
+        file_info['fields'] = contact_to_dict(message.contact)
     elif content_type == 'sticker':
-        file_id = sticker_to_dict(message.sticker)
-        print(f"message.sticker.file_id {file_id}")
-    return file_id
+        file_info['fields'] = sticker_to_dict(message.sticker)
+        #print(f"message.sticker.file_id {file_info}")
+    return file_info
 
 
 def document_to_dict(document: Document):

@@ -1,6 +1,7 @@
 import asyncio
 from typing import List
 
+from aiogram.enums import ParseMode
 from aiogram.types import Location, Contact, InputFile, Sticker, Document
 from aiogram.utils.media_group import MediaGroupBuilder
 
@@ -9,13 +10,14 @@ from models.item_model import Item
 from utils.ContentGroupBuilder import ContentGroupBuilder
 from utils.data_manager import get_data, set_data
 from utils.utils_files import dict_to_location, dict_to_contact, dict_to_sticker, dict_to_document
+from utils.utils_parse_mode_converter import markdown_without_code, escape_markdown, full_escape_markdown
 
 
 async def show_item_files(user_id, item: Item):
     media_files = item.get_all_media_values()
-    if len(media_files) > 0:
+    if item.files_count() > 0:
         media_group_audio_builders = [MediaGroupBuilder()]
-        media_group_photo_video_builders = [MediaGroupBuilder()]
+        media_group_photo_video_builders = [MediaGroupBuilder()] # caption=item.get_body_markdown()[:1000]
         media_group_voice_builders = [MediaGroupBuilder()]
         media_group_video_note_builders = [MediaGroupBuilder()]
         document_builders = [ContentGroupBuilder()]
@@ -70,7 +72,7 @@ async def send_document(user_id, document_builders, item_files_messages):
             for document in documents:
                 await asyncio.sleep(0.25)
                 item_files_messages.append(
-                    await bot.send_document(chat_id=user_id, document=document.file_id)
+                    await bot.send_document(chat_id=user_id, document=document.media, caption=document.caption)
                 )
 
 
@@ -137,42 +139,54 @@ async def fill_builders(
 
     #tasks = []
 
+    media_group_ids = {
+        'audio': None,
+        'photo_video': None,
+    }
+
     for content_type, files in item.media.items():
         for file_info in files:
             if content_type == 'document':
-                document: Document = dict_to_document(file_info)
-                await process_document_group(document, document_builders)
+                document: Document = dict_to_document(file_info['fields'])
+                caption = file_info['caption']
+                await process_document_group(document, caption, document_builders)
             elif content_type == 'location':
-                location: Location = dict_to_location(file_info)
+                location: Location = dict_to_location(file_info['fields'])
                 await process_location_group(location, location_builders)
             elif content_type == 'contact':
-                contact: Contact = dict_to_contact(file_info)
+                contact: Contact = dict_to_contact(file_info['fields'])
                 await process_contact_group(contact, contact_builders)
             elif content_type == 'sticker':
-                sticker = dict_to_sticker(file_info)
+                sticker = dict_to_sticker(file_info['fields'])
                 await process_sticker_group(sticker, sticker_builders)
             elif content_type == 'voice':
                 await process_media_voice_group(
                     content_type='audio',
-                    file_id=file_info,
+                    file_id=file_info['file_id'],
                     media_group_voice_builders=media_group_voice_builders
                 )
             elif content_type == 'video_note':
                 await process_media_video_note_group(
                     content_type='video',
-                    file_id=file_info,
+                    file_id=file_info['file_id'],
                     media_group_video_note_builders=media_group_video_note_builders
                 )
             elif content_type == 'audio':
                 await process_media_audio_group(
                     content_type=content_type,
-                    file_id=file_info,
+                    file_id=file_info['file_id'],
+                    media_group_id=file_info['media_group_id'],
+                    media_group_ids=media_group_ids,
+                    caption=file_info['caption'],
                     media_group_audio_builders=media_group_audio_builders
                 )
             else:
                 await process_media_photo_video_group(
                     content_type=content_type,
-                    file_id=file_info,
+                    file_id=file_info['file_id'],
+                    media_group_id=file_info['media_group_id'],
+                    media_group_ids=media_group_ids,
+                    caption=file_info['caption'],
                     media_group_photo_video_builders=media_group_photo_video_builders
                 )
 
@@ -181,16 +195,51 @@ async def fill_builders(
     # await asyncio.gather(*tasks)
 
 
-async def process_media_audio_group(content_type, file_id, media_group_audio_builders):
-    if len(media_group_audio_builders[-1]._media) >= 10:
+async def process_media_audio_group(
+        content_type,
+        file_id,
+        caption,
+        media_group_id,
+        media_group_ids,
+        media_group_audio_builders):
+
+    last_builder = media_group_audio_builders[-1]
+    if len(last_builder._media) >= 10\
+            or (media_group_ids['audio'] != media_group_id
+                and len(last_builder._media) > 0):
+                # and caption != last_builder._media[0].caption):
         media_group_audio_builders.append(MediaGroupBuilder())
-    media_group_audio_builders[-1].add(type=content_type, media=str(file_id))
+
+    media_group_ids['audio'] = media_group_id
+    media_group_audio_builders[-1].add(type=content_type, media=str(file_id), caption=caption)
 
 
-async def process_media_photo_video_group(content_type, file_id, media_group_photo_video_builders):
-    if len(media_group_photo_video_builders[-1]._media) >= 10:
+async def process_media_photo_video_group(
+        content_type,
+        file_id,
+        media_group_id,
+        media_group_ids,
+        caption,
+        media_group_photo_video_builders):
+
+    last_builder = media_group_photo_video_builders[-1]
+    if len(last_builder._media) >= 10\
+            or (media_group_ids['photo_video'] != media_group_id
+                and len(last_builder._media) > 0):
+                #and caption != last_builder._media[0].caption):
         media_group_photo_video_builders.append(MediaGroupBuilder())
-    media_group_photo_video_builders[-1].add(type=content_type, media=str(file_id))
+
+    media_group_ids['photo_video'] = media_group_id
+
+    caption = escape_markdown(caption) if caption else caption
+    if content_type == 'photo':
+        media_group_photo_video_builders[-1].add_photo(
+            media=str(file_id), caption=caption, parse_mode=ParseMode.MARKDOWN_V2
+        )
+    elif content_type == 'video':
+        media_group_photo_video_builders[-1].add_video(
+            media=str(file_id), caption=caption, parse_mode=ParseMode.MARKDOWN_V2
+        )
 
 
 async def process_media_voice_group(content_type, file_id, media_group_voice_builders):
@@ -205,10 +254,10 @@ async def process_media_video_note_group(content_type, file_id, media_group_vide
     media_group_video_note_builders[-1].add(type=content_type, media=str(file_id))
 
 
-async def process_document_group(document: Document, document_builders: List[ContentGroupBuilder]):
+async def process_document_group(document: Document, caption, document_builders: List[ContentGroupBuilder]):
     if len(document_builders[-1]._media) >= 10:
         document_builders.append(ContentGroupBuilder())
-    document_builders[-1].add('document', document)
+    document_builders[-1].add('document', document, caption=caption)
 
 
 async def process_location_group(location: Location, location_builders):
