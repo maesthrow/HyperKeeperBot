@@ -139,6 +139,11 @@ async def fill_builders(
 
     #tasks = []
 
+    media_group_ids = {
+        'audio': None,
+        'photo_video': None,
+    }
+
     for content_type, files in item.media.items():
         for file_info in files:
             if content_type == 'document':
@@ -170,6 +175,8 @@ async def fill_builders(
                 await process_media_audio_group(
                     content_type=content_type,
                     file_id=file_info['file_id'],
+                    media_group_id=file_info['media_group_id'],
+                    media_group_ids=media_group_ids,
                     caption=file_info['caption'],
                     media_group_audio_builders=media_group_audio_builders
                 )
@@ -177,6 +184,8 @@ async def fill_builders(
                 await process_media_photo_video_group(
                     content_type=content_type,
                     file_id=file_info['file_id'],
+                    media_group_id=file_info['media_group_id'],
+                    media_group_ids=media_group_ids,
                     caption=file_info['caption'],
                     media_group_photo_video_builders=media_group_photo_video_builders
                 )
@@ -186,15 +195,42 @@ async def fill_builders(
     # await asyncio.gather(*tasks)
 
 
-async def process_media_audio_group(content_type, file_id, caption, media_group_audio_builders):
-    if len(media_group_audio_builders[-1]._media) >= 10:
+async def process_media_audio_group(
+        content_type,
+        file_id,
+        caption,
+        media_group_id,
+        media_group_ids,
+        media_group_audio_builders):
+
+    last_builder = media_group_audio_builders[-1]
+    if len(last_builder._media) >= 10\
+            or (media_group_ids['audio'] != media_group_id
+                and len(last_builder._media) > 0):
+                # and caption != last_builder._media[0].caption):
         media_group_audio_builders.append(MediaGroupBuilder())
-    media_group_audio_builders[-1].add(type=content_type, media=str(file_id), caption=caption) # add(type=content_type, media=str(file_id))
+
+    media_group_ids['audio'] = media_group_id
+    media_group_audio_builders[-1].add(type=content_type, media=str(file_id), caption=caption)
 
 
-async def process_media_photo_video_group(content_type, file_id, caption, media_group_photo_video_builders):
-    if len(media_group_photo_video_builders[-1]._media) >= 10:
+async def process_media_photo_video_group(
+        content_type,
+        file_id,
+        media_group_id,
+        media_group_ids,
+        caption,
+        media_group_photo_video_builders):
+
+    last_builder = media_group_photo_video_builders[-1]
+    if len(last_builder._media) >= 10\
+            or (media_group_ids['photo_video'] != media_group_id
+                and len(last_builder._media) > 0):
+                #and caption != last_builder._media[0].caption):
         media_group_photo_video_builders.append(MediaGroupBuilder())
+
+    media_group_ids['photo_video'] = media_group_id
+
     caption = escape_markdown(caption) if caption else caption
     if content_type == 'photo':
         media_group_photo_video_builders[-1].add_photo(
@@ -204,7 +240,6 @@ async def process_media_photo_video_group(content_type, file_id, caption, media_
         media_group_photo_video_builders[-1].add_video(
             media=str(file_id), caption=caption, parse_mode=ParseMode.MARKDOWN_V2
         )
-    #media_group_photo_video_builders[-1].add(type=content_type, media=str(file_id))
 
 
 async def process_media_voice_group(content_type, file_id, media_group_voice_builders):

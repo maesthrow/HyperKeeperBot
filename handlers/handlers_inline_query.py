@@ -193,7 +193,7 @@ async def get_main_inline_markup(user_id, author_user_id, item: Item, result_id)
     )
     builder.add(
         InlineKeyboardButton(
-            text="Показать весь контент 📲",
+            text="🧐 Обзор контента 📲",
             switch_inline_query_current_chat=repost_switch_inline_query,
         )
     )
@@ -266,6 +266,7 @@ async def create_photo_results(author_user_id, item: Item, media_results: list, 
     for file_info in item.media['photo']:
 
         file_id = file_info['file_id']
+        caption = file_info['caption']
 
         this_inline_markup = copy.deepcopy(inline_markup)
 
@@ -294,8 +295,9 @@ async def create_photo_results(author_user_id, item: Item, media_results: list, 
                 photo_url=file_id,
                 thumb_url=file_id,
                 thumbnail_url=file_id,
-                title=item_inline_title,
-                caption=item_title,
+                title=caption,
+                description=caption,
+                caption=caption,
                 parse_mode=ParseMode.MARKDOWN,
                 reply_markup=this_inline_markup,
             )

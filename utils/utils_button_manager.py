@@ -118,8 +118,8 @@ item_inline_buttons = [
 show_smile = "📤"
 hide_smile = "📥"
 
-show_item_files_button = InlineKeyboardButton(text=f"Открыть файлы", callback_data="show_item_files")
-hide_item_files_button = InlineKeyboardButton(text=f"Скрыть файлы", callback_data="hide_item_files")
+show_item_files_button = InlineKeyboardButton(text=f"📖Открыть файлы", callback_data="show_item_files")
+hide_item_files_button = InlineKeyboardButton(text=f"📥 Скрыть файлы", callback_data="hide_item_files")
 
 
 class FilesButtons:

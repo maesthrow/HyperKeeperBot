@@ -17,8 +17,9 @@ async def get_file_id(item: Item, file_type: ContentType, short_file_id):
     if not media:
         return None
 
-    for file_id in media[file_type]:
-        if file_id[16:24] == short_file_id:
+    for file_info in media[file_type]:
+        file_id = file_info['file_id']
+        if file_id and file_id[16:24] == short_file_id:
             return file_id
 
     return None

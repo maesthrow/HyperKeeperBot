@@ -3,9 +3,15 @@ from aiogram.types import Message, Location, Contact, Document, Sticker
 from utils.utils_parse_mode_converter import preformat_text
 
 
-def get_file_info_by_content_type(message: Message):
+def get_file_info_by_content_type(message: Message, page: int = -1):
     content_type = message.content_type
-    file_info = {'file_id': None, 'fields': None, 'caption': preformat_text(message.caption, message.caption_entities)}
+    file_info = {
+        'file_id': None,
+        'media_group_id': message.media_group_id,
+        'fields': None,
+        'caption': preformat_text(message.caption, message.caption_entities),
+        'page': page
+    }
     if content_type == 'photo':
         file_info['file_id'] = message.photo[-1].file_id
     elif content_type == 'video':
