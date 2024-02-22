@@ -116,10 +116,11 @@ async def start_url_data_file_handler(message, state, tg_user):
 
         inline_markup = InlineKeyboardMarkup(inline_keyboard=save_file_buttons)
 
-        file_id = await FileFinder.get_file_id_in_item(author_user_id, item_id, file_type, short_file_id)
+        file_info = await FileFinder.get_file_info_in_item(author_user_id, item_id, file_type, short_file_id)
+        file_id = FileFinder.get_file_id(file_info)
+        caption = file_info['caption']
         if file_type == "photo":
-            await bot.send_photo(tg_user.id, file_id,
-                                 reply_markup=inline_markup)
+            await bot.send_photo(tg_user.id, file_id, caption=caption, reply_markup=inline_markup)
 
         await asyncio.sleep(5)
         data['author_user_id'] = None

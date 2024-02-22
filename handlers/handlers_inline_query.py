@@ -246,6 +246,7 @@ async def create_text_results(item: Item, media_results: list, inline_markup):
 async def create_document_results(item: Item, media_results: list, inline_markup):
     for file_info in item.media['document']:
         # print(f"item.media[document] = {item.media['document']}")
+        caption = file_info['caption']
         file_id = file_info['fields'].get('file_id')
         file_name = file_info['fields'].get('file_name')
         mime_type = file_info['fields'].get('mime_type')
@@ -253,6 +254,8 @@ async def create_document_results(item: Item, media_results: list, inline_markup
             id=hashlib.md5(file_id.encode()).hexdigest(),
             title=file_name,
             document_url=file_id,
+            caption=caption,
+            description=caption,
             mime_type=mime_type,
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
