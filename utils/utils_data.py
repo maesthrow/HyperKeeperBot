@@ -14,6 +14,7 @@ async def get_current_folder_id(user_id):
     """Устанавливает новый идентификатор текущей папки для пользователя."""
     data = await get_data(user_id)
     current_folder_id = data.get('current_folder_id')
+    print(f'user_id = {user_id}, current_folder_id = {current_folder_id}')
     if not current_folder_id:
         current_folder_id = ROOT_FOLDER_ID
     return current_folder_id

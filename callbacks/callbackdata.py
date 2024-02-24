@@ -50,3 +50,13 @@ class RemoveTextPageCallback(TextPagesCallback, prefix="remove_text_page"):
 class ChooseTypeAddText(CallbackData, prefix='choose_type_add_text'):
     type: str
 
+
+class SaveItemCallback(CallbackData, prefix="=save_item"):
+    author_user_id: int
+    item_id: str
+
+
+class ItemShowCallback(CallbackData, prefix="=item_show"):
+    author_user_id: int
+    item_id: str
+    with_folders: bool

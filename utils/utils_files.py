@@ -1,3 +1,5 @@
+import hashlib
+
 from aiogram.types import Message, Location, Contact, Document, Sticker
 
 from utils.utils_parse_mode_converter import preformat_text
@@ -25,8 +27,13 @@ def get_file_info_by_content_type(message: Message, page: int = -1):
     elif content_type == 'video_note':
         file_info['file_id'] = message.video_note.file_id
     elif content_type == 'location':
+        longitude = message.location.longitude
+        latitude = message.location.latitude
+        file_info['file_id'] = hashlib.md5(f'{longitude}{latitude}'.encode()).hexdigest()
         file_info['fields'] = location_to_dict(message.location)
     elif content_type == 'contact':
+        contact = message.contact
+        file_info['file_id'] = hashlib.md5(f'{contact.user_id}'.encode()).hexdigest()
         file_info['fields'] = contact_to_dict(message.contact)
     elif content_type == 'sticker':
         file_info['fields'] = sticker_to_dict(message.sticker)

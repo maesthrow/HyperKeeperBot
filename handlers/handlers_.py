@@ -10,7 +10,8 @@ from aiogram.enums import ContentType
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, any_state
-from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove
+from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, Location, \
+    Contact
 
 from callbacks.callbackdata import ChooseTypeAddText
 from handlers import states
@@ -30,11 +31,12 @@ from utils.utils_button_manager import create_general_reply_markup, general_butt
     get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_file_finder import FileFinder
-from utils.utils_files import get_file_info_by_content_type
+from utils.utils_files import get_file_info_by_content_type, dict_to_location, dict_to_contact
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id, get_item
 from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
 from utils.utils_sender_message_loop import send_storage, send_storage_folders, send_storage_with_items
+from utils.utils_show_item_entities import show_item_page_as_text_only, show_item_full_mode
 
 # from aiogram_media_group import media_group_handler, MediaGroupFilter
 
@@ -45,9 +47,10 @@ dp.include_router(router)
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     tg_user = message.from_user
+    print(f'start: tg_user {tg_user}')
     url_data = from_url_data_item(message.text).split()
     if len(url_data) > 1:
-        if len(url_data[1].split('_')) <= 2:
+        if len(url_data[1].split('_')) <= 3:
             await start_url_data_item_handler(message, state, tg_user)
         else:
             await start_url_data_file_handler(message, state, tg_user)
@@ -77,20 +80,33 @@ async def start_url_data_item_handler(message, state, tg_user):
     await asyncio.sleep(0.3)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
-    print(f"author_user_id {author_user_id}")
     if not author_user_id:
         data['author_user_id'] = author_user_id
         await set_data(user_id=tg_user.id, data=data)
-
-        await start_handler(message, state, tg_user)
+        #await start_handler(message, state, tg_user)
         url_data = from_url_data_item(message.text).split()[1]
-        author_user_id = int(url_data.split('_')[0])
-        item_id = url_data.split('_')[1]
+        url_data_split = url_data.split('_')
+        author_user_id = int(url_data_split[0])
+        item_id = url_data_split[1]
+        page = int(url_data_split[2])
+        if page == -1:
+            if author_user_id != tg_user.id:
+                await show_item_full_mode(
+                    user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id
+                )
+            else:
+                await show_folders(tg_user.id, need_to_resend=True)
+                await show_item(tg_user.id, item_id)
+        else:
+            await show_item_page_as_text_only(
+                user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id, page=page
+            )
+        data = await get_data(tg_user.id)
 
-        await show_item(user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id)
-        await asyncio.sleep(5)
+        await asyncio.sleep(0.5)
         data['author_user_id'] = None
         await set_data(user_id=tg_user.id, data=data)
+
     else:
         await bot.delete_message(tg_user.id, message.message_id)
 
@@ -103,23 +119,63 @@ async def start_url_data_file_handler(message, state, tg_user):
     if not author_user_id:
         data['author_user_id'] = author_user_id
         await set_data(user_id=tg_user.id, data=data)
+        #await start_handler(message, state, tg_user)
 
-        await start_handler(message, state, tg_user)
         url_data = from_url_data_item(message.text).split()[1]
         print(f"url_data = {url_data}")
-        author_user_id = int(url_data.split('_')[0])
-        item_id = url_data.split('_')[1]
-        short_file_id = url_data[-8:]
-        file_type: ContentType = ContentType(url_data[:-8].split('_')[-2])
+        url_data_split = url_data.split('_')
 
-        # print(f"author_user_id {author_user_id}\nitem_id {item_id}\nfile_type {file_type}\nfile_id {short_file_id}")
+        author_user_id = int(url_data_split[0])
+        item_id = url_data_split[1]
+        page = int(url_data_split[2])
+        short_file_id = url_data[-8:]
+        str_content_type = url_data[:-8].split('_')[-2]
+        if str_content_type == 'video-note':
+            str_content_type = 'video_note'
+        file_type: ContentType = ContentType(str_content_type)
+        file_info = await FileFinder.get_file_info_in_item(author_user_id, item_id, file_type, short_file_id)
+        file_id = FileFinder.get_file_id(file_info)
+        caption = file_info['caption']
 
         inline_markup = InlineKeyboardMarkup(inline_keyboard=save_file_buttons)
 
-        file_id = await FileFinder.get_file_id_in_item(author_user_id, item_id, file_type, short_file_id)
-        if file_type == "photo":
-            await bot.send_photo(tg_user.id, file_id,
-                                 reply_markup=inline_markup)
+        if file_type == 'document':
+            await bot.send_document(chat_id=tg_user.id, document=file_id, caption=caption, reply_markup=inline_markup)
+        elif file_type == 'photo':
+            await bot.send_photo(chat_id=tg_user.id, photo=file_id, caption=caption, reply_markup=inline_markup)
+        elif file_type == 'audio':
+            await bot.send_audio(chat_id=tg_user.id, audio=file_id, caption=caption, reply_markup=inline_markup)
+        elif file_type == 'voice':
+            await bot.send_voice(chat_id=tg_user.id, voice=file_id, caption=caption, reply_markup=inline_markup)
+        elif file_type == 'video':
+            await bot.send_video(chat_id=tg_user.id, video=file_id, caption=caption, reply_markup=inline_markup)
+        elif file_type == 'video_note':
+            await bot.send_video_note(chat_id=tg_user.id, video_note=file_id, reply_markup=inline_markup)
+        elif file_type == 'sticker':
+            await bot.send_sticker(chat_id=tg_user.id, sticker=file_id, reply_markup=inline_markup)
+        elif file_type == 'location':
+            location: Location = dict_to_location(file_info['fields'])
+            await bot.send_location(
+                chat_id=tg_user.id,
+                latitude=location.latitude,
+                longitude=location.longitude,
+                horizontal_accuracy=location.horizontal_accuracy,
+                live_period=location.live_period,
+                heading=location.heading,
+                proximity_alert_radius=location.proximity_alert_radius,
+                reply_markup=inline_markup
+            )
+        elif file_type == 'contact':
+            contact: Contact = dict_to_contact(file_info['fields'])
+            await bot.send_contact(
+                chat_id=tg_user.id,
+                phone_number=contact.phone_number,
+                first_name=contact.first_name,
+                last_name=contact.last_name,
+                vcard=contact.vcard,
+                reply_markup=inline_markup
+            )
+            #await bot.send_contact(chat_id=tg_user.id, latitude=None, longitude=None, reply_markup=inline_markup)
 
         await asyncio.sleep(5)
         data['author_user_id'] = None
