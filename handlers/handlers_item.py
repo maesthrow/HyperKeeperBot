@@ -8,7 +8,7 @@ from aiogram.filters import Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, Message
 
-from callbacks.callbackdata import SendItemCallback
+from callbacks.callbackdata import SendItemCallback, ItemShowCallback
 from enums.enums import Environment
 from handlers import states
 from handlers.filters import NotInButtonsFilter, InButtonsFilter
@@ -31,6 +31,7 @@ from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util
     util_move_item
 from utils.utils_items_reader import get_item, get_folder_id
 from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
+from utils.utils_show_item_entities import show_item_full_mode
 
 #cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
@@ -51,7 +52,8 @@ dp.include_router(router)
 
 
 # Обработчик для ответа на нажатие кнопки
-@router.callback_query(lambda c: c.data and c.data.startswith('item_'))
+#@router.callback_query(lambda c: c.data and c.data.startswith('item_'))
+@router.callback_query(ItemShowCallback.filter())
 async def show_item_button(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
     data = await get_data(user_id)
@@ -63,14 +65,18 @@ async def show_item_button(callback_query: CallbackQuery):
         await callback_query.answer()
         return
 
-    # Получаем item_id из callback_data
-    callback_data = callback_query.data.split('_')
-    print(f'callback_data {callback_data}')
-    item_id = callback_data[1]
-    if len(callback_data) > 2 and callback_data[2] == 'with-folders':
-        await show_folders(user_id, need_to_resend=True)
+    call_data: ItemShowCallback = ItemShowCallback.unpack(callback_query.data)
+    author_user_id = call_data.author_user_id
+    item_id = call_data.item_id
+    with_folders = call_data.with_folders
 
-    await show_item(user_id, item_id)
+    if user_id == author_user_id:
+        if with_folders:
+            await show_folders(user_id, need_to_resend=True)
+        await show_item(user_id, item_id)
+    else:
+        await show_item_full_mode(user_id, item_id, author_user_id)
+
     await callback_query.answer()
 
 
@@ -99,7 +105,7 @@ async def show_item(user_id, item_id, author_user_id=None, page=0):
     await set_data(author_user_id, data)
 
 
-async def get_item_inline_markup(user_id, item: Item, page: int):
+async def get_item_inline_markup(author_user_id, item: Item, page: int):
     if item.files_count() == 0:
         item_inlines = copy.deepcopy(item_inline_buttons)
     else:
@@ -107,10 +113,10 @@ async def get_item_inline_markup(user_id, item: Item, page: int):
         files_button: InlineKeyboardButton = FilesButtons.get_show_button(item.files_count())
         item_inlines[-1][-1] = files_button
 
-    item_inlines[0][0].switch_inline_query = f"{user_id}_{item.id}"
-    item_inlines[-1][0].switch_inline_query_current_chat = f"{user_id}_{item.id}_content"
+    item_inlines[0][0].switch_inline_query = f"{author_user_id}_{item.id}_{-1}"
+    item_inlines[-1][0].switch_inline_query_current_chat = f"{author_user_id}_{item.id}_{-1}_content"
     if item.pages_count() > 1:
-        item_inlines.insert(0, get_text_pages_buttons(user_id, item, page))
+        item_inlines.insert(0, get_text_pages_buttons(author_user_id, item, page))
 
     return InlineKeyboardMarkup(row_width=2, inline_keyboard=item_inlines, resize_keyboard=True)
 
@@ -218,8 +224,6 @@ async def on_create_new_item(state: FSMContext, item: Item, message: Message = N
     if add_item_messages:
         for message_del in add_item_messages:
             await bot.delete_message(message_del.chat.id, message_del.message_id)
-            #await asyncio.sleep(0.2)
-    # await asyncio.sleep(0.4)
 
     await state.clear()
     data = await state.get_data()

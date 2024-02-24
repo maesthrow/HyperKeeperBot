@@ -2,7 +2,7 @@ import math
 
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
-from callbacks.callbackdata import FolderCallback
+from callbacks.callbackdata import FolderCallback, ItemShowCallback
 from enums.enums import Environment
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 from utils.data_manager import get_data
@@ -200,8 +200,10 @@ async def get_inline_markup_items_in_folder(
 
         item_button_text = item.get_inline_title()
         if item:
-            buttons.append([InlineKeyboardButton(text=f"{smile_item} {item_button_text}",
-                                                 callback_data=f"item_{item_id}")])
+            buttons.append([InlineKeyboardButton(
+                text=f"{smile_item} {item_button_text}",
+                callback_data=ItemShowCallback(author_user_id=user_id, item_id=item_id, with_folders=False).pack())])
+                                                 #f"item_{item_id}")])
 
     # Создаем разметку и отправляем сообщение с кнопками для каждой item
     items_inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)

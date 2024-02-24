@@ -7,12 +7,12 @@ from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 
-from callbacks.callbackdata import TextPagesCallback
+from callbacks.callbackdata import TextPagesCallback, SaveItemCallback
 from handlers.handlers_folder import show_folders
 from load_all import bot, dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
-from utils.utils_button_manager import FilesButtons, get_repost_button_in_markup
+from utils.utils_button_manager import FilesButtons, get_repost_button_in_markup, get_save_button_in_markup
 from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
@@ -79,7 +79,15 @@ async def show_item_files_handler(call: CallbackQuery):
     user_id = call.from_user.id
     inline_markup = call.message.reply_markup
     repost_button = get_repost_button_in_markup(inline_markup)
-    author_user_id, item_id = repost_button.switch_inline_query.split('_')
+    if repost_button:
+        author_user_id, item_id, page = repost_button.switch_inline_query.split('_')
+    else:
+        save_button: InlineKeyboardButton = get_save_button_in_markup(inline_markup)
+        print(f'save_button.callback_data {save_button.callback_data}')
+        save_button_call_data: SaveItemCallback = SaveItemCallback.unpack(save_button.callback_data)
+        author_user_id = save_button_call_data.author_user_id
+        item_id = save_button_call_data.item_id
+
     print(f"author_user_id {author_user_id}\nitem_id {item_id}")
 
     item: Item = await get_item(int(author_user_id), item_id) #  data.get('current_item', None)

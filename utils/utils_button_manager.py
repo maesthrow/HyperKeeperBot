@@ -3,7 +3,7 @@ from typing import List
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback
+from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback
 from models.item_model import Item
 
 cancel_edit_item_button = KeyboardButton(text="❎ Завершить редактирование")
@@ -173,10 +173,18 @@ item_edit_buttons = [
 save_file_buttons = [
     [
         InlineKeyboardButton(text="💾 Сохранить", callback_data="save_file"),
-        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_file"),
+        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_entity"),
     ]
 ]
 
+save_page_buttons = [
+    [
+        InlineKeyboardButton(text="💾 Сохранить", callback_data="save_text_page"),
+        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_entity"),
+    ]
+]
+
+save_item_full_mode_button = InlineKeyboardButton(text="💾 Сохранить", callback_data="save_item")
 
 # Определяем функцию для создания разметки ответа для общего использования
 def create_general_reply_markup(buttons):
@@ -273,4 +281,12 @@ def get_repost_button_in_markup(inline_markup: InlineKeyboardMarkup):
         for button in keyboard:
             btn: InlineKeyboardButton = button
             if btn.text == 'Поделиться' and btn.switch_inline_query:
+                return btn
+
+
+def get_save_button_in_markup(inline_markup: InlineKeyboardMarkup):
+    for keyboard in inline_markup.inline_keyboard:
+        for button in keyboard:
+            btn: InlineKeyboardButton = button
+            if SaveItemCallback.__prefix__ in btn.callback_data:
                 return btn

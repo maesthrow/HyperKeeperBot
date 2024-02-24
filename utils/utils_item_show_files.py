@@ -269,7 +269,7 @@ async def process_location_group(location: Location, location_builders):
 async def process_contact_group(contact: Contact, contact_builders):
     if len(contact_builders[-1]._media) >= 10:
         contact_builders.append(ContentGroupBuilder())
-    contact_builders[-1].add_video_note(contact)
+    contact_builders[-1].add_contact(contact)
 
 
 async def process_sticker_group(sticker: Sticker, sticker_builders):
