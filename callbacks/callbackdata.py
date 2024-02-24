@@ -60,3 +60,21 @@ class ItemShowCallback(CallbackData, prefix="=item_show"):
     author_user_id: int
     item_id: str
     with_folders: bool
+
+
+class EditFileCaptionCallback(CallbackData, prefix="edit_file_capt"):
+    item_id: str
+    type: str
+    file_id: str
+
+
+class MarkFileCallback(CallbackData, prefix="mark_file"):
+    item_id: str
+    type: str
+    file_id: str
+
+
+class DeleteFileCallback(CallbackData, prefix="delete_file"):
+    item_id: str
+    type: str
+    file_id: str

@@ -8,6 +8,7 @@ from handlers.handlers_item_inline_buttons import close_item_handler
 from load_all import bot
 from models.item_model import Item
 from utils.data_manager import get_data
+from utils.utils_data import get_current_folder_id
 from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
 
@@ -37,7 +38,6 @@ async def edit_item(user_id, state: FSMContext, edit_text=None):
     item.date_modified = datetime.now()
 
     item_message = data.get('bot_message', None)
-    print(f'item_message = {item_message}')
     if item_message:
         await close_item_handler(message=item_message)
         #await bot.delete_message(chat_id=chat.id, message_id=item_message.message_id)

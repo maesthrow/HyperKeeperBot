@@ -177,7 +177,7 @@ async def start_url_data_file_handler(message, state, tg_user):
             )
             #await bot.send_contact(chat_id=tg_user.id, latitude=None, longitude=None, reply_markup=inline_markup)
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(0.5)
         data['author_user_id'] = None
         await set_data(user_id=tg_user.id, data=data)
     else:

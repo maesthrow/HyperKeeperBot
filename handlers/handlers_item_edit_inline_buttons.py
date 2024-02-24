@@ -16,7 +16,8 @@ from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_ import invisible_char
 from utils.utils_button_manager import item_edit_buttons, create_general_reply_markup, \
-    get_edit_item_title_keyboard, get_edit_item_text_keyboard, get_text_pages_buttons, get_edit_page_buttons
+    get_edit_item_title_keyboard, get_edit_item_text_keyboard, get_text_pages_buttons, get_edit_page_buttons, \
+    general_buttons_edit_item_files, get_edit_item_files_keyboard
 from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, full_escape_markdown, \
@@ -34,8 +35,12 @@ dp.include_router(router)
 
 @router.callback_query(F.data == "edit_item")
 async def edit_item_handler(call: CallbackQuery):
-    item_inlines = copy.deepcopy(item_edit_buttons)
     current_markup = call.message.reply_markup
+    last_btn = current_markup.inline_keyboard[-1][-1]
+    item_inlines = copy.deepcopy(item_edit_buttons)
+    if not last_btn.callback_data or last_btn.callback_data != 'show_item_files':
+        item_inlines[0].pop(-1)
+
     middle_btn = current_markup.inline_keyboard[0][1]
     if middle_btn.callback_data and TextPagesCallback.__prefix__ in middle_btn.callback_data:
         for btn in current_markup.inline_keyboard[0]:
@@ -124,9 +129,9 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
                                reply_markup=markup)
     )
 
-    if item.pages_count() and (item.pages_count() > 1 or item.page_not_empty(0)):
-        await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
-        data.pop('bot_message')
+    # if item.pages_count() and (item.pages_count() > 1 or item.page_not_empty(0)):
+    #     await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+    #     data.pop('bot_message')
 
     data['edit_item_messages'] = edit_item_messages
     await set_data(user_id, data)
@@ -251,3 +256,6 @@ def get_instruction_copy_edit_text(item: Item, page_number: int):
 def get_instruction_new_edit_text(item: Item):
     addiction = f' для выбранной страницы' if len(item.text) > 1 else ''
     return f"Напишите новый текст{addiction} или выберите действие:"
+
+
+

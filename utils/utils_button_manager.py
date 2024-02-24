@@ -1,46 +1,50 @@
 from typing import List
 
+from aiogram.enums import ContentType
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback
+from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
+    EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback
 from models.item_model import Item
 
 cancel_edit_item_button = KeyboardButton(text="❎ Завершить редактирование")
 clean_title_buttons = [
-        KeyboardButton(text="🪧 Сделать пустой заголовок"),
-        KeyboardButton(text="💾 Сохранить без заголовка"),
-    ]
+    KeyboardButton(text="🪧 Сделать пустой заголовок"),
+    KeyboardButton(text="💾 Сохранить без заголовка"),
+]
 
-#delete_page_button = KeyboardButton(text="🗑 Удалить текущую страницу")
+# delete_page_button = KeyboardButton(text="🗑 Удалить текущую страницу")
 insert_page_inline_button = InlineKeyboardButton(text="↔️ Вставить страницу", callback_data="insert_page")
 delete_page_inline_button = InlineKeyboardButton(text="🗑 Удалить страницу", callback_data="remove_page")
 
 clean_text_buttons = [
-        KeyboardButton(text="🧹 Очистить весь текст записи и сохранить"),
-        KeyboardButton(text="💾 Сохранить без текста"),
-    ]
+    KeyboardButton(text="🧹 Очистить весь текст записи и сохранить"),
+    KeyboardButton(text="💾 Сохранить без текста"),
+]
 
 general_buttons_folder = [
-        [KeyboardButton(text="➕ Новая папка"), KeyboardButton(text="🔍 Поиск")],
-        [KeyboardButton(text="️📊 Статистика"), KeyboardButton(text="️🧹 Удалить все записи в папке")],
-    ]
+    [KeyboardButton(text="➕ Новая папка"), KeyboardButton(text="🔍 Поиск")],
+    [KeyboardButton(text="️📊 Статистика"), KeyboardButton(text="️🧹 Удалить все записи в папке")],
+]
 
 general_buttons_folder_show_all = [
-        [KeyboardButton(text="➕ Новая папка"), KeyboardButton(text="️📊 Статистика")],
-    ]
+    [KeyboardButton(text="➕ Новая папка"), KeyboardButton(text="️📊 Статистика")],
+]
 
 general_buttons_items_show_all = [
-        [KeyboardButton(text="🔍 Поиск"), KeyboardButton(text="️📊 Статистика")],
-        [KeyboardButton(text="️🧹 Удалить все записи в папке")],
-        [KeyboardButton(text="↪️ Перейти к общему виду папки 🗂️📄")]
-    ]
+    [KeyboardButton(text="🔍 Поиск"), KeyboardButton(text="️📊 Статистика")],
+    [KeyboardButton(text="️🧹 Удалить все записи в папке")],
+    [KeyboardButton(text="↪️ Перейти к общему виду папки 🗂️📄")]
+]
 
-general_buttons_item = [
-        [KeyboardButton(text="️✏️ Заголовок"), KeyboardButton(text="️📝 Текст"), KeyboardButton(text="️🗃️ Файлы и медиа")],
-        [KeyboardButton(text="️🔀 Переместить"), KeyboardButton(text="🗑 Удалить")],
-        [KeyboardButton(text="️↩️ Назад к папке")],
-    ]
+general_buttons_edit_item_files = [
+    [
+        KeyboardButton(text="🗑 Удалить выбранные ☑️"),
+        KeyboardButton(text="🧹 Удалить все файлы 🗃️")
+    ],
+    [cancel_edit_item_button],
+]
 
 cancel_add_mode_button = KeyboardButton(text="️🚫 Отменить дополнение записи")
 general_buttons_add_mode = [
@@ -52,67 +56,64 @@ add_to_item_button = KeyboardButton(text="❇️ Дополнить")
 cancel_save_new_item_button = KeyboardButton(text="❌ Не сохранять запись")
 
 general_new_item_buttons = [
-        [
-            without_title_button,
-            add_to_item_button,
-        ],
-        [
-            cancel_save_new_item_button
-        ],
-    ]
+    [
+        without_title_button,
+        add_to_item_button,
+    ],
+    [
+        cancel_save_new_item_button
+    ],
+]
 
 general_add_to_new_item_mode_buttons = [
-        [
-            cancel_add_mode_button,
-            cancel_save_new_item_button,
-        ],
-    ]
-
+    [
+        cancel_add_mode_button,
+        cancel_save_new_item_button,
+    ],
+]
 
 general_buttons_movement_item = [
-        [KeyboardButton(text="🔀 Переместить в текущую папку")],
-        [KeyboardButton(text="️🚫 Отменить перемещение")],
-    ]
+    [KeyboardButton(text="🔀 Переместить в текущую папку")],
+    [KeyboardButton(text="️🚫 Отменить перемещение")],
+]
 
 general_buttons_search_items = [
-        [KeyboardButton(text="🔄 Новый поиск 🔍️")],
-        [KeyboardButton(text="❎ Завершить режим поиска 🔍️")],
-    ]
+    [KeyboardButton(text="🔄 Новый поиск 🔍️")],
+    [KeyboardButton(text="❎ Завершить режим поиска 🔍️")],
+]
 
 general_buttons_statistic_folder = [
-        [KeyboardButton(text="️↩️ Назад к папке")],
-    ]
-
+    [KeyboardButton(text="️↩️ Назад к папке")],
+]
 
 ok_info_button = InlineKeyboardButton(text="👌 Понятно", callback_data="ok_info")
 skip_enter_item_title_button = InlineKeyboardButton(text="Без заголовка", callback_data="skip_enter_item_title")
 cancel_add_new_item_button = InlineKeyboardButton(text="Не добавлять запись", callback_data="cancel_add_new_item")
 
 text_pages_buttons = [
-            InlineKeyboardButton(text="◀️", callback_data="prev_text_page"),
-            InlineKeyboardButton(text="", callback_data="all_text_pages"),
-            InlineKeyboardButton(text="▶️", callback_data="next_text_page"),
-        ]
+    InlineKeyboardButton(text="◀️", callback_data="prev_text_page"),
+    InlineKeyboardButton(text="", callback_data="all_text_pages"),
+    InlineKeyboardButton(text="▶️", callback_data="next_text_page"),
+]
 
 item_inline_buttons = [
-        # text_pages_buttons,
-        [
-            InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
-            InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+    # text_pages_buttons,
+    [
+        InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
+        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
 
+    ],
+    [
+        InlineKeyboardButton(text="❇️ Дополнить", callback_data="add_to_item"),
+        InlineKeyboardButton(text="📝 Редактировать", callback_data="edit_item"),
 
-        ],
-        [
-            InlineKeyboardButton(text="❇️ Дополнить", callback_data="add_to_item"),
-            InlineKeyboardButton(text="📝 Редактировать", callback_data="edit_item"),
+    ],
 
-        ],
+    [
+        InlineKeyboardButton(text="🔀 Переместить", callback_data="move_item"),
+        InlineKeyboardButton(text="🗑 Удалить", callback_data="delete_item"),
 
-        [
-            InlineKeyboardButton(text="🔀 Переместить", callback_data="move_item"),
-            InlineKeyboardButton(text="🗑 Удалить", callback_data="delete_item"),
-
-        ]
+    ]
 ]
 
 show_smile = "📤"
@@ -140,35 +141,34 @@ class FilesButtons:
 
 
 item_inline_buttons_with_files = [
-        # text_pages_buttons,
-        [
-            InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
-            InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
-        ],
-        [
-            InlineKeyboardButton(text="❇️", callback_data="add_to_item"),
-            InlineKeyboardButton(text="📝", callback_data="edit_item"),
-            InlineKeyboardButton(text="🔀", callback_data="move_item"),
-            InlineKeyboardButton(text="🗑", callback_data="delete_item"),
-        ],
-        [
-            InlineKeyboardButton(text="🧐 Обзор контента", switch_inline_query_current_chat="none"),
-            show_item_files_button,
-        ],
-        # show_item_files_buttons
+    # text_pages_buttons,
+    [
+        InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
+        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+    ],
+    [
+        InlineKeyboardButton(text="❇️", callback_data="add_to_item"),
+        InlineKeyboardButton(text="📝", callback_data="edit_item"),
+        InlineKeyboardButton(text="🔀", callback_data="move_item"),
+        InlineKeyboardButton(text="🗑", callback_data="delete_item"),
+    ],
+    [
+        InlineKeyboardButton(text="🧐 Обзор контента", switch_inline_query_current_chat="none"),
+        show_item_files_button,
+    ],
+    # show_item_files_buttons
 ]
 
 item_edit_buttons = [
-        [
-            InlineKeyboardButton(text="✏️ Заголовок", callback_data="edit_item_title"),
-            InlineKeyboardButton(text="📝 Текст", callback_data="edit_item_text"),
-            InlineKeyboardButton(text="🗃️ Файлы", callback_data="edit_item_files"),
-        ],
-        [
-            InlineKeyboardButton(text="↩️ Назад", callback_data="edit_item_back")
-        ]
+    [
+        InlineKeyboardButton(text="✏️ Заголовок", callback_data="edit_item_title"),
+        InlineKeyboardButton(text="📝 Текст", callback_data="edit_item_text"),
+        InlineKeyboardButton(text="🗃️ Файлы", callback_data="edit_item_files"),
+    ],
+    [
+        InlineKeyboardButton(text="↩️ Назад", callback_data="edit_item_back")
+    ]
 ]
-
 
 save_file_buttons = [
     [
@@ -185,6 +185,7 @@ save_page_buttons = [
 ]
 
 save_item_full_mode_button = InlineKeyboardButton(text="💾 Сохранить", callback_data="save_item")
+
 
 # Определяем функцию для создания разметки ответа для общего использования
 def create_general_reply_markup(buttons):
@@ -252,6 +253,10 @@ def get_edit_item_text_keyboard(item: Item):
     return buttons
 
 
+def get_edit_item_files_keyboard():
+    return general_buttons_edit_item_files
+
+
 def get_text_pages_buttons(author_user_id: int, item: Item, page_number: int, mode='show'):
     pages_buttons = text_pages_buttons.copy()
     display_page_number = page_number + 1
@@ -290,3 +295,33 @@ def get_save_button_in_markup(inline_markup: InlineKeyboardMarkup):
             btn: InlineKeyboardButton = button
             if SaveItemCallback.__prefix__ in btn.callback_data:
                 return btn
+
+
+file_mark_on = '☑️' #'🔴' # '✔️' # '✅' # '☑️'
+file_mark_off = '◻️' #'🔘' # '🔲' #'Выбрать'
+
+
+def get_edit_file_inline_markup(item_id: str, content_type: ContentType, file_id):
+    builder = InlineKeyboardBuilder()
+    if file_has_caption(content_type):
+        builder.button(
+            text='✏️ Редактировать описание',
+            callback_data=EditFileCaptionCallback(item_id=item_id, type=content_type, file_id=file_id).pack()
+        )
+    builder.button(
+        text=file_mark_off,
+        callback_data=MarkFileCallback(item_id=item_id, type=content_type, file_id=file_id).pack()
+    )
+    builder.button(
+        text='🗑 Удалить',
+        callback_data=DeleteFileCallback(item_id=item_id, type=content_type, file_id=file_id).pack()
+    )
+    if file_has_caption(content_type):
+        builder.adjust(1, 2)
+    else:
+        builder.adjust(2)
+    return builder.as_markup()
+
+
+def file_has_caption(content_type: ContentType):
+    return content_type in ('document', 'photo', 'audio', 'voice', 'video')

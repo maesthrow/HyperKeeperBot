@@ -16,6 +16,7 @@ class Item(StatesGroup):
     ChooseTypeAddText = State()
     EditTitle = State()
     EditText = State()
+    EditFiles = State()
     Search = State()
 
 

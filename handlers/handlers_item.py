@@ -386,13 +386,14 @@ async def do_edit_item(user_id, item_id, state, edit_text):
     await edit_item(user_id, state, edit_text)
     state_data = await state.get_data()
     text_page = state_data.get('item_text_page', 0)
-    await state.clear()
+    await state.set_state(state=None)
     await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id, page=text_page)
 
 
 @router.message(states.Item.EditTitle, F.text == cancel_edit_item_button.text)
 @router.message(states.Item.EditText, F.text == cancel_edit_item_button.text)
+@router.message(states.Item.EditFiles, F.text == cancel_edit_item_button.text)
 async def cancel_edit_item(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)

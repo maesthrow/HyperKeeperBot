@@ -14,7 +14,6 @@ from utils.utils_parse_mode_converter import markdown_without_code, escape_markd
 
 
 async def show_item_files(user_id, item: Item):
-    media_files = item.get_all_media_values()
     if item.files_count() > 0:
         media_group_audio_builders = [MediaGroupBuilder()]
         media_group_photo_video_builders = [MediaGroupBuilder()] # caption=item.get_body_markdown()[:1000]
