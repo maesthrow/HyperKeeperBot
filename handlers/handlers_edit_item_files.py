@@ -7,8 +7,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Document, InputMediaPhoto, Location, Contact, Message, InlineKeyboardButton
 
 from callbacks.callbackdata import MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
-    RequestDeleteFilesCallback
+    RequestDeleteFilesCallback, EditFileCaptionCallback
 from handlers import states
+from handlers.handlers_item import on_cancel_edit_item
 from handlers.handlers_item_inline_buttons import hide_item_files_handler
 from load_all import dp, bot
 from models.item_model import Item, INVISIBLE_CHAR
@@ -20,7 +21,7 @@ from utils.utils_file_finder import FileFinder, get_file_id_by_short_file_id, ge
 from utils.utils_files import dict_to_document, dict_to_location, dict_to_contact
 from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
-from utils.utils_parse_mode_converter import escape_markdown
+from utils.utils_parse_mode_converter import escape_markdown, markdown_without_code
 
 router = Router()
 dp.include_router(router)
@@ -34,7 +35,7 @@ async def edit_item_files_handler(call: CallbackQuery, state: FSMContext):
 
     item: Item = await get_item(user_id, item_id)
 
-    await hide_item_files_handler(call)
+    await hide_item_files_handler(call, is_native_call=False)
 
     buttons = get_edit_item_files_keyboard()
     markup = create_general_reply_markup(buttons)
@@ -198,6 +199,8 @@ async def mark_file_handler(call: CallbackQuery, state: FSMContext):
     else:
         mark_button.text = file_mark_on
         delete_file_ids[call_data.file_id][1] = True
+
+    data['delete_file_ids'] = delete_file_ids
     inline_markup.inline_keyboard[-1][0] = mark_button
     await bot.edit_message_reply_markup(chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup)
     await call.answer()
@@ -213,7 +216,8 @@ async def pre_delete_file_handler(call: CallbackQuery, state: FSMContext):
         caption = escape_markdown(call.message.caption) if call.message.caption else ''
         caption = f'{caption}\n{INVISIBLE_CHAR}\n_*Удалить этот файл?*_'
         await bot.edit_message_caption(
-            user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+            user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=inline_markup
         )
     else:
         await bot.edit_message_reply_markup(user_id, call.message.message_id, reply_markup=inline_markup)
@@ -229,12 +233,14 @@ async def delete_file_handler(call: CallbackQuery, state: FSMContext):
         data = await get_data(user_id)
         delete_file_ids = data.get('delete_file_ids')
         mark_is_on = delete_file_ids[call_data.file_id][1]
-        inline_markup = get_edit_file_inline_markup(call_data.item_id, content_type, call_data.file_id, mark_is_on=mark_is_on)
+        inline_markup = get_edit_file_inline_markup(call_data.item_id, content_type, call_data.file_id,
+                                                    mark_is_on=mark_is_on)
         if file_has_caption(content_type):
             caption = escape_markdown(call.message.caption) if call.message.caption else ''
             caption = caption.replace('Удалить этот файл?', '').strip()
             await bot.edit_message_caption(
-                user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+                user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2,
+                reply_markup=inline_markup
             )
         else:
             await bot.edit_message_reply_markup(user_id, call.message.message_id, reply_markup=inline_markup)
@@ -242,12 +248,7 @@ async def delete_file_handler(call: CallbackQuery, state: FSMContext):
         item: Item = await get_item(user_id, call_data.item_id)
         del_file_info = await get_file_info_by_short_file_id(item, content_type, call_data.file_id)
         print(f'item.media[content_type] = {item.media[content_type]}')
-        media: list = item.media[content_type]
-        for file_info in media:
-            if file_info['file_id'] == del_file_info['file_id']:
-                media.remove(file_info)
-                item.media[content_type] = media
-                break
+        delete_file_in_item(item, content_type, del_file_info)
 
         result = await util_edit_item(user_id, item.id, item)
         if result:
@@ -255,31 +256,100 @@ async def delete_file_handler(call: CallbackQuery, state: FSMContext):
             for message in data['edit_file_messages']:
                 if message.message_id == call.message.message_id:
                     data['edit_file_messages'].remove(message)
+                    data['delete_file_ids'].pop(call_data.file_id, None)
+                    break
             await bot.delete_message(user_id, call.message.message_id)
 
     await call.answer()
 
 
-async def update_message_reply_markup(user_id, delete_file_ids, file_message, mark):
-    inline_markup = file_message.reply_markup
-    mark_button = inline_markup.inline_keyboard[-1][0]
-    call_data = MarkFileCallback.unpack(mark_button.callback_data)
-    if delete_file_ids[call_data.file_id][1] != mark:
-        delete_file_ids[call_data.file_id][1] = mark
-        mark_button.text = file_mark_on if mark else file_mark_off
-        inline_markup.inline_keyboard[-1][0] = mark_button
-        return await bot.edit_message_reply_markup(
-            chat_id=user_id, message_id=file_message.message_id, reply_markup=inline_markup
-        )
-    return None
+def delete_file_in_item(item: Item, content_type: ContentType, del_file_info):
+    media: list = item.media[content_type]
+    for file_info in media:
+        if file_info['file_id'] == del_file_info['file_id']:
+            media.remove(file_info)
+            item.media[content_type] = media
+            break
 
 
 @router.callback_query(RequestDeleteFilesCallback.filter())
-async def delete_file_handler(call: CallbackQuery, state: FSMContext):
+async def delete_files_handler(call: CallbackQuery, state: FSMContext):
+    result = is_all = False
     user_id = call.from_user.id
     call_data: RequestDeleteFilesCallback = RequestDeleteFilesCallback.unpack(call.data)
     if call_data.res == 'n':
         await bot.delete_message(chat_id=user_id, message_id=call.message.message_id)
+        return
     elif call_data.res == 'y':
-        pass
+        result, is_all = await delete_marked_files(user_id, is_all=call_data.is_all)
 
+    await call.answer()
+    message_text = 'Файлы удалены ✔️' if result else 'Что то пошло не так при удалении файлов ✖️'
+    if result and is_all:
+        message_text = 'Все файлы удалены ✔️'
+    info_message = await bot.send_message(user_id, message_text)
+    await bot.delete_message(user_id, call.message.message_id)
+    await asyncio.sleep(1)
+    if is_all:
+        await on_cancel_edit_item(user_id, state)
+    else:
+        await bot.delete_message(user_id, info_message.message_id)
+
+
+async def delete_marked_files(user_id, is_all):
+    data = await get_data(user_id)
+    edit_file_messages = data.get('edit_file_messages')
+    delete_file_ids = data.get('delete_file_ids')
+    item: object = None
+    to_remove_messages = []
+    to_remove_ids = []
+    for file_message in edit_file_messages:
+        inline_markup = file_message.reply_markup
+        mark_button = inline_markup.inline_keyboard[-1][0]
+        call_data = MarkFileCallback.unpack(mark_button.callback_data)
+        if not item:
+            item: Item = await get_item(user_id, call_data.item_id)
+
+        if call_data.file_id in delete_file_ids and (delete_file_ids[call_data.file_id][1] or is_all):
+            del_file_info = await get_file_info_by_short_file_id(item, call_data.type, call_data.file_id)
+            delete_file_in_item(item, call_data.type, del_file_info)
+            await bot.delete_message(user_id, file_message.message_id)
+            if not is_all:
+                to_remove_ids.append(call_data.file_id)
+                to_remove_messages.append(file_message)
+
+    data['edit_file_messages'] = [message for message in edit_file_messages if message not in to_remove_messages]
+    for file_id in to_remove_ids:
+        delete_file_ids.pop(file_id, None)
+    data['delete_file_ids'] = delete_file_ids
+
+    if len(data['edit_file_messages']) == 0:
+        is_all = True
+
+    result = await util_edit_item(user_id, item.id, item)
+
+    if is_all:
+        data['edit_file_messages'] = None
+        data['delete_file_ids'] = None
+
+    await set_data(user_id, data)
+
+    return result, is_all
+
+
+@router.callback_query(EditFileCaptionCallback.filter())
+async def edit_file_caption_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    call_data: EditFileCaptionCallback = EditFileCaptionCallback.unpack(call.data)
+    item: Item = await get_item(user_id, call_data.item_id)
+    file_info = await get_file_info_by_short_file_id(item, call_data.type, call_data.file_id)
+    caption = file_info['caption']
+    if caption:
+        message_text = (f"Нажмите на текущий текст подписи, чтобы скопировать:"
+                        f"\n\n`{markdown_without_code(caption)}\n{INVISIBLE_CHAR}`")
+        await bot.send_message(chat_id=user_id, text=message_text, parse_mode=ParseMode.MARKDOWN_V2)
+    await bot.send_message(user_id, 'Напишите новый текст подписи к файлу:')
+
+    #data = await get_data(user_id)
+
+    await call.answer()

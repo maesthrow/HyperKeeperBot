@@ -2,11 +2,12 @@ import math
 
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
-from callbacks.callbackdata import FolderCallback, ItemShowCallback
+from callbacks.callbackdata import FolderCallback, ItemShowCallback, MarkFileCallback
 from enums.enums import Environment
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
+from load_all import bot
 from utils.data_manager import get_data
-from utils.utils_button_manager import check_button_exists
+from utils.utils_button_manager import check_button_exists, file_mark_on, file_mark_off
 from utils.utils_data import get_folders_collection, get_from_user_collection
 from utils.utils_folders_reader import get_folder_data, get_folders_in_folder
 from utils.utils_items_reader import get_folder_items, get_simple_item
@@ -265,3 +266,17 @@ async def get_page_info(user_id, folder_id, entities_key, current_page=None):
 
     page_info = {f'current_page_{entities_key}': int(current_page), f'page_{entities_key}': new_page_entities}
     return page_info
+
+
+async def update_message_reply_markup(user_id, delete_file_ids, file_message, mark):
+    inline_markup = file_message.reply_markup
+    mark_button = inline_markup.inline_keyboard[-1][0]
+    call_data = MarkFileCallback.unpack(mark_button.callback_data)
+    if call_data.file_id in delete_file_ids and delete_file_ids[call_data.file_id][1] != mark:
+        delete_file_ids[call_data.file_id][1] = mark
+        mark_button.text = file_mark_on if mark else file_mark_off
+        inline_markup.inline_keyboard[-1][0] = mark_button
+        return await bot.edit_message_reply_markup(
+            chat_id=user_id, message_id=file_message.message_id, reply_markup=inline_markup
+        )
+    return None

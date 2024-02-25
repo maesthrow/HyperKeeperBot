@@ -12,7 +12,6 @@ from callbacks.callbackdata import SendItemCallback, ItemShowCallback, MarkFileC
 from enums.enums import Environment
 from handlers import states
 from handlers.filters import NotInButtonsFilter, InButtonsFilter
-from handlers.handlers_edit_item_files import update_message_reply_markup
 from handlers.handlers_edit_item_title_text import edit_item
 from handlers.handlers_folder import show_folders
 from handlers.handlers_search import show_search_results
@@ -20,7 +19,7 @@ from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_sel
 from load_all import dp, bot
 from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
-from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment
+from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment, update_message_reply_markup
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, \
     cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, \
     general_new_item_buttons, \
@@ -398,19 +397,22 @@ async def do_edit_item(user_id, item_id, state, edit_text):
 @router.message(states.Item.EditFiles, F.text == cancel_edit_item_button.text)
 async def cancel_edit_item(message: Message, state: FSMContext):
     user_id = message.from_user.id
+    await on_cancel_edit_item(user_id, state)
+
+
+async def on_cancel_edit_item(user_id, state: FSMContext):
     data = await get_data(user_id)
     item_id = data.get('item_id')
     edit_item_messages = data.get('edit_item_messages')
     if edit_item_messages:
-        for message in edit_item_messages:
-            await bot.delete_message(message.chat.id, message.message_id)
+        for item_message in edit_item_messages:
+            await bot.delete_message(item_message.chat.id, item_message.message_id)
 
     data['edit_item_messages'] = None
     await set_data(user_id, data)
     await state.set_state()
     await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id)
-
 
 @router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][0].text)
 @router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][1].text)
@@ -441,7 +443,7 @@ async def delete_marked_edit_files_handler(message: Message, state: FSMContext):
         inline_markup = file_message.reply_markup
         mark_button = inline_markup.inline_keyboard[-1][0]
         call_data = MarkFileCallback.unpack(mark_button.callback_data)
-        if delete_file_ids[call_data.file_id][1]:
+        if call_data.file_id in delete_file_ids and delete_file_ids[call_data.file_id][1]:
             delete_count += 1
 
     if delete_count:

@@ -310,7 +310,7 @@ def get_edit_file_inline_markup(item_id: str, content_type: ContentType, file_id
     builder = InlineKeyboardBuilder()
     if file_has_caption(content_type):
         builder.button(
-            text='✏️ Редактировать описание',
+            text='✏️ Редактировать подпись',
             callback_data=EditFileCaptionCallback(item_id=item_id, type=content_type, file_id=file_id).pack()
         )
     builder.button(

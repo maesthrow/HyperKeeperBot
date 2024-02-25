@@ -108,19 +108,18 @@ async def show_item_files_handler(call: CallbackQuery):
 
 
 @router.callback_query(F.data == "hide_item_files")
-async def hide_item_files_handler(call: CallbackQuery):
+async def hide_item_files_handler(call: CallbackQuery, is_native_call=True):
     user_id = call.from_user.id
     data = await get_data(user_id)
     inline_markup = call.message.reply_markup
     item: Item = data.get('current_item', None)
-    #item: Item = await get_item(int(author_user_id), item_id)  # data.get('current_item', None)
 
-    files_button = FilesButtons.get_show_button(item.files_count())
-    inline_markup.inline_keyboard[-1][-1] = files_button
+    if is_native_call:
+        files_button = FilesButtons.get_show_button(item.files_count())
+        inline_markup.inline_keyboard[-1][-1] = files_button
+        await call.message.edit_reply_markup(reply_markup=inline_markup)
 
     item_files_messages = data.get('item_files_messages', [])
-
-    await call.message.edit_reply_markup(reply_markup=inline_markup)
     await asyncio.gather(
         close_files(item_files_messages),
         update_inline_markup_data(user_id, inline_markup)
