@@ -5,7 +5,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
-    EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback
+    EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, RequestDeleteFilesCallback
 from models.item_model import Item
 
 cancel_edit_item_button = KeyboardButton(text="❎ Завершить редактирование")
@@ -39,6 +39,10 @@ general_buttons_items_show_all = [
 ]
 
 general_buttons_edit_item_files = [
+    [
+        KeyboardButton(text="☑️ Выбрать все"),
+        KeyboardButton(text="✖️ Отменить выбор")
+    ],
     [
         KeyboardButton(text="🗑 Удалить выбранные ☑️"),
         KeyboardButton(text="🧹 Удалить все файлы 🗃️")
@@ -301,7 +305,8 @@ file_mark_on = '☑️' #'🔴' # '✔️' # '✅' # '☑️'
 file_mark_off = '◻️' #'🔘' # '🔲' #'Выбрать'
 
 
-def get_edit_file_inline_markup(item_id: str, content_type: ContentType, file_id):
+def get_edit_file_inline_markup(item_id: str, content_type: ContentType, file_id, mark_is_on=False):
+    mark = file_mark_on if mark_is_on else file_mark_off
     builder = InlineKeyboardBuilder()
     if file_has_caption(content_type):
         builder.button(
@@ -309,7 +314,7 @@ def get_edit_file_inline_markup(item_id: str, content_type: ContentType, file_id
             callback_data=EditFileCaptionCallback(item_id=item_id, type=content_type, file_id=file_id).pack()
         )
     builder.button(
-        text=file_mark_off,
+        text=mark,
         callback_data=MarkFileCallback(item_id=item_id, type=content_type, file_id=file_id).pack()
     )
     builder.button(
@@ -332,6 +337,20 @@ def get_delete_file_inline_markup(item_id: str, content_type: ContentType, file_
     builder.button(
         text='✖️Не удалять',
         callback_data=RequestDeleteFileCallback(item_id=item_id, type=content_type, file_id=file_id, res='n').pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+def get_delete_files_inline_markup(item_id: str, is_all=False):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='✔️Да, удалить',
+        callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+    )
+    builder.button(
+        text='✖️Не удалять',
+        callback_data=RequestDeleteFilesCallback(item_id=item_id, res='n', is_all=is_all).pack()
     )
     builder.adjust(2)
     return builder.as_markup()

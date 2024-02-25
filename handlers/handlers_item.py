@@ -8,10 +8,11 @@ from aiogram.filters import Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, Message
 
-from callbacks.callbackdata import SendItemCallback, ItemShowCallback
+from callbacks.callbackdata import SendItemCallback, ItemShowCallback, MarkFileCallback
 from enums.enums import Environment
 from handlers import states
 from handlers.filters import NotInButtonsFilter, InButtonsFilter
+from handlers.handlers_edit_item_files import update_message_reply_markup
 from handlers.handlers_edit_item_title_text import edit_item
 from handlers.handlers_folder import show_folders
 from handlers.handlers_search import show_search_results
@@ -24,7 +25,8 @@ from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_
     cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, \
     general_new_item_buttons, \
     without_title_button, add_to_item_button, FilesButtons, text_pages_buttons, get_text_pages_buttons, \
-    create_general_reply_markup, general_add_to_new_item_mode_buttons, cancel_add_mode_button
+    create_general_reply_markup, general_add_to_new_item_mode_buttons, cancel_add_mode_button, file_mark_on, \
+    general_buttons_edit_item_files, file_mark_off, get_delete_files_inline_markup
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
@@ -408,6 +410,63 @@ async def cancel_edit_item(message: Message, state: FSMContext):
     await state.set_state()
     await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id)
+
+
+@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][0].text)
+@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][1].text)
+async def mark_all_edit_files_handler(message: Message, state: FSMContext):
+    mark = message.text == general_buttons_edit_item_files[0][0].text
+    user_id = message.from_user.id
+    data = await get_data(user_id)
+    edit_file_messages = data.get('edit_file_messages')
+    delete_file_ids = data.get('delete_file_ids')
+    tasks = []
+    for index, file_message in enumerate(edit_file_messages):
+        task = update_message_reply_markup(user_id, delete_file_ids, file_message, mark)
+        tasks.append(task)
+
+    await asyncio.gather(*tasks)
+    await bot.delete_message(user_id, message.message_id)
+
+
+@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[1][0].text)
+async def delete_marked_edit_files_handler(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    data = await get_data(user_id)
+    edit_file_messages = data.get('edit_file_messages')
+    delete_file_ids = data.get('delete_file_ids')
+    delete_count = 0
+    call_data = None
+    for index, file_message in enumerate(edit_file_messages):
+        inline_markup = file_message.reply_markup
+        mark_button = inline_markup.inline_keyboard[-1][0]
+        call_data = MarkFileCallback.unpack(mark_button.callback_data)
+        if delete_file_ids[call_data.file_id][1]:
+            delete_count += 1
+
+    if delete_count:
+        inline_markup = get_delete_files_inline_markup(call_data.item_id)
+        await bot.send_message(user_id, f'Хотите удалить {delete_count} выбранных файлов?', reply_markup=inline_markup)
+    else:
+        info_message = await bot.send_message(user_id, f'Ничего не выбрано')
+        await asyncio.sleep(1)
+        await bot.delete_message(chat_id=user_id, message_id=info_message.message_id)
+
+    await bot.delete_message(chat_id=user_id, message_id=message.message_id)
+
+
+@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[1][1].text)
+async def delete_all_marked_edit_files_handler(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    data = await get_data(user_id)
+    edit_file_messages = data.get('edit_file_messages')
+    file_message = edit_file_messages[0]
+    inline_markup = file_message.reply_markup
+    mark_button = inline_markup.inline_keyboard[-1][0]
+    call_data = MarkFileCallback.unpack(mark_button.callback_data)
+    inline_markup = get_delete_files_inline_markup(call_data.item_id, is_all=True)
+    await bot.send_message(user_id, f'Хотите удалить все файлы?', reply_markup=inline_markup)
+    await bot.delete_message(chat_id=user_id, message_id=message.message_id)
 
 
 @router.message(F.text == "️🔀 Переместить")

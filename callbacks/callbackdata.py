@@ -86,3 +86,9 @@ class RequestDeleteFileCallback(CallbackData, prefix="req_del_file"):
     type: ContentType
     file_id: str
     res: str
+
+
+class RequestDeleteFilesCallback(CallbackData, prefix="req_del_files"):
+    item_id: str
+    res: str
+    is_all: bool
