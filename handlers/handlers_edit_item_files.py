@@ -16,12 +16,12 @@ from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import get_edit_item_files_keyboard, create_general_reply_markup, \
     get_edit_file_inline_markup, file_mark_off, file_mark_on, file_has_caption, get_delete_file_inline_markup, \
-    general_buttons_edit_item_files
+    general_buttons_edit_item_files, get_edit_file_caption_keyboard, leave_current_caption_button
 from utils.utils_file_finder import FileFinder, get_file_id_by_short_file_id, get_file_info_by_short_file_id
 from utils.utils_files import dict_to_document, dict_to_location, dict_to_contact
 from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
-from utils.utils_parse_mode_converter import escape_markdown, markdown_without_code
+from utils.utils_parse_mode_converter import escape_markdown, markdown_without_code, preformat_text
 
 router = Router()
 dp.include_router(router)
@@ -259,8 +259,11 @@ async def delete_file_handler(call: CallbackQuery, state: FSMContext):
                     data['delete_file_ids'].pop(call_data.file_id, None)
                     break
             await bot.delete_message(user_id, call.message.message_id)
+            if len(data['edit_file_messages']) == 0:
+                await on_cancel_edit_item(user_id, state)
 
     await call.answer()
+
 
 
 def delete_file_in_item(item: Item, content_type: ContentType, del_file_info):
@@ -285,8 +288,6 @@ async def delete_files_handler(call: CallbackQuery, state: FSMContext):
 
     await call.answer()
     message_text = 'Файлы удалены ✔️' if result else 'Что то пошло не так при удалении файлов ✖️'
-    if result and is_all:
-        message_text = 'Все файлы удалены ✔️'
     info_message = await bot.send_message(user_id, message_text)
     await bot.delete_message(user_id, call.message.message_id)
     await asyncio.sleep(1)
@@ -343,13 +344,66 @@ async def edit_file_caption_handler(call: CallbackQuery, state: FSMContext):
     call_data: EditFileCaptionCallback = EditFileCaptionCallback.unpack(call.data)
     item: Item = await get_item(user_id, call_data.item_id)
     file_info = await get_file_info_by_short_file_id(item, call_data.type, call_data.file_id)
+
+    edit_file_caption_messages = []
+
     caption = file_info['caption']
     if caption:
         message_text = (f"Нажмите на текущий текст подписи, чтобы скопировать:"
                         f"\n\n`{markdown_without_code(caption)}\n{INVISIBLE_CHAR}`")
-        await bot.send_message(chat_id=user_id, text=message_text, parse_mode=ParseMode.MARKDOWN_V2)
-    await bot.send_message(user_id, 'Напишите новый текст подписи к файлу:')
+        edit_file_caption_messages.append(
+            await bot.send_message(chat_id=user_id, text=message_text, parse_mode=ParseMode.MARKDOWN_V2)
+        )
+
+    buttons = get_edit_file_caption_keyboard()
+    markup = create_general_reply_markup(buttons)
+    edit_file_caption_messages.append(
+        await bot.send_message(user_id, 'Напишите новый текст подписи к файлу:', reply_markup=markup)
+    )
 
     #data = await get_data(user_id)
 
+    await state.set_state(states.Item.EditFileCaption)
+    await state.update_data(
+        edit_file_message_id=call.message.message_id,
+        edit_file_caption_messages=edit_file_caption_messages,
+        edit_file_item=item,
+        edit_file_type=call_data.type,
+        edit_file_info=file_info
+    )
     await call.answer()
+
+
+@router.message(states.Item.EditFileCaption)
+async def cancel_edit_file_caption(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    data = await state.get_data()
+    edit_file_caption_messages = data.get('edit_file_caption_messages')
+    for edit_message in edit_file_caption_messages:
+        await bot.delete_message(user_id, edit_message.message_id)
+
+    buttons = get_edit_item_files_keyboard()
+    markup = create_general_reply_markup(buttons)
+
+    await bot.delete_message(user_id, message.message_id)
+    if message.text == leave_current_caption_button.text:
+        message_text = 'Сохранена текущая подпись ☑️'
+    else:
+        message_text = 'Сохранена новая подпись ☑️'
+        edit_file_message_id = data.get('edit_file_message_id')
+        item: Item = data.get('edit_file_item')
+        content_type: ContentType = data.get('edit_file_type')
+        edit_file_info = data.get('edit_file_info')
+        caption = preformat_text(message.text, message.entities)
+        for file_info in item.media[content_type]:
+            if file_info['file_id'] == edit_file_info['file_id']:
+                file_info['caption'] = caption
+                break
+        await util_edit_item(user_id, item.id, item)
+        await bot.edit_message_caption(user_id, edit_file_message_id, caption=message.text, parse_mode=ParseMode.MARKDOWN_V2)
+
+    await bot.send_message(message.from_user.id, message_text, reply_markup=markup)
+    await state.set_state(states.Item.EditFiles)
+
+
+

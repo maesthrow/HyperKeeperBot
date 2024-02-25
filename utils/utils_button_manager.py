@@ -47,12 +47,27 @@ general_buttons_edit_item_files = [
         KeyboardButton(text="🗑 Удалить выбранные ☑️"),
         KeyboardButton(text="🧹 Удалить все файлы 🗃️")
     ],
-    [cancel_edit_item_button],
+    [
+        cancel_edit_item_button
+    ],
+]
+
+leave_current_caption_button = KeyboardButton(text="☑️ Оставить текущую подпись")
+
+general_buttons_edit_file_caption = [
+    [
+        leave_current_caption_button
+    ],
+    [
+        cancel_edit_item_button
+    ],
 ]
 
 cancel_add_mode_button = KeyboardButton(text="️🚫 Отменить дополнение записи")
 general_buttons_add_mode = [
-    [cancel_add_mode_button],
+    [
+        cancel_add_mode_button
+    ],
 ]
 
 without_title_button = KeyboardButton(text="💾 Без заголовка")
@@ -259,6 +274,10 @@ def get_edit_item_text_keyboard(item: Item):
 
 def get_edit_item_files_keyboard():
     return general_buttons_edit_item_files
+
+
+def get_edit_file_caption_keyboard():
+    return general_buttons_edit_file_caption
 
 
 def get_text_pages_buttons(author_user_id: int, item: Item, page_number: int, mode='show'):

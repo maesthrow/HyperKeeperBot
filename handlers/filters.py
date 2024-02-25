@@ -35,6 +35,12 @@ class NotAddToFilter(Filter):
         return current_state != Item.AddTo.state
 
 
+class NotEditFileCaptionFilter(Filter):
+    async def __call__(self, message: Message, state: FSMContext) -> bool:
+        current_state = await state.get_state()
+        return current_state != Item.EditFileCaption.state
+
+
 class OnlyAddTextToItemFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()

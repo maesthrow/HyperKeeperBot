@@ -15,6 +15,7 @@ from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, M
 
 from callbacks.callbackdata import ChooseTypeAddText
 from handlers import states
+from handlers.filters import NotEditFileCaptionFilter
 from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item import movement_item_handler, show_item
 from handlers.handlers_item_add_mode import add_files_to_message_handler, add_text_to_item_handler
@@ -284,7 +285,7 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@router.message(F.via_bot == None, F.content_type == 'text')  # NotAddToFilter(),
+@router.message(NotEditFileCaptionFilter(), F.via_bot == None, F.content_type == 'text')  # NotAddToFilter(),
 async def any_message(message: Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return

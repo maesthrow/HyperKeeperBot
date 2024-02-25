@@ -25,9 +25,9 @@ from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_
     general_new_item_buttons, \
     without_title_button, add_to_item_button, FilesButtons, text_pages_buttons, get_text_pages_buttons, \
     create_general_reply_markup, general_add_to_new_item_mode_buttons, cancel_add_mode_button, file_mark_on, \
-    general_buttons_edit_item_files, file_mark_off, get_delete_files_inline_markup
+    general_buttons_edit_item_files, file_mark_off, get_delete_files_inline_markup, leave_current_caption_button, \
+    get_edit_item_files_keyboard
 from utils.utils_data import get_current_folder_id, set_current_folder_id
-from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
     util_move_item
 from utils.utils_items_reader import get_item, get_folder_id
@@ -395,6 +395,7 @@ async def do_edit_item(user_id, item_id, state, edit_text):
 @router.message(states.Item.EditTitle, F.text == cancel_edit_item_button.text)
 @router.message(states.Item.EditText, F.text == cancel_edit_item_button.text)
 @router.message(states.Item.EditFiles, F.text == cancel_edit_item_button.text)
+@router.message(states.Item.EditFileCaption, F.text == cancel_edit_item_button.text)
 async def cancel_edit_item(message: Message, state: FSMContext):
     user_id = message.from_user.id
     await on_cancel_edit_item(user_id, state)

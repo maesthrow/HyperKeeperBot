@@ -71,7 +71,11 @@ async def send_document(user_id, document_builders, item_files_messages):
             for document in documents:
                 await asyncio.sleep(0.25)
                 item_files_messages.append(
-                    await bot.send_document(chat_id=user_id, document=document.media, caption=document.caption)
+                    await bot.send_document(
+                        chat_id=user_id, document=document.media,
+                        caption=escape_markdown(document.caption),
+                        parse_mode=ParseMode.MARKDOWN_V2
+                    )
                 )
 
 
