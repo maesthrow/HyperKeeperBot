@@ -5,7 +5,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
-    EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback
+    EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback
 from models.item_model import Item
 
 cancel_edit_item_button = KeyboardButton(text="❎ Завершить редактирование")
@@ -320,6 +320,20 @@ def get_edit_file_inline_markup(item_id: str, content_type: ContentType, file_id
         builder.adjust(1, 2)
     else:
         builder.adjust(2)
+    return builder.as_markup()
+
+
+def get_delete_file_inline_markup(item_id: str, content_type: ContentType, file_id):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='✔️Да, удалить',
+        callback_data=RequestDeleteFileCallback(item_id=item_id, type=content_type, file_id=file_id, res='y').pack()
+    )
+    builder.button(
+        text='✖️Не удалять',
+        callback_data=RequestDeleteFileCallback(item_id=item_id, type=content_type, file_id=file_id, res='n').pack()
+    )
+    builder.adjust(2)
     return builder.as_markup()
 
 

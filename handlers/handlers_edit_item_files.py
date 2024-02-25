@@ -1,19 +1,23 @@
 import asyncio
 
 from aiogram import Router, F
+from aiogram.enums import ContentType, ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Document, InputMediaPhoto, Location, Contact
 
-from callbacks.callbackdata import MarkFileCallback
+from callbacks.callbackdata import MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback
 from handlers import states
+from handlers.handlers_item_inline_buttons import hide_item_files_handler
 from load_all import dp, bot
-from models.item_model import Item
+from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import get_edit_item_files_keyboard, create_general_reply_markup, \
-    get_edit_file_inline_markup, file_mark_off, file_mark_on
-from utils.utils_file_finder import FileFinder
+    get_edit_file_inline_markup, file_mark_off, file_mark_on, file_has_caption, get_delete_file_inline_markup
+from utils.utils_file_finder import FileFinder, get_file_id_by_short_file_id, get_file_info_by_short_file_id
 from utils.utils_files import dict_to_document, dict_to_location, dict_to_contact
+from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
+from utils.utils_parse_mode_converter import escape_markdown
 
 router = Router()
 dp.include_router(router)
@@ -27,9 +31,13 @@ async def edit_item_files_handler(call: CallbackQuery, state: FSMContext):
 
     item: Item = await get_item(user_id, item_id)
 
+    await hide_item_files_handler(call)
+
     buttons = get_edit_item_files_keyboard()
     markup = create_general_reply_markup(buttons)
-    await bot.send_message(chat_id=user_id, text='Редактирование файлов:', reply_markup=markup)
+    await bot.send_message(
+        chat_id=user_id, text='_*Редактирование файлов:*_', parse_mode=ParseMode.MARKDOWN_V2, reply_markup=markup
+    )
     await show_all_files_edit_mode(user_id, item)
     await state.set_state(states.Item.EditFiles)
     await call.answer()
@@ -43,51 +51,71 @@ async def show_all_files_edit_mode(user_id, item: Item):
         for file_info in files:
             if content_type == 'document':
                 file_id = FileFinder.get_file_id(file_info)
-                caption = file_info['caption']
+                caption = escape_markdown(file_info['caption'])
                 inline_markup = get_edit_file_inline_markup(item.id, content_type, file_id[16:24])
                 edit_file_messages.append(
                     await bot.send_document(
-                        chat_id=user_id, document=file_id, caption=caption, reply_markup=inline_markup
+                        chat_id=user_id,
+                        document=file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2,
+                        reply_markup=inline_markup
                     )
                 )
                 delete_file_ids[file_id[16:24]] = [content_type, False]
             elif content_type == 'photo':
                 file_id = FileFinder.get_file_id(file_info)
-                caption = file_info['caption']
+                caption = escape_markdown(file_info['caption'])
                 inline_markup = get_edit_file_inline_markup(item.id, content_type, file_id[16:24])
                 edit_file_messages.append(
                     await bot.send_photo(
-                        chat_id=user_id, photo=file_id, caption=caption, reply_markup=inline_markup
+                        chat_id=user_id,
+                        photo=file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2,
+                        reply_markup=inline_markup
                     )
                 )
                 delete_file_ids[file_id[16:24]] = [content_type, False]
             elif content_type == 'audio':
                 file_id = FileFinder.get_file_id(file_info)
-                caption = file_info['caption']
+                caption = escape_markdown(file_info['caption'])
                 inline_markup = get_edit_file_inline_markup(item.id, content_type, file_id[16:24])
                 edit_file_messages.append(
                     await bot.send_audio(
-                        chat_id=user_id, audio=file_id, caption=caption, reply_markup=inline_markup
+                        chat_id=user_id,
+                        audio=file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2,
+                        reply_markup=inline_markup
                     )
                 )
                 delete_file_ids[file_id[16:24]] = [content_type, False]
             elif content_type == 'voice':
                 file_id = FileFinder.get_file_id(file_info)
-                caption = file_info['caption']
+                caption = escape_markdown(file_info['caption'])
                 inline_markup = get_edit_file_inline_markup(item.id, content_type, file_id[16:24])
                 edit_file_messages.append(
                     await bot.send_voice(
-                        chat_id=user_id, voice=file_id, caption=caption, reply_markup=inline_markup
+                        chat_id=user_id,
+                        voice=file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2,
+                        reply_markup=inline_markup
                     )
                 )
                 delete_file_ids[file_id[16:24]] = [content_type, False]
             elif content_type == 'video':
                 file_id = FileFinder.get_file_id(file_info)
-                caption = file_info['caption']
+                caption = escape_markdown(file_info['caption'])
                 inline_markup = get_edit_file_inline_markup(item.id, content_type, file_id[16:24])
                 edit_file_messages.append(
                     await bot.send_video(
-                        chat_id=user_id, video=file_id, caption=caption, reply_markup=inline_markup
+                        chat_id=user_id,
+                        video=file_id,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN_V2,
+                        reply_markup=inline_markup
                     )
                 )
                 delete_file_ids[file_id[16:24]] = [content_type, False]
@@ -144,7 +172,7 @@ async def show_all_files_edit_mode(user_id, item: Item):
                 )
                 delete_file_ids[file_id[16:24]] = [content_type, False]
 
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.1)
 
     data = await get_data(user_id)
     data['edit_file_messages'] = edit_file_messages
@@ -159,6 +187,10 @@ async def edit_item_files_handler(call: CallbackQuery, state: FSMContext):
     mark_button = inline_markup.inline_keyboard[-1][0]
     call_data: MarkFileCallback = MarkFileCallback.unpack(call.data)
     data = await get_data(user_id)
+    # edit_file_messages = data.get('edit_file_messages')
+    # for message in edit_file_messages:
+    #     await bot.edit_message_caption(user_id, message.message_id, caption='test edit caption')
+
     delete_file_ids = data.get('delete_file_ids')
     if delete_file_ids[call_data.file_id][1]:
         mark_button.text = file_mark_off
@@ -170,3 +202,52 @@ async def edit_item_files_handler(call: CallbackQuery, state: FSMContext):
     await bot.edit_message_reply_markup(chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup)
     await call.answer()
 
+
+@router.callback_query(DeleteFileCallback.filter())
+async def edit_item_files_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    call_data: DeleteFileCallback = DeleteFileCallback.unpack(call.data)
+    content_type: ContentType = call_data.type
+    inline_markup = get_delete_file_inline_markup(call_data.item_id, content_type, call_data.file_id)
+    if file_has_caption(content_type):
+        caption = escape_markdown(call.message.caption) if call.message.caption else ''
+        caption = f'{caption}\n{INVISIBLE_CHAR}\n_*Удалить этот файл?*_'
+        await bot.edit_message_caption(
+            user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+        )
+    else:
+        await bot.edit_message_reply_markup(user_id, call.message.message_id, reply_markup=inline_markup)
+    await call.answer()
+
+
+@router.callback_query(RequestDeleteFileCallback.filter())
+async def edit_item_files_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    call_data: RequestDeleteFileCallback = RequestDeleteFileCallback.unpack(call.data)
+    content_type: ContentType = call_data.type
+    if call_data.res == 'n':
+        inline_markup = get_edit_file_inline_markup(call_data.item_id, content_type, call_data.file_id)
+        if file_has_caption(content_type):
+            caption = escape_markdown(call.message.caption) if call.message.caption else ''
+            caption = caption.replace('Удалить этот файл?', '').strip()
+            await bot.edit_message_caption(
+                user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+            )
+        else:
+            await bot.edit_message_reply_markup(user_id, call.message.message_id, reply_markup=inline_markup)
+    elif call_data.res == 'y':
+        item: Item = await get_item(user_id, call_data.item_id)
+        del_file_info = await get_file_info_by_short_file_id(item, content_type, call_data.file_id)
+        print(f'item.media[content_type] = {item.media[content_type]}')
+        media: list = item.media[content_type]
+        for file_info in media:
+            if file_info['file_id'] == del_file_info['file_id']:
+                media.remove(file_info)
+                item.media[content_type] = media
+                break
+
+        result = await util_edit_item(user_id, item.id, item)
+        if result:
+            await bot.delete_message(user_id, call.message.message_id)
+
+    await call.answer()

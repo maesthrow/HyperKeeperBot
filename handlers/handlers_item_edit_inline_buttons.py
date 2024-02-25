@@ -38,7 +38,8 @@ async def edit_item_handler(call: CallbackQuery):
     current_markup = call.message.reply_markup
     last_btn = current_markup.inline_keyboard[-1][-1]
     item_inlines = copy.deepcopy(item_edit_buttons)
-    if not last_btn.callback_data or last_btn.callback_data != 'show_item_files':
+    if not last_btn.callback_data or \
+            (last_btn.callback_data != 'show_item_files' and last_btn.callback_data != 'hide_item_files'):
         item_inlines[0].pop(-1)
 
     middle_btn = current_markup.inline_keyboard[0][1]
@@ -256,6 +257,3 @@ def get_instruction_copy_edit_text(item: Item, page_number: int):
 def get_instruction_new_edit_text(item: Item):
     addiction = f' для выбранной страницы' if len(item.text) > 1 else ''
     return f"Напишите новый текст{addiction} или выберите действие:"
-
-
-

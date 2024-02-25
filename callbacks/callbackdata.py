@@ -1,3 +1,4 @@
+from aiogram.enums import ContentType
 from aiogram.filters.callback_data import CallbackData
 
 from models.item_model import Item
@@ -64,17 +65,24 @@ class ItemShowCallback(CallbackData, prefix="=item_show"):
 
 class EditFileCaptionCallback(CallbackData, prefix="edit_file_capt"):
     item_id: str
-    type: str
+    type: ContentType
     file_id: str
 
 
 class MarkFileCallback(CallbackData, prefix="mark_file"):
     item_id: str
-    type: str
+    type: ContentType
     file_id: str
 
 
 class DeleteFileCallback(CallbackData, prefix="delete_file"):
     item_id: str
-    type: str
+    type: ContentType
     file_id: str
+
+
+class RequestDeleteFileCallback(CallbackData, prefix="req_del_file"):
+    item_id: str
+    type: ContentType
+    file_id: str
+    res: str

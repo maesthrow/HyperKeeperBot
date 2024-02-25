@@ -23,6 +23,8 @@ def preformat_text(text: str, message_entities: List[MessageEntity], is_show=Fal
 
 def escape_markdown(text) -> str:
     """Экранирует специальные символы для использования в разметке Markdown V2."""
+    if not text:
+        return text
     escape_chars = '\\*_[]()<>#+-=|{}.!'
     escaped_text = ''
     can_edit = True
