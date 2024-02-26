@@ -89,7 +89,7 @@ async def show_item(user_id, item_id, author_user_id=None, page=0):
     inline_markup = await get_item_inline_markup(author_user_id, item, page=page)
     message_text = item.get_body_markdown(page)
     if item.files_count() > 0:
-        message_text = f'{message_text}\n\n_{item.get_files_statistic_text()}_'
+        message_text = f'{message_text}\n_{item.get_files_statistic_text()}_'
     bot_message = await bot.send_message(
         chat_id=user_id,
         text=message_text,
