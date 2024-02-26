@@ -50,6 +50,7 @@ class RemoveTextPageCallback(TextPagesCallback, prefix="remove_text_page"):
 
 class ChooseTypeAddText(CallbackData, prefix='choose_type_add_text'):
     type: str
+    page: int
 
 
 class SaveItemCallback(CallbackData, prefix="=save_item"):

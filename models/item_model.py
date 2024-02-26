@@ -214,7 +214,7 @@ class Item:
                                .replace('}', '')
                                .replace("'", "")
                                .replace(',', '')
-                               .replace(': ', '×')
+                               .replace(': ', ' ×')
                                )}'
         return files_statistics_text
 

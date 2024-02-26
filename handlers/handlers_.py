@@ -13,7 +13,7 @@ from aiogram.fsm.state import State, any_state
 from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, Location, \
     Contact
 
-from callbacks.callbackdata import ChooseTypeAddText
+from callbacks.callbackdata import ChooseTypeAddText, TextPagesCallback
 from handlers import states
 from handlers.filters import NotEditFileCaptionFilter
 from handlers.handlers_folder import show_all_folders, show_folders
@@ -315,7 +315,18 @@ async def text_to_new_item_handler(messages: List[Message], state: FSMContext):
                                                   response_text=response_text)
     else:
         is_new_item = _state == states.Item.NewStepAdd
-        await add_text_to_item_handler(messages, state, is_new_item=is_new_item)
+        page = -1
+        if not item:
+            item = data.get('current_item')
+        if item and not is_new_item and item.pages_count() > 1:
+            bot_message: Message = data.get('bot_message')
+            mid_btn = bot_message.reply_markup.inline_keyboard[0][1]
+            call_data: TextPagesCallback = TextPagesCallback.unpack(mid_btn.callback_data)
+            page = call_data.page
+        elif item and is_new_item:
+            page = item.pages_count() - 1
+
+        await add_text_to_item_handler(messages, state, is_new_item=is_new_item, item=item, page=page)
 
 
 @router.callback_query(states.Item.ChooseTypeAddTextToNewItem, ChooseTypeAddText.filter())

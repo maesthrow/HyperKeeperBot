@@ -156,6 +156,7 @@ async def back_to_folder(message: aiogram.types.Message):
 
 @router.message(states.Item.NewStepTitle, F.text == cancel_save_new_item_button.text)
 @router.message(states.Item.NewStepAdd, F.text == cancel_save_new_item_button.text)
+@router.message(states.Item.ChooseTypeAddTextToNewItem, F.text == cancel_save_new_item_button.text)
 async def cancel_add_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
@@ -169,6 +170,8 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
 
 
 @router.message(states.Item.NewStepAdd, F.text == cancel_add_mode_button.text)
+@router.message(states.Item.ChooseTypeAddTextToNewItem, F.text == cancel_add_mode_button.text)
+@router.message(states.Item.ChooseTypeAddText, F.text == cancel_add_mode_button.text)
 async def cancel_add_mode_on_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
     item: Item = data.get('item', None)

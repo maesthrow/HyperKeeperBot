@@ -4,6 +4,7 @@ from typing import List
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ChooseTypeAddText
 from handlers import states
@@ -22,10 +23,21 @@ from utils.utils_parse_mode_converter import preformat_text
 router = Router()
 dp.include_router(router)
 
-choose_type_add_buttons = [
-    InlineKeyboardButton(text="⤵️ Новый абзац", callback_data=ChooseTypeAddText(type='join').pack()),
-    InlineKeyboardButton(text="🆕 Новая страница", callback_data=ChooseTypeAddText(type='new_page').pack()),
-]
+
+def get_choose_type_add_text_keyboard(item: Item, page=-1):
+    print(f'page ={page}')
+    new_page_text = "🆕 Новая"
+    display_page = page + 1
+    while display_page < 1:
+        display_page += 1
+    builder = InlineKeyboardBuilder()
+    builder.button(text=f"⤵️ Текущая ({display_page})", callback_data=ChooseTypeAddText(type='join', page=page).pack())
+    if 0 <= page < item.pages_count() - 1:
+        builder.button(text="➡️ Последняя", callback_data=ChooseTypeAddText(type='join', page=-1).pack())
+        new_page_text = f"{new_page_text} страница"
+    builder.button(text=new_page_text, callback_data=ChooseTypeAddText(type='new_page', page=-1).pack())
+    builder.adjust(2, 1)
+    return builder.as_markup()
 
 
 @router.message(ItemAddModeFilter(), F.text == cancel_add_mode_button.text)
@@ -44,20 +56,22 @@ async def add_to_item_handler(call: CallbackQuery, state: FSMContext):
     markup = create_general_reply_markup(general_buttons_add_mode)
     await bot.send_message(
         chat_id=call.from_user.id,
-        text="Отправьте в сообщении то, чем хотите дополнить новую запись:",
+        text="Отправьте в сообщении то, чем хотите дополнить запись:",
         reply_markup=markup
     )
     await state.set_state(states.Item.AddTo)
+    await state.update_data(bot_message=call.message)
     await call.answer()
 
 
-#@router.message(F.content_type == 'text')
-async def add_text_to_item_handler(messages: List[Message], state: FSMContext, is_new_item: bool):
+# @router.message(F.content_type == 'text')
+async def add_text_to_item_handler(messages: List[Message], state: FSMContext, is_new_item: bool, item: Item,
+                                   page: int):
     user_id = messages[0].from_user.id
 
-    inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=[choose_type_add_buttons], resize_keyboard=True)
-    await bot.send_message(user_id, 'Как вы хотите сохранить добавляемый текст?', reply_markup=inline_markup)
-    #await asyncio.sleep(0.5)
+    inline_markup = get_choose_type_add_text_keyboard(item, page)
+    await bot.send_message(user_id, 'На какую страницу добавить новый текст?', reply_markup=inline_markup)
+    # await asyncio.sleep(0.5)
 
     await state.update_data(text_messages=messages)
     if is_new_item:
@@ -70,13 +84,14 @@ async def add_text_to_item_handler(messages: List[Message], state: FSMContext, i
 @router.message(states.Item.ChooseTypeAddText)
 async def message_on_choose_type_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
+    await bot.delete_message(user_id, message.message_id)
 
-    inline_markup = InlineKeyboardMarkup(row_width=2, inline_keyboard=[choose_type_add_buttons], resize_keyboard=True)
-    await bot.send_message(
+    info_message = await bot.send_message(
         chat_id=user_id,
-        text='Выберите один из вариантов.\nКак вы хотите сохранить добавляемый текст?',
-        reply_markup=inline_markup
+        text='❗ Выберите один из вариантов ⬆️\n\nИли отмените дополнение записи ⬇️',
     )
+    await asyncio.sleep(2.7)
+    await bot.delete_message(user_id, info_message.message_id)
 
 
 @router.callback_query(OnlyAddTextToItemFilter(), ChooseTypeAddText.filter())
