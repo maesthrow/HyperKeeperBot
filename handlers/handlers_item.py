@@ -31,10 +31,10 @@ from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
     util_move_item
 from utils.utils_items_reader import get_item, get_folder_id
-from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
+from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, escape_markdown, full_escape_markdown
 from utils.utils_show_item_entities import show_item_full_mode
 
-#cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
+# cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")
 
 # choose_edit_item_content_buttons = [
 #     InlineKeyboardButton(text="📝 Текст", callback_data=f"edit_content_text"),
@@ -53,7 +53,7 @@ dp.include_router(router)
 
 
 # Обработчик для ответа на нажатие кнопки
-#@router.callback_query(lambda c: c.data and c.data.startswith('item_'))
+# @router.callback_query(lambda c: c.data and c.data.startswith('item_'))
 @router.callback_query(ItemShowCallback.filter())
 async def show_item_button(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
@@ -88,6 +88,8 @@ async def show_item(user_id, item_id, author_user_id=None, page=0):
 
     inline_markup = await get_item_inline_markup(author_user_id, item, page=page)
     message_text = item.get_body_markdown(page)
+    if item.files_count() > 0:
+        message_text = f'{message_text}\n\n_{item.get_files_statistic_text()}_'
     bot_message = await bot.send_message(
         chat_id=user_id,
         text=message_text,
@@ -95,8 +97,8 @@ async def show_item(user_id, item_id, author_user_id=None, page=0):
         parse_mode=ParseMode.MARKDOWN_V2
     )
 
-    print(f"item {item}")
-    #await show_item_files(user_id, item)
+    # print(f"item {item}")
+    # await show_item_files(user_id, item)
 
     data = await get_data(author_user_id)
     data['bot_message'] = bot_message
@@ -210,7 +212,7 @@ async def add_to_new_item_handler(message: Message, state: FSMContext):
 async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
-    item.title = message.text.strip()  #to_markdown_text(message.text, message.entities)
+    item.title = message.text.strip()  # to_markdown_text(message.text, message.entities)
     await on_create_new_item(state, item, message=message)
     await bot.delete_message(message.chat.id, message.message_id)
 
@@ -415,6 +417,7 @@ async def on_cancel_edit_item(user_id, state: FSMContext):
     await show_folders(user_id, need_to_resend=True)
     await show_item(user_id, item_id)
 
+
 @router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][0].text)
 @router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][1].text)
 async def mark_all_edit_files_handler(message: Message, state: FSMContext):
@@ -561,6 +564,3 @@ async def send_item_handler(call: CallbackQuery, callback_data: SendItemCallback
     author_user_id = callback_data.author_user_id
     item_id = callback_data.item_id
     await show_item(user_id=user_id, author_user_id=author_user_id, item_id=item_id)
-
-
-

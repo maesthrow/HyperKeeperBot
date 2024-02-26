@@ -3,22 +3,48 @@ import json
 from datetime import datetime
 from typing import List, Union
 
+from aiogram.enums import ContentType
+
 from utils.utils_parse_mode_converter import escape_markdown
 
 INVISIBLE_CHAR = "\u00A0"
 
 
 class Item:
+    # default_media = {
+    #     "photo": [],
+    #     "video": [],
+    #     "audio": [],
+    #     "document": [],
+    #     "voice": [],
+    #     "video_note": [],
+    #     "location": [],
+    #     "contact": [],
+    #     "sticker": [],
+    # }
+
     default_media = {
-        "photo": [],
-        "video": [],
-        "audio": [],
-        "document": [],
-        "voice": [],
-        "video_note": [],
-        "location": [],
-        "contact": [],
-        "sticker": [],
+        ContentType.DOCUMENT: [],
+        ContentType.PHOTO: [],
+        ContentType.VIDEO: [],
+        ContentType.AUDIO: [],
+        ContentType.VOICE: [],
+        ContentType.VIDEO_NOTE: [],
+        ContentType.LOCATION: [],
+        ContentType.CONTACT: [],
+        ContentType.STICKER: [],
+    }
+
+    icons_media = {
+        ContentType.DOCUMENT: '📑',
+        ContentType.PHOTO: '🖼',
+        ContentType.VIDEO: '🎬',
+        ContentType.AUDIO: '🎵',
+        ContentType.VOICE: '🗣',
+        ContentType.VIDEO_NOTE: '📹',
+        ContentType.LOCATION: '📍',
+        ContentType.CONTACT: '📞',
+        ContentType.STICKER: '🔖',
     }
 
     def __init__(self, id: str, text: List[str], title=None, media: dict = None, date_created=None, date_modified=None):
@@ -169,44 +195,28 @@ class Item:
     def remove_page(self, page: int):
         self.text.pop(page)
 
-    # def get_short_parse_title(self):
-    #     urls = re.findall(r'https?://[^\s]+', self.text)
-    #
-    #     if not urls:
-    #         words = self.text.split()
-    #         short_title = " ".join(words[:3])
-    #         if len(words) > 3:
-    #             short_title = short_title + "..."
-    #         return short_title
-    #
-    #     for url in urls:
-    #         print(url)
-    #     # Берем первый найденный URL
-    #     url = urls[0]
-    #
-    #     # Отправляем запрос на получение HTML-кода страницы
-    #     response = requests.get(url)
-    #     html_code = response.text
-    #
-    #     # Используем BeautifulSoup для парсинга HTML-кода
-    #     soup = BeautifulSoup(html_code, 'html.parser')
-    #
-    #     # Получаем текст заголовка страницы
-    #     try:
-    #         short_title = soup.title.string
-    #     except:
-    #         words = self.text.split()
-    #         short_title = " ".join(words[:3])
-    #         if len(words) > 3:
-    #             short_title = short_title + "..."
-    #         return short_title
-    #
-    #     return short_title
-
     def select_search_text(self, search_text: str, left_teg: str = '<b><i><u>', right_teg: str = '</u></i></b>'):
         self.title = get_selected_search_text(self.title, search_text, left_teg, right_teg)
         for page in range(len(self.text)):
             self.text[page] = get_selected_search_text(self.text[page], search_text, left_teg, right_teg)
+
+    def get_files_statistic(self):
+        result = {}
+        for content_type in self.media.keys():
+            if len(self.media[content_type]):
+                result[self.icons_media[content_type]] = len(self.media[content_type])
+        return result
+
+    def get_files_statistic_text(self):
+        files_statistics_text = \
+            f'{escape_markdown(str(self.get_files_statistic()).
+                               replace('{', '')
+                               .replace('}', '')
+                               .replace("'", "")
+                               .replace(',', '')
+                               .replace(': ', '×')
+                               )}'
+        return files_statistics_text
 
     def __str__(self):
         return f"{self.id} {self.get_inline_title()} ({self.date_created.strftime('%Y-%m-%d %H:%M:%S')})"
@@ -240,7 +250,7 @@ def get_selected_search_text(text: str, search_text: str, left_teg: str = '<b><i
         text = f"{prefix}{underlined_text}{suffix}"
 
         if text:
-            #Ищем следующее вхождение search_text, исключая уже найденный текст
+            # Ищем следующее вхождение search_text, исключая уже найденный текст
             start_index = text.lower().find(search_text.lower(), start_index + len(underlined_text))
         else:
             start_index = -1
