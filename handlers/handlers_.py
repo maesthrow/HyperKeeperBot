@@ -13,7 +13,7 @@ from aiogram.fsm.state import State, any_state
 from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, Location, \
     Contact
 
-from callbacks.callbackdata import ChooseTypeAddText, TextPagesCallback
+from callbacks.callbackdata import ChooseTypeAddText, TextPagesCallback, MessageBoxCallback
 from handlers import states
 from handlers.filters import NotEditFileCaptionFilter
 from handlers.handlers_folder import show_all_folders, show_folders
@@ -459,3 +459,9 @@ async def is_message_allowed_new_item(message: aiogram.types.Message):
         return False
 
     return True
+
+
+@router.callback_query(MessageBoxCallback.filter())
+async def message_box_show_handler(call: CallbackQuery):
+    await bot.delete_message(call.from_user.id, call.message.message_id)
+

@@ -93,3 +93,7 @@ class RequestDeleteFilesCallback(CallbackData, prefix="req_del_files"):
     item_id: str
     res: str
     is_all: bool
+
+
+class MessageBoxCallback(CallbackData, prefix='message_box'):
+    result: str

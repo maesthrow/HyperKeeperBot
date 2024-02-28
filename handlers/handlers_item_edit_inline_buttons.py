@@ -251,7 +251,7 @@ async def action_remove_text_page_handler(call: CallbackQuery, state: FSMContext
 def get_instruction_copy_edit_text(item: Item, page_number: int):
     entity = f'страницы {(page_number + 1)}' if len(item.text) > 1 else 'записи'
     return f"_Нажмите на текущий текст {entity}, чтобы скопировать:_ ↙️" \
-           f"\n\n`{markdown_without_code(item.get_text(page_number))}\n{INVISIBLE_CHAR}`"
+           f"\n\n`{markdown_without_code(item.get_text(page_number))}`\n{INVISIBLE_CHAR}"
 
 
 def get_instruction_new_edit_text(item: Item):

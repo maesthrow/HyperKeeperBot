@@ -1,3 +1,4 @@
+import copy
 from typing import List
 
 from aiogram.enums import ContentType
@@ -8,7 +9,7 @@ from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback,
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, RequestDeleteFilesCallback
 from models.item_model import Item
 
-cancel_edit_item_button = KeyboardButton(text="❎ Завершить редактирование")
+cancel_edit_item_button = KeyboardButton(text="✔️ Завершить редактирование") # ❎
 clean_title_buttons = [
     KeyboardButton(text="🪧 Сделать пустой заголовок"),
     KeyboardButton(text="💾 Сохранить без заголовка"),
@@ -53,9 +54,11 @@ general_buttons_edit_item_files = [
 ]
 
 leave_current_caption_button = KeyboardButton(text="☑️ Оставить текущую подпись")
+remove_current_caption_button = KeyboardButton(text="🧹 Удалить подпись")
 
 general_buttons_edit_file_caption = [
     [
+        remove_current_caption_button,
         leave_current_caption_button
     ],
     [
@@ -276,9 +279,11 @@ def get_edit_item_files_keyboard():
     return general_buttons_edit_item_files
 
 
-def get_edit_file_caption_keyboard():
-    return general_buttons_edit_file_caption
-
+def get_edit_file_caption_keyboard(caption: str):
+    buttons = copy.deepcopy(general_buttons_edit_file_caption)
+    if not caption:
+        buttons[0].pop(0)
+    return buttons
 
 def get_text_pages_buttons(author_user_id: int, item: Item, page_number: int, mode='show'):
     pages_buttons = text_pages_buttons.copy()
