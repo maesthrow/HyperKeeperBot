@@ -8,7 +8,7 @@ from aiogram.filters import Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, Message
 
-from callbacks.callbackdata import SendItemCallback, ItemShowCallback, MarkFileCallback
+from callbacks.callbackdata import SendItemCallback, ItemShowCallback, MarkFileCallback, BackToStandardFolderView
 from enums.enums import Environment
 from handlers import states
 from handlers.filters import NotInButtonsFilter, InButtonsFilter
@@ -567,3 +567,17 @@ async def send_item_handler(call: CallbackQuery, callback_data: SendItemCallback
     author_user_id = callback_data.author_user_id
     item_id = callback_data.item_id
     await show_item(user_id=user_id, author_user_id=author_user_id, item_id=item_id)
+
+
+@router.callback_query(BackToStandardFolderView.filter())
+async def send_item_handler(call: CallbackQuery):
+    call_data = BackToStandardFolderView.unpack(call.data)
+    user_id = call.from_user.id
+    current_folder_id = await get_current_folder_id(user_id)
+    await show_folders(
+        user_id,
+        current_folder_id,
+        page_folder=call_data.page_folder,
+        page_item=call_data.page_item,
+        need_to_resend=False
+    )

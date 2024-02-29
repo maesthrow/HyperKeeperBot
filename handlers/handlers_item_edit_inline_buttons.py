@@ -194,7 +194,7 @@ async def remove_text_page_handler(call: CallbackQuery, state: FSMContext):
 
     item_inlines = [
         [
-            InlineKeyboardButton(text="☑️ Да", callback_data=RemoveTextPageCallback(
+            InlineKeyboardButton(text="✔️ Да", callback_data=RemoveTextPageCallback(
                 author_user_id=user_id,
                 item_id=item_id,
                 action='yes',

@@ -27,6 +27,7 @@ clean_text_buttons = [
 general_buttons_folder = [
     [KeyboardButton(text="➕ Новая папка"), KeyboardButton(text="🔍 Поиск")],
     [KeyboardButton(text="️📊 Статистика"), KeyboardButton(text="️🧹 Удалить все записи в папке")],
+    [KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")]
 ]
 
 general_buttons_folder_show_all = [

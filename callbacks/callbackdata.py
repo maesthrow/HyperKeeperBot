@@ -97,3 +97,8 @@ class RequestDeleteFilesCallback(CallbackData, prefix="req_del_files"):
 
 class MessageBoxCallback(CallbackData, prefix='message_box'):
     result: str
+
+
+class BackToStandardFolderView(CallbackData, prefix='back_to_standard_folder_view'):
+    page_folder: int
+    page_item: int

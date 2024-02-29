@@ -124,6 +124,7 @@ async def get_folders_for_page(user_id, current_folder_id, current_page):
         folders = sorted_folders
     return folders
 
+
 async def get_inline_markup_folders(user_id, current_folder_id, current_page):
     user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
     sorted_folders = sorted(user_folders.items(), key=lambda item: item[1].get("name"))

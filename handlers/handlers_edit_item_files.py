@@ -215,7 +215,8 @@ async def pre_delete_file_handler(call: CallbackQuery, state: FSMContext):
     content_type: ContentType = call_data.type
     inline_markup = get_delete_file_inline_markup(call_data.item_id, content_type, call_data.file_id)
     if file_has_caption(content_type):
-        caption = escape_markdown(call.message.caption) if call.message.caption else ''
+        caption = escape_markdown(preformat_text(call.message.caption, call.message.caption_entities)) \
+            if call.message.caption else ''
         caption = f'{caption}\n{INVISIBLE_CHAR}\n_*Удалить этот файл?*_'
         await bot.edit_message_caption(
             user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2,
@@ -238,7 +239,8 @@ async def delete_file_handler(call: CallbackQuery, state: FSMContext):
         inline_markup = get_edit_file_inline_markup(call_data.item_id, content_type, call_data.file_id,
                                                     mark_is_on=mark_is_on)
         if file_has_caption(content_type):
-            caption = escape_markdown(call.message.caption) if call.message.caption else ''
+            caption = escape_markdown(preformat_text(call.message.caption, call.message.caption_entities))\
+                if call.message.caption else ''
             caption = caption.replace('Удалить этот файл?', '').strip()
             await bot.edit_message_caption(
                 user_id, call.message.message_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2,
@@ -382,7 +384,11 @@ async def edit_file_caption(message: Message, state: FSMContext):
     edit_file_caption_messages = data.get('edit_file_caption_messages')
     # print(f'edit_file_caption_messages count =  {len(edit_file_caption_messages)}')
     for edit_message in edit_file_caption_messages:
-        await bot.delete_message(user_id, edit_message.message_id)
+        try:
+            await bot.delete_message(user_id, edit_message.message_id)
+        except:
+            pass
+    edit_file_caption_messages = []
 
     buttons = get_edit_item_files_keyboard()
     markup = create_general_reply_markup(buttons)
@@ -401,25 +407,36 @@ async def edit_file_caption(message: Message, state: FSMContext):
         content_type: ContentType = data.get('edit_file_type')
         edit_file_info = data.get('edit_file_info')
         caption = preformat_text(new_text, message.entities) if new_text else ''
-        print(f'caption = {caption}')
+        this_file_info = {}
+        #print(f'caption = {caption}')
         for file_info in item.media[content_type]:
             if file_info['file_id']:
                 is_equals_file_info = file_info['file_id'] == edit_file_info['file_id']
             else:
                 is_equals_file_info = file_info['fields']['file_id'] == edit_file_info['fields']['file_id']
             if is_equals_file_info:
-                file_info['caption'] = caption
+                this_file_info = file_info
                 break
         if new_text != edit_file_message.caption:
-            await util_edit_item(user_id, item.id, item)
-            await bot.edit_message_caption(
-                user_id,
-                edit_file_message.message_id,
-                caption=escape_markdown(caption),
-                parse_mode=ParseMode.MARKDOWN_V2,
-                reply_markup=edit_file_message.reply_markup
-            )
-            data['edit_file_item'] = item
+            try:
+                await bot.edit_message_caption(
+                    user_id,
+                    edit_file_message.message_id,
+                    caption=escape_markdown(caption),
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                    reply_markup=edit_file_message.reply_markup
+                )
+            except Exception as e:
+                if "MEDIA_CAPTION_TOO_LONG" in str(e):
+                    edit_file_caption_messages.append(
+                        await bot.send_message(user_id, "❗ Эта подпись слишком длинная. Придумайте другую:")
+                    )
+                    await state.update_data(edit_file_caption_messages=edit_file_caption_messages)
+                    return
+                else:
+                    this_file_info['caption'] = caption
+                    await util_edit_item(user_id, item.id, item)
+                    data['edit_file_item'] = item
 
     info_message = await bot.send_message(message.from_user.id, message_text, reply_markup=markup)
     await state.set_state(states.Item.EditFiles)

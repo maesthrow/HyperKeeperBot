@@ -210,7 +210,6 @@ async def show_storage(message: Message, state: FSMContext):
             general_buttons.insert(0, [KeyboardButton(text="🔀 Переместить в текущую папку")])
     else:
         general_buttons = general_buttons_folder[:]
-        general_buttons.append([KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")])
 
     markup = create_general_reply_markup(general_buttons)
 
@@ -275,7 +274,7 @@ async def show_all_entities_handler(call: CallbackQuery):
     if 'folders' in call.data:
         await show_all_folders(user_id, need_resend=True)
     elif 'items' in call.data:
-        await show_all_items(user_id, need_to_resend=True)
+        await show_all_items(user_id, need_to_resend=False)
     await call.answer()
 
 

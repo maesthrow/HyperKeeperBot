@@ -1,9 +1,11 @@
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, KeyboardButton
 
+from callbacks.callbackdata import BackToStandardFolderView
 from load_all import bot
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_page_info, get_inline_markup_items_in_folder, get_folder_path_names, get_sub_folders
-from utils.utils_button_manager import general_buttons_items_show_all, create_general_reply_markup
+from utils.utils_button_manager import general_buttons_items_show_all, create_general_reply_markup, \
+    general_buttons_folder
 from utils.utils_data import get_current_folder_id
 
 
@@ -13,20 +15,29 @@ async def show_all_items(user_id, current_folder_id=None, need_to_resend=False):
         current_folder_id = await get_current_folder_id(user_id)
 
     if need_to_resend:
-        general_buttons = general_buttons_items_show_all[:]
+        general_buttons = general_buttons_folder[:] #general_buttons_items_show_all[:]
         markup = create_general_reply_markup(general_buttons)
         data['markup'] = markup
         await bot.send_message(user_id, f"🗂️", reply_markup=markup)
 
     current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
 
-    # load_message = await bot.send_message(chat.id, f"⌛️")
+    current_page_folder, current_page_item = await get_currents_pages(user_id, current_folder_id)
+
     items_page_info = await get_page_info(user_id, current_folder_id, 'items', 0)
-    current_item_page = items_page_info.get('current_page_items')
+    new_page_item = items_page_info.get('current_page_items')
     new_page_items = items_page_info.get('page_items')
 
     items_inline_markup = await get_inline_markup_items_in_folder(
-        user_id, current_folder_id, current_page=current_item_page
+        user_id, current_folder_id, current_page=new_page_item
+    )
+    items_inline_markup.inline_keyboard.insert(
+        0,
+        [
+            InlineKeyboardButton(text='⬅️ К папке', callback_data=BackToStandardFolderView(
+                page_folder=current_page_folder, page_item=current_page_item
+            ).pack())
+        ]
     )
     if need_to_resend:
         folders_message = await bot.send_message(user_id, f"🗂️ <b>{current_folder_path_names}</b>",
@@ -44,6 +55,16 @@ async def show_all_items(user_id, current_folder_id=None, need_to_resend=False):
     data['page_items'] = str(new_page_items)
 
     await set_data(user_id, data)
+
+
+async def get_currents_pages(user_id, current_folder_id):
+    folders_page_info = await get_page_info(user_id, current_folder_id, 'folders')
+    current_page_folder = folders_page_info.get('current_page_folders')
+    items_page_info = await get_page_info(user_id, current_folder_id, 'items')
+    current_page_item = items_page_info.get('current_page_items')
+    current_page_folder = 1 if not current_folder_id else current_page_folder
+    current_page_item = 1 if not current_page_item else current_page_item
+    return current_page_folder, current_page_item
 
 
 async def get_all_search_items(user_id, folder_id, search_text):

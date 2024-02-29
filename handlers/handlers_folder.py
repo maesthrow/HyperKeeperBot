@@ -64,12 +64,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         general_buttons = general_buttons_movement_item[:]
     else:
         general_buttons = general_buttons_folder[:]
-    if True:  # current_folder_id != ROOT_FOLDER_ID:
-        if not movement_item_id:
-            general_buttons.append([
-                KeyboardButton(text="✏️ Переименовать папку"),
-                KeyboardButton(text="🗑 Удалить папку")
-            ])
+
     markup = create_general_reply_markup(general_buttons)
 
     folders_page_info = await get_page_info(user_id, current_folder_id, 'folders', page_folder)
@@ -86,7 +81,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
     new_page_items = items_page_info.get('page_items')
 
     if current_item_page == 0:
-        await show_all_items(user_id)
+        await show_all_items(user_id, need_to_resend=True)
         return
 
     current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
@@ -144,8 +139,6 @@ async def show_all_folders(user_id, current_folder_id=None, need_resend=False):
         current_folder_id = await get_current_folder_id(user_id)
 
     general_buttons = general_buttons_folder_show_all[:]
-    if current_folder_id != ROOT_FOLDER_ID:
-        general_buttons.append([KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")])
     general_buttons.append([KeyboardButton(text="↪️ Перейти к общему виду папки 🗂️📄")])
     markup = create_general_reply_markup(general_buttons)
 
