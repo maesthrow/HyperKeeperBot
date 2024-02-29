@@ -14,6 +14,7 @@ def get_file_info_by_content_type(message: Message, page: int = -1):
         'caption': preformat_text(message.caption, message.caption_entities),
         'page': page
     }
+    print(f'file_info[caption] = {file_info['caption']}')
     if content_type == 'photo':
         file_info['file_id'] = message.photo[-1].file_id
     elif content_type == 'video':
@@ -37,7 +38,7 @@ def get_file_info_by_content_type(message: Message, page: int = -1):
         file_info['fields'] = contact_to_dict(message.contact)
     elif content_type == 'sticker':
         file_info['fields'] = sticker_to_dict(message.sticker)
-        #print(f"message.sticker.file_id {file_info}")
+        # print(f"message.sticker.file_id {file_info}")
     return file_info
 
 

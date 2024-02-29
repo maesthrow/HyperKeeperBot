@@ -401,6 +401,7 @@ async def edit_file_caption(message: Message, state: FSMContext):
         content_type: ContentType = data.get('edit_file_type')
         edit_file_info = data.get('edit_file_info')
         caption = preformat_text(new_text, message.entities) if new_text else ''
+        print(f'caption = {caption}')
         for file_info in item.media[content_type]:
             if file_info['file_id']:
                 is_equals_file_info = file_info['file_id'] == edit_file_info['file_id']
@@ -414,7 +415,7 @@ async def edit_file_caption(message: Message, state: FSMContext):
             await bot.edit_message_caption(
                 user_id,
                 edit_file_message.message_id,
-                caption=escape_markdown(new_text),
+                caption=escape_markdown(caption),
                 parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=edit_file_message.reply_markup
             )
