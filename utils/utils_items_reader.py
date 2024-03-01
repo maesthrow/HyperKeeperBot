@@ -8,7 +8,7 @@ def get_last_number(key):
 
 def get_folder_id(item_id):
     # Разделение строки по '/' справа налево и взятие первой части
-    return item_id.rsplit('/', 1)[0]
+    return item_id.rsplit('/', 1)[0] if item_id else None
 
 
 async def get_folder_items(user_id, folder_id, text_search=None):

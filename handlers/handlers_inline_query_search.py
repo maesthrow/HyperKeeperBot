@@ -10,7 +10,7 @@ from handlers.handlers_item import show_item
 from load_all import dp, bot
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
-from utils.utils_ import smile_item
+from utils.utils_ import smile_item, smile_folder
 from utils.utils_bot import get_bot_name, get_bot_link, to_url_data_item
 from utils.utils_folders_reader import get_folders_in_folder
 from utils.utils_items_reader import get_folder_items, get_item
@@ -19,7 +19,7 @@ router = Router()
 dp.include_router(router)
 
 
-@router.inline_query(lambda query: not query.query.startswith('browse_'))
+@router.inline_query(lambda query: not query.query.startswith('browse_') and not query.query.startswith('folders/'))
 async def inline_query_search(query: InlineQuery):
     query_data = query.query
     if not query_data:
@@ -33,7 +33,7 @@ async def inline_query_search(query: InlineQuery):
     )
     if not search_items:
         return
-    print(f'search_items:\n{search_items}')
+    #print(f'search_items:\n{search_items}')
 
     search_results = []
     for item_id in search_items:
@@ -104,3 +104,51 @@ async def get_search_items(user_id, folder_id, text_search, result_search_items:
     for sub_folder_id in folders_in_folder:
         result_search_items = await get_search_items(user_id, sub_folder_id, text_search, result_search_items)
     return result_search_items
+
+
+async def get_search_folders(user_id, folder_id, text_search, result_search_folders: dict):
+    search_folders = await get_folders_in_folder(user_id, folder_id) #, text_search=text_search)
+    for search_folder in search_folders:
+        result_search_folders[search_folder] = search_folders[search_folder]
+    folders_in_folder = await get_folders_in_folder(user_id, folder_id)
+    for sub_folder_id in folders_in_folder:
+        result_search_folders = await get_search_folders(user_id, sub_folder_id, text_search, result_search_folders)
+    return result_search_folders
+
+
+@router.inline_query(lambda query: query.query.startswith('folders/'))
+async def inline_query_search(query: InlineQuery):
+    query_data = query.query
+    if not query_data:
+        return
+    print(f'query_data folders = {query_data.replace('folders/', '', 1)}')
+
+    user_id = query.from_user.id
+    search_folders = await get_search_folders(
+        user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=query_data, result_search_folders={}
+    )
+    if not search_folders:
+        return
+
+    search_results = []
+    for folder_id in search_folders:
+        folder_name = search_folders[folder_id]['name']
+
+        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+
+        #inline_markup = await get_result_inline_markup(repost_switch_inline_query, query_data)
+        result_id = hashlib.md5(folder_id.encode()).hexdigest()
+        item_body_result = InlineQueryResultArticle(
+            id=result_id,
+            title=f'{smile_folder} {folder_name}',
+            input_message_content=InputTextMessageContent(message_text=folder_name, parse_mode=ParseMode.MARKDOWN_V2),
+            #reply_markup=inline_markup,
+            thumbnail_url=search_icon_url,
+        )
+        search_results.append(item_body_result)
+
+    await bot.answer_inline_query(
+        query.id,
+        results=search_results,
+        cache_time=0,
+    )
