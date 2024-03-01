@@ -15,7 +15,6 @@ async def on_shutdown():
 async def on_startup():
     #await setup_bot()
     await setup_bot_commands()
-    pass
 
 
 async def main():
@@ -41,6 +40,7 @@ async def setup_bot_commands():
     bot_commands = [
         BotCommand(command="/start", description="🚀️ начало работы"),
         BotCommand(command="/storage", description="🗂️ открыть хранилище"),
+        BotCommand(command="/search", description="🔍️ live-поиск"),
         BotCommand(command="/settings", description="⚙️ настройки"),
         #BotCommand(command="/profile", description="👤 мой профиль"),
         #BotCommand(command="/help", description="справка"),

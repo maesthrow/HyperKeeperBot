@@ -232,9 +232,9 @@ async def get_inline_markup_for_pages(instance_text, inline_markup, current_page
     mid_btn_text = f"{current_nums} {separator} {max_num} {instance_smile}"
 
     inline_markup.inline_keyboard.append([
-        InlineKeyboardButton(text='⬅️', callback_data=f'{callback_data_text}prev_{prev_page}'),
+        InlineKeyboardButton(text='◀️', callback_data=f'{callback_data_text}prev_{prev_page}'),
         InlineKeyboardButton(text=mid_btn_text, callback_data=f'storage_show_all_{instance_text}'),
-        InlineKeyboardButton(text='➡️', callback_data=f'{callback_data_text}next_{next_page}')
+        InlineKeyboardButton(text='▶️', callback_data=f'{callback_data_text}next_{next_page}')
     ])
 
     return inline_markup

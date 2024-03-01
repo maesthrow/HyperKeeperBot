@@ -30,14 +30,14 @@ router = Router()
 dp.include_router(router)
 
 
-@router.inline_query(lambda query: len(query.query.split("_")) > 4)
+@router.inline_query(lambda query: len(query.query.split("_")) > 5 and query.query.split("_")[0] == 'browse')
 async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]):
     query_data = query.query.split('_')
-    author_user_id, item_id, text_page, file_type = int(query_data[0]), query_data[1], query_data[2], query_data[3]
+    author_user_id, item_id, text_page, file_type = int(query_data[1]), query_data[2], query_data[3], query_data[4]
     if file_type == 'video-note':
         file_type = 'video_note'
     file_type = ContentType(file_type)
-    file_id = "_".join(query_data[4:])
+    file_id = "_".join(query_data[5:])
     print(f"file_type = {file_type}, file_id = {file_id}")
     repost_switch_inline_query = query.query
     bot_name = await get_bot_name()
@@ -168,25 +168,25 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     )
 
 
-@router.inline_query(lambda query: len(query.query.split("_")) <= 4)
+@router.inline_query(lambda query: len(query.query.split("_")) <= 5 and query.query.split("_")[0] == 'browse')
 async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuery]):
     print(f"query {query.query}")
     if not query.query:
         return
     query_data = query.query.split('_')
-    if not query_data or len(query_data) == 0:
+    if not query_data or len(query_data) <= 1:
         return
 
-    author_user_id = int(query_data[0])
-    item_id = query_data[1]
-    text_page = int(query_data[2])
+    author_user_id = int(query_data[1])
+    item_id = query_data[2]
+    text_page = int(query_data[3])
 
     # if text_page >= 0:
     #     return
 
-    tag = query_data[3] if len(query_data) > 3 else None
+    tag = query_data[4] if len(query_data) > 4 else None
     item: Item = Item("", [""])
-    print(f'repost_switch_inline_query = f"{author_user_id}_{item.id}_{text_page}"')
+    print(f'repost_switch_inline_query = f"browse_{author_user_id}_{item.id}_{text_page}"')
     user_id = result_id = 0
     if isinstance(query, types.InlineQuery):
         user_id = query.from_user.id
@@ -207,7 +207,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
         photo_url = (f"https://avatars.mds.yandex.net/i?id=e915ed8674cf1b1719106eef318b439f5f63d37f-"
                      f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
 
-        repost_switch_inline_query = f"{author_user_id}_{item.id}_{text_page}"
+        repost_switch_inline_query = f"browse_{author_user_id}_{item.id}_{text_page}"
         inline_markup = await get_main_inline_markup(repost_switch_inline_query)
         item_body_result = InlineQueryResultArticle(
             id=result_id,
@@ -223,7 +223,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
     bot_link = await get_bot_link()
     builder = InlineKeyboardBuilder()
 
-    repost_switch_inline_query = f"{author_user_id}_{item_id}_{text_page}"
+    repost_switch_inline_query = f"browse_{author_user_id}_{item_id}_{text_page}"
 
     if tag == 'content':
         builder.add(
@@ -237,7 +237,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
         builder.add(
             InlineKeyboardButton(
                 text="🧐 Обзор контента",
-                switch_inline_query_current_chat=f"{author_user_id}_{item_id}_{text_page}_content"
+                switch_inline_query_current_chat=f"browse_{author_user_id}_{item_id}_{text_page}_content"
             )
         )
     else:
@@ -357,8 +357,9 @@ async def create_text_result_for_page(item: Item, media_results: list, inline_ma
     )
     media_results.append(item_text_result)
 
+
 async def update_markup_for_content_mode(inline_markup: InlineKeyboardMarkup, content_type: str, file_id):
-    query_base = "_".join(inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:3])
+    query_base = "_".join(inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:4])
     switch_inline_query = f"{query_base}_{content_type}_{file_id}"
     inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
 

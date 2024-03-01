@@ -80,7 +80,7 @@ async def show_item_files_handler(call: CallbackQuery):
     inline_markup = call.message.reply_markup
     repost_button = get_repost_button_in_markup(inline_markup)
     if repost_button:
-        author_user_id, item_id, page = repost_button.switch_inline_query.split('_')
+        author_user_id, item_id, page = repost_button.switch_inline_query.split('_')[1:]
     else:
         save_button: InlineKeyboardButton = get_save_button_in_markup(inline_markup)
         print(f'save_button.callback_data {save_button.callback_data}')

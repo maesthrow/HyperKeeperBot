@@ -426,17 +426,22 @@ async def edit_file_caption(message: Message, state: FSMContext):
                     parse_mode=ParseMode.MARKDOWN_V2,
                     reply_markup=edit_file_message.reply_markup
                 )
+                this_file_info['caption'] = caption
+                await util_edit_item(user_id, item.id, item)
+                data['edit_file_item'] = item
             except Exception as e:
                 if "MEDIA_CAPTION_TOO_LONG" in str(e):
-                    edit_file_caption_messages.append(
-                        await bot.send_message(user_id, "❗ Эта подпись слишком длинная. Придумайте другую:")
-                    )
-                    await state.update_data(edit_file_caption_messages=edit_file_caption_messages)
-                    return
+                    exception_message_text = "❗ Эта подпись слишком длинная. Придумайте другую:"
                 else:
-                    this_file_info['caption'] = caption
-                    await util_edit_item(user_id, item.id, item)
-                    data['edit_file_item'] = item
+                    exception_message_text = ("❗ Не удалось сохранить эту подпись. "
+                                              "Возможно что то не так с ее содержимым. Придумайте другую:")
+                buttons = get_edit_file_caption_keyboard(caption)
+                markup = create_general_reply_markup(buttons)
+                edit_file_caption_messages.append(
+                    await bot.send_message(user_id, exception_message_text, reply_markup=markup)
+                )
+                await state.update_data(edit_file_caption_messages=edit_file_caption_messages)
+                return
 
     info_message = await bot.send_message(message.from_user.id, message_text, reply_markup=markup)
     await state.set_state(states.Item.EditFiles)

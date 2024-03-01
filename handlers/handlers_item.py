@@ -116,8 +116,8 @@ async def get_item_inline_markup(author_user_id, item: Item, page: int):
         files_button: InlineKeyboardButton = FilesButtons.get_show_button(item.files_count())
         item_inlines[-1][-1] = files_button
 
-    item_inlines[0][0].switch_inline_query = f"{author_user_id}_{item.id}_{-1}"
-    item_inlines[-1][0].switch_inline_query_current_chat = f"{author_user_id}_{item.id}_{-1}_content"
+    item_inlines[0][0].switch_inline_query = f"browse_{author_user_id}_{item.id}_{-1}"
+    item_inlines[-1][0].switch_inline_query_current_chat = f"browse_{author_user_id}_{item.id}_{-1}_content"
     if item.pages_count() > 1:
         item_inlines.insert(0, get_text_pages_buttons(author_user_id, item, page))
 

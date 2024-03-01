@@ -34,7 +34,7 @@ async def show_all_items(user_id, current_folder_id=None, need_to_resend=False):
     items_inline_markup.inline_keyboard.insert(
         0,
         [
-            InlineKeyboardButton(text='⬅️ К папке', callback_data=BackToStandardFolderView(
+            InlineKeyboardButton(text='↩️ К папке', callback_data=BackToStandardFolderView(
                 page_folder=current_page_folder, page_item=current_page_item
             ).pack())
         ]

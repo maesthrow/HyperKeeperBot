@@ -6,12 +6,13 @@ from typing import List
 
 import aiogram
 from aiogram import Router, F
-from aiogram.enums import ContentType
+from aiogram.enums import ContentType, ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, any_state
 from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, Location, \
-    Contact
+    Contact, InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ChooseTypeAddText, TextPagesCallback, MessageBoxCallback
 from handlers import states
@@ -35,7 +36,7 @@ from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_info_by_content_type, dict_to_location, dict_to_contact
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id, get_item
-from utils.utils_parse_mode_converter import to_markdown_text, preformat_text
+from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, escape_markdown
 from utils.utils_sender_message_loop import send_storage, send_storage_folders, send_storage_with_items
 from utils.utils_show_item_entities import show_item_page_as_text_only, show_item_full_mode
 
@@ -51,7 +52,7 @@ async def start(message: Message, state: FSMContext):
     print(f'start: tg_user {tg_user}')
     url_data = from_url_data_item(message.text).split()
     if len(url_data) > 1:
-        if len(url_data[1].split('_')) <= 3:
+        if len(url_data[1].split('_')) <= 4:
             await start_url_data_item_handler(message, state, tg_user)
         else:
             await start_url_data_file_handler(message, state, tg_user)
@@ -87,9 +88,9 @@ async def start_url_data_item_handler(message, state, tg_user):
         #await start_handler(message, state, tg_user)
         url_data = from_url_data_item(message.text).split()[1]
         url_data_split = url_data.split('_')
-        author_user_id = int(url_data_split[0])
-        item_id = url_data_split[1]
-        page = int(url_data_split[2])
+        author_user_id = int(url_data_split[1])
+        item_id = url_data_split[2]
+        page = int(url_data_split[3])
         if page == -1:
             if author_user_id != tg_user.id:
                 await show_item_full_mode(
@@ -126,9 +127,9 @@ async def start_url_data_file_handler(message, state, tg_user):
         print(f"url_data = {url_data}")
         url_data_split = url_data.split('_')
 
-        author_user_id = int(url_data_split[0])
-        item_id = url_data_split[1]
-        page = int(url_data_split[2])
+        author_user_id = int(url_data_split[1])
+        item_id = url_data_split[2]
+        page = int(url_data_split[3])
         short_file_id = url_data[-8:]
         str_content_type = url_data[:-8].split('_')[-2]
         if str_content_type == 'video-note':
@@ -183,6 +184,24 @@ async def start_url_data_file_handler(message, state, tg_user):
         await set_data(user_id=tg_user.id, data=data)
     else:
         await bot.delete_message(tg_user.id, message.message_id)
+
+
+@router.message(Command(commands=["search"]))
+async def live_search(message: Message, state: FSMContext):
+    bot_username = (await message.bot.get_me()).username
+    prompt_text = (
+        "Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\.\n"
+        "Просто напишите\:\n'@{} _ваш\_запрос_'\.\n\nЛибо используйте кнопку ↙️"
+    ).format(bot_username)
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🔍 Поиск", switch_inline_query_current_chat="")
+    builder.button(text="✖️ Закрыть", callback_data=MessageBoxCallback(result='cancel').pack())
+    await message.answer(
+        text=prompt_text,
+        parse_mode=ParseMode.MARKDOWN_V2,
+        reply_markup=builder.as_markup())
+    await bot.delete_message(message.from_user.id, message.message_id)
 
 
 @router.message(Command(commands=["storage"]))
