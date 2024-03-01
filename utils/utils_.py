@@ -87,15 +87,13 @@ async def get_environment(user_id):
     return environment
 
 
-async def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback_data):
+def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback_data):
     inline_markup = InlineKeyboardMarkup(
         row_width=2,
         inline_keyboard=
         [
             [
                 InlineKeyboardButton(text=text_accept, callback_data=f"{callback_data}_accept"),
-            ],
-            [
                 InlineKeyboardButton(text=text_cancel, callback_data=f"{callback_data}_cancel")
             ],
         ]

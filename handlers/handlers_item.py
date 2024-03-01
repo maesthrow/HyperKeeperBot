@@ -316,8 +316,8 @@ async def delete_all_items_handler(message: Message):
 
     sent_message = await bot.send_message(message.chat.id, "⌛️")  # , reply_markup=ReplyKeyboardRemove())
 
-    inline_markup = await get_inline_markup_for_accept_cancel(
-        text_accept="Да, удалить", text_cancel="Не удалять",
+    inline_markup = get_inline_markup_for_accept_cancel(
+        text_accept="✔️Да, удалить", text_cancel="✖️Не удалять",
         callback_data=f"delete_all_items_request")
 
     # await asyncio.sleep(0.5)
