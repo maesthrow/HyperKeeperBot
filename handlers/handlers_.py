@@ -187,7 +187,7 @@ async def start_url_data_file_handler(message, state, tg_user):
 
 
 @router.message(Command(commands=["search"]))
-async def live_search(message: Message, state: FSMContext):
+async def inline_search(message: Message, state: FSMContext):
     bot_username = (await message.bot.get_me()).username
     prompt_text = (
         "Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\.\n"
