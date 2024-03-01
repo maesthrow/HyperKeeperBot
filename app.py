@@ -27,7 +27,8 @@ if __name__ == '__main__':
     import handlers.handlers_item_entities
     import handlers.handlers_item_edit_inline_buttons
     import handlers.handlers_item_add_mode
-    import handlers.handlers_inline_query
+    import handlers.handlers_inline_query_share
+    import handlers.handlers_inline_query_search
     import handlers.handlers_item_text_pages
     import handlers.handlers_edit_item_files
     try:

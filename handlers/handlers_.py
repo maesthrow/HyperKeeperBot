@@ -97,7 +97,8 @@ async def start_url_data_item_handler(message, state, tg_user):
                     user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id
                 )
             else:
-                await show_folders(tg_user.id, need_to_resend=True)
+                folder_id = get_folder_id(item_id)
+                await show_folders(user_id=tg_user.id, current_folder_id=folder_id, need_to_resend=True)
                 await show_item(tg_user.id, item_id)
         else:
             await show_item_page_as_text_only(
