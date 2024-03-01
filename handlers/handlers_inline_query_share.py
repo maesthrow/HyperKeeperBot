@@ -211,7 +211,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
         inline_markup = await get_main_inline_markup(repost_switch_inline_query)
         item_body_result = InlineQueryResultArticle(
             id=result_id,
-            title=item_title,
+            title=f'{smile_item} {item_title}',
             description=item.get_text(),
             input_message_content=input_message_content,
             reply_markup=inline_markup,

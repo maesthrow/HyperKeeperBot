@@ -21,6 +21,7 @@ invisible_char = "\u00A0"
 separator = 'из'
 smile_folder = '🗂️'
 smile_item = '📄'
+smile_file = '🗃️'
 
 
 async def get_sub_folders(user_id, folder_id):

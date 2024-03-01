@@ -26,7 +26,7 @@ from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import add_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names, \
-    invisible_char
+    invisible_char, smile_item, smile_folder, smile_file
 from utils.utils_bot import from_url_data_item
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
@@ -192,12 +192,15 @@ async def inline_search(message: Message, state: FSMContext):
     bot_username = (await message.bot.get_me()).username
     prompt_text = (
         "Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\.\n"
-        "Просто напишите\:\n'@{} _ваш\_запрос_'\.\n\nЛибо используйте кнопку ↙️"
+        "Просто напишите\:\n'@{} _ваш\_запрос_'\.\n\nЛибо используйте кнопки ⬇️"
     ).format(bot_username)
 
     builder = InlineKeyboardBuilder()
-    builder.button(text="🔍 Поиск", switch_inline_query_current_chat="")
+    builder.button(text=f"🔍 Поиск записей {smile_item}", switch_inline_query_current_chat="")
+    builder.button(text=f"🔍 Поиск файлов {smile_file}", switch_inline_query_current_chat="*files/")
+    builder.button(text=f"🔍 Поиск папок {smile_folder}", switch_inline_query_current_chat="*folders/")
     builder.button(text="✖️ Закрыть", callback_data=MessageBoxCallback(result='cancel').pack())
+    builder.adjust(1)
     await message.answer(
         text=prompt_text,
         parse_mode=ParseMode.MARKDOWN_V2,
@@ -319,6 +322,15 @@ async def any_message(message: Message, state: FSMContext):
     await state.update_data(text_messages=text_messages)
     if len(text_messages) == 1:
         await text_to_new_item_handler(text_messages, state)
+
+
+@router.message(NotEditFileCaptionFilter(), F.via_bot, F.text.startswith('*folders/'))  # NotAddToFilter(),
+async def search_folder_result_message(message: Message, state: FSMContext):
+    message_data = message.text.replace('*folders/', '', 1)
+    author_user_id, folder_id = message_data.split('|')
+    author_user_id = int(author_user_id)
+    if author_user_id == message.from_user.id:
+        await show_folders(user_id=author_user_id, current_folder_id=folder_id)
 
 
 async def text_to_new_item_handler(messages: List[Message], state: FSMContext):

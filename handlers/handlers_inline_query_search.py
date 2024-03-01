@@ -19,7 +19,11 @@ router = Router()
 dp.include_router(router)
 
 
-@router.inline_query(lambda query: not query.query.startswith('browse_') and not query.query.startswith('folders/'))
+@router.inline_query(
+    lambda query: not query.query.startswith('browse_')
+                  and not query.query.startswith('*folders/')
+                  and not query.query.startswith('*files/')
+)
 async def inline_query_search(query: InlineQuery):
     query_data = query.query
     if not query_data:
@@ -33,7 +37,7 @@ async def inline_query_search(query: InlineQuery):
     )
     if not search_items:
         return
-    #print(f'search_items:\n{search_items}')
+    # print(f'search_items:\n{search_items}')
 
     search_results = []
     for item_id in search_items:
@@ -53,7 +57,7 @@ async def inline_query_search(query: InlineQuery):
         result_id = hashlib.md5(item.id.encode()).hexdigest()
         item_body_result = InlineQueryResultArticle(
             id=result_id,
-            title=item_title,
+            title=f'{smile_item} {item_title}',
             description=item.get_text(),
             input_message_content=InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2),
             reply_markup=inline_markup,
@@ -107,25 +111,28 @@ async def get_search_items(user_id, folder_id, text_search, result_search_items:
 
 
 async def get_search_folders(user_id, folder_id, text_search, result_search_folders: dict):
-    search_folders = await get_folders_in_folder(user_id, folder_id) #, text_search=text_search)
-    for search_folder in search_folders:
-        result_search_folders[search_folder] = search_folders[search_folder]
+    search_folders = await get_folders_in_folder(user_id, folder_id)  # , text_search=text_search)
+    for folder_id in search_folders:
+        if text_search.lower() in search_folders[folder_id]['name'].lower():
+            result_search_folders[folder_id] = search_folders[folder_id]
     folders_in_folder = await get_folders_in_folder(user_id, folder_id)
     for sub_folder_id in folders_in_folder:
         result_search_folders = await get_search_folders(user_id, sub_folder_id, text_search, result_search_folders)
     return result_search_folders
 
 
-@router.inline_query(lambda query: query.query.startswith('folders/'))
+@router.inline_query(lambda query: query.query.startswith('*folders/'))
 async def inline_query_search(query: InlineQuery):
     query_data = query.query
     if not query_data:
         return
-    print(f'query_data folders = {query_data.replace('folders/', '', 1)}')
+
+    text_search = query_data.replace('*folders/', '', 1)
+    print(f'query_data folders = {text_search}')
 
     user_id = query.from_user.id
     search_folders = await get_search_folders(
-        user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=query_data, result_search_folders={}
+        user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=text_search, result_search_folders={}
     )
     if not search_folders:
         return
@@ -136,13 +143,13 @@ async def inline_query_search(query: InlineQuery):
 
         search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
 
-        #inline_markup = await get_result_inline_markup(repost_switch_inline_query, query_data)
+        # inline_markup = await get_result_inline_markup(repost_switch_inline_query, query_data)
         result_id = hashlib.md5(folder_id.encode()).hexdigest()
         item_body_result = InlineQueryResultArticle(
             id=result_id,
             title=f'{smile_folder} {folder_name}',
-            input_message_content=InputTextMessageContent(message_text=folder_name, parse_mode=ParseMode.MARKDOWN_V2),
-            #reply_markup=inline_markup,
+            input_message_content=InputTextMessageContent(message_text=f'*folders/{user_id}|{folder_id}'),
+            # reply_markup=inline_markup,
             thumbnail_url=search_icon_url,
         )
         search_results.append(item_body_result)
