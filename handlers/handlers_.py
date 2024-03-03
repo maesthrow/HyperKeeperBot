@@ -330,7 +330,7 @@ async def search_folder_result_message(message: Message, state: FSMContext):
     author_user_id, folder_id = message_data.split('|')
     author_user_id = int(author_user_id)
     if author_user_id == message.from_user.id:
-        await show_folders(user_id=author_user_id, current_folder_id=folder_id)
+        await show_folders(user_id=author_user_id, current_folder_id=folder_id, need_to_resend=True)
 
 
 async def text_to_new_item_handler(messages: List[Message], state: FSMContext):
