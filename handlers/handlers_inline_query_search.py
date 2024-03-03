@@ -1,7 +1,7 @@
 import hashlib
 
 from aiogram import Router
-from aiogram.enums import ParseMode
+from aiogram.enums import ParseMode, ContentType
 from aiogram.types import InlineQuery, InputTextMessageContent, InlineQueryResultArticle, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -15,6 +15,7 @@ from utils.utils_ import smile_item, smile_folder, smile_file
 from utils.utils_bot import get_bot_name, get_bot_link, to_url_data_item
 from utils.utils_file_finder import FileFinder
 from utils.utils_folders_reader import get_folders_in_folder
+from utils.utils_inline_query import get_inline_query_result
 from utils.utils_items_reader import get_folder_items, get_item
 
 router = Router()
@@ -127,29 +128,40 @@ async def get_search_folders(user_id, folder_id, text_search, result_search_fold
 
 async def get_search_files(user_id, folder_id, text_search, result_search_files: dict):
     items = await get_folder_items(user_id, folder_id)
-    #print(f'items = {items}')
+    # print(f'items = {items}')
     for item_id in items:
-        #print(f'item_id = {item_id}')
+        # print(f'item_id = {item_id}')
         item: Item = await get_item(user_id, item_id)
         for content_type, files in item.media.items():
-            #print(files)
+            # print(files)
             for file_info in files:
-                caption = file_info['caption'] \
-                    if file_info['caption'] else file_info['fields']['caption'] \
-                    if file_info['fields'] and 'caption' in file_info['fields'] and file_info['fields']['caption'] \
-                    else None
-                #print(f'caption = {caption}')
-                file_name = file_info['fields']['file_name'] \
-                    if file_info['fields'] and 'file_name' in file_info['fields'] else None
-                if ((caption and text_search.lower() in caption.lower())
-                        or (file_name and text_search.lower() in file_name.lower())):
+                file_name, caption, is_match = file_is_match(content_type, file_info, text_search)
+                if is_match:
                     file_id = FileFinder.get_file_id(file_info)
-                    result_search_files[file_id] = File(file_id, content_type, file_name, caption)
+                    result_search_files[file_id] = File(file_id, content_type, file_name, caption, item_id)
 
     folders_in_folder = await get_folders_in_folder(user_id, folder_id)
     for sub_folder_id in folders_in_folder:
         result_search_files = await get_search_files(user_id, sub_folder_id, text_search, result_search_files)
     return result_search_files
+
+
+def file_is_match(content_type: ContentType, file_info, text_search):
+    is_match = False
+    text_search = text_search.lower()
+    caption = file_info['caption'].lower() if file_info['caption'] else None
+    file_name = file_info['fields']['file_name'].lower() \
+        if file_info['fields'] and 'file_name' in file_info['fields'] and file_info['fields']['file_name'] else None
+    if ((caption and text_search in caption)
+            or (file_name and text_search in file_name)):
+        is_match = True
+    if content_type == 'audio':
+        performer = file_info['fields']['performer'].lower() if file_info['fields']['performer'] else None
+        title = file_info['fields']['title'].lower() if file_info['fields']['title'] else None
+        if ((performer and text_search in performer)
+                or (title and text_search in title)):
+            is_match = True
+    return file_name, caption, is_match
 
 
 @router.inline_query(lambda query: query.query.startswith('*folders/'))
@@ -207,22 +219,28 @@ async def inline_query_search_files(query: InlineQuery):
     search_results = []
     for file_id in search_files:
         file: File = search_files[file_id]
-        file_name = file.file_name
-        caption = file.caption
 
-        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+        #file_name = file.file_name
+        #caption = file.caption
 
-        inline_markup = await get_result_inline_markup(query_data)
-        result_id = hashlib.md5(file_id.encode()).hexdigest()
-        title = f'{smile_file} {file_name}' if file_name else f'{smile_file}'
-        search_file_result = InlineQueryResultArticle(
-            id=result_id,
-            title=title,
-            description=caption,
-            input_message_content=InputTextMessageContent(message_text=f'*files/{user_id}|{file_id}'),
-            reply_markup=inline_markup,
-            thumbnail_url=search_icon_url,
+        #search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+
+        repost_switch_inline_query = f"browse_{user_id}_{file.item_id}_-1"
+        inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
+        # result_id = hashlib.md5(file_id.encode()).hexdigest()
+        # title = f'{smile_file} {file_name}' if file_name else f'{smile_file}'
+        file_info = await FileFinder.get_file_info_in_item_by_file_id(
+            user_id, file.item_id, file.content_type, file.file_id
         )
+        search_file_result = await get_inline_query_result(file.content_type, file.file_id, file_info, inline_markup)
+        # search_file_result = InlineQueryResultArticle(
+        #     id=result_id,
+        #     title=title,
+        #     description=caption,
+        #     input_message_content=InputTextMessageContent(message_text=f'*files/{user_id}|{file_id}'),
+        #     reply_markup=inline_markup,
+        #     thumbnail_url=search_icon_url,
+        # )
         search_results.append(search_file_result)
 
     await bot.answer_inline_query(

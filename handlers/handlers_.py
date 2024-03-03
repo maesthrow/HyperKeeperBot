@@ -136,7 +136,7 @@ async def start_url_data_file_handler(message, state, tg_user):
         if str_content_type == 'video-note':
             str_content_type = 'video_note'
         file_type: ContentType = ContentType(str_content_type)
-        file_info = await FileFinder.get_file_info_in_item(author_user_id, item_id, file_type, short_file_id)
+        file_info = await FileFinder.get_file_info_in_item_by_short_file_id(author_user_id, item_id, file_type, short_file_id)
         file_id = FileFinder.get_file_id(file_info)
         caption = file_info['caption']
 
