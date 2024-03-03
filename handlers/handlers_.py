@@ -407,9 +407,9 @@ async def save_text_to_new_item_and_set_title(
 async def media_files_handler(message: Message, state: FSMContext):
     # if message.via_bot:
     #     return
-    print(f'message = {message}')
-    if message.content_type == 'photo':
-        print(f"message.photo = {message.photo}")
+    #print(f'message = {message}')
+    if message.content_type == 'audio':
+        print(f"message.audio = {message.audio}")
     _state = await state.get_state()
     func = add_files_to_message_handler if _state == states.Item.AddTo else files_to_message_handler
 

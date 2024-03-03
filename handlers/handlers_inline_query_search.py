@@ -127,23 +127,29 @@ async def get_search_folders(user_id, folder_id, text_search, result_search_fold
 
 async def get_search_files(user_id, folder_id, text_search, result_search_files: dict):
     items = await get_folder_items(user_id, folder_id)
+    #print(f'items = {items}')
     for item_id in items:
+        #print(f'item_id = {item_id}')
         item: Item = await get_item(user_id, item_id)
         for content_type, files in item.media.items():
+            #print(files)
             for file_info in files:
-                caption = file_info['caption']
+                caption = file_info['caption'] \
+                    if file_info['caption'] else file_info['fields']['caption'] \
+                    if file_info['fields'] and 'caption' in file_info['fields'] and file_info['fields']['caption'] \
+                    else None
+                #print(f'caption = {caption}')
                 file_name = file_info['fields']['file_name'] \
                     if file_info['fields'] and 'file_name' in file_info['fields'] else None
-                if (caption and text_search in caption) or (file_name and text_search in file_name):
+                if ((caption and text_search.lower() in caption.lower())
+                        or (file_name and text_search.lower() in file_name.lower())):
                     file_id = FileFinder.get_file_id(file_info)
-                    file: File = File(file_id, content_type, file_name, caption)
-                    result_search_files[file_id] = file
+                    result_search_files[file_id] = File(file_id, content_type, file_name, caption)
 
     folders_in_folder = await get_folders_in_folder(user_id, folder_id)
     for sub_folder_id in folders_in_folder:
         result_search_files = await get_search_files(user_id, sub_folder_id, text_search, result_search_files)
     return result_search_files
-
 
 
 @router.inline_query(lambda query: query.query.startswith('*folders/'))
@@ -189,7 +195,7 @@ async def inline_query_search_files(query: InlineQuery):
     text_search = query_data.replace('*files/', '', 1)
     if not text_search:
         return
-    print(f'query_data folders = {text_search}')
+    print(f'query_data files = {text_search}')
 
     user_id = query.from_user.id
     search_files = await get_search_files(

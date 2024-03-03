@@ -9,7 +9,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InlineQueryResultAudio, \
     InlineQueryResultVideo, InlineQueryResultPhoto, InputTextMessageContent, InputMediaAudio, InlineQueryResultArticle, \
     InlineQueryResultVoice, InlineQueryResultDocument, InputMediaDocument, InlineQueryResultCachedSticker, \
-    InlineQueryResultLocation, Location, Contact, InlineQueryResultContact, CallbackQuery
+    InlineQueryResultLocation, Location, Contact, InlineQueryResultContact, CallbackQuery, InlineQueryResult
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import load_all
@@ -62,7 +62,7 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     file_info = await FileFinder.get_file_info_in_item(author_user_id, item_id, file_type, file_id[16:24])
     caption = file_info['caption']
 
-    result = {}
+    result = InlineQueryResult
     if file_type == 'document':
         file_name = file_info['fields'].get('file_name')
         mime_type = file_info['fields'].get('mime_type')

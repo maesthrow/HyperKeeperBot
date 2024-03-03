@@ -77,7 +77,6 @@ async def get_folder_path_names(user_id, folder_id=ROOT_FOLDER_ID):
     return " > ".join(path_names) + ":"
 
 
-
 async def get_environment(user_id):
     data = await get_data(user_id)
     keyboard: ReplyKeyboardMarkup = data.get('current_keyboard', None)
@@ -111,7 +110,7 @@ async def create_folder_button(folder_id, folder_name):
 
 async def get_folders_for_page(user_id, current_folder_id, current_page):
     user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
-    sorted_folders = sorted(user_folders.items(), key=lambda item: item[1].get("name"))
+    sorted_folders = sorted(user_folders.items(), key=lambda item: sort_folders_func(item)) #item[1].get("name"))
 
     settings = await get_from_user_collection(user_id, 'settings')
     folders_on_page_count = settings.get('folders_on_page_count', 4)
@@ -124,9 +123,22 @@ async def get_folders_for_page(user_id, current_folder_id, current_page):
     return folders
 
 
+def sort_folders_func(item):
+    name = item[1].get("name")
+    result = name
+    if name:
+        parts = name.split()
+        if parts:
+            try:
+                result = int(parts[0])
+            except:
+                pass
+    return result
+
+
 async def get_inline_markup_folders(user_id, current_folder_id, current_page):
     user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
-    sorted_folders = sorted(user_folders.items(), key=lambda item: item[1].get("name"))
+    sorted_folders = sorted(user_folders.items(), key=lambda item: sort_folders_func(item)) # item[1].get("name"))
 
     settings = await get_from_user_collection(user_id, 'settings')
     folders_on_page_count = settings.get('folders_on_page_count', 6)
