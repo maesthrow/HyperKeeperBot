@@ -1,6 +1,6 @@
 import hashlib
 
-from aiogram.types import Message, Location, Contact, Document, Sticker
+from aiogram.types import Message, Location, Contact, Document, Sticker, Audio
 
 from utils.utils_parse_mode_converter import preformat_text
 
@@ -20,7 +20,7 @@ def get_file_info_by_content_type(message: Message, page: int = -1):
     elif content_type == 'video':
         file_info['file_id'] = message.video.file_id
     elif content_type == 'audio':
-        file_info['file_id'] = message.audio.file_id
+        file_info['fields'] = audio_to_dict(message.audio)
     elif content_type == 'document':
         file_info['fields'] = document_to_dict(message.document)
     elif content_type == 'voice':
@@ -53,6 +53,34 @@ def document_to_dict(document: Document):
 
 def dict_to_document(document_dict: dict):
     return Document(**document_dict)
+
+
+def audio_to_dict(audio: Audio):
+    return {
+        'file_id': audio.file_id,
+        'file_unique_id': audio.file_unique_id,
+        'duration': audio.duration,
+        'performer': audio.performer,
+        'title': audio.title,
+        'file_name': audio.file_name,
+        'mime_type': audio.mime_type,
+        'file_size': audio.file_size,
+        'thumbnail': audio.thumbnail
+    }
+
+
+def dict_to_audio(audio_dict: dict):
+    audio: Audio = Audio(
+        file_id=audio_dict['file_id'],
+        file_unique_id=audio_dict['file_unique_id'],
+        duration=audio_dict['duration'],
+        performer=audio_dict['performer'],
+        title=audio_dict['title'],
+        file_name=audio_dict['file_name'],
+        mime_type=audio_dict['mime_type'],
+        file_size=audio_dict['file_size'],
+    )
+    return audio
 
 
 def location_to_dict(location: Location):

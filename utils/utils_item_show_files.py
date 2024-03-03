@@ -2,14 +2,14 @@ import asyncio
 from typing import List
 
 from aiogram.enums import ParseMode
-from aiogram.types import Location, Contact, InputFile, Sticker, Document
+from aiogram.types import Location, Contact, InputFile, Sticker, Document, Audio
 from aiogram.utils.media_group import MediaGroupBuilder
 
 from load_all import bot
 from models.item_model import Item
 from utils.ContentGroupBuilder import ContentGroupBuilder
 from utils.data_manager import get_data, set_data
-from utils.utils_files import dict_to_location, dict_to_contact, dict_to_sticker, dict_to_document
+from utils.utils_files import dict_to_location, dict_to_contact, dict_to_sticker, dict_to_document, dict_to_audio
 from utils.utils_parse_mode_converter import markdown_without_code, escape_markdown, full_escape_markdown
 
 
@@ -175,9 +175,14 @@ async def fill_builders(
                     media_group_video_note_builders=media_group_video_note_builders
                 )
             elif content_type == 'audio':
+                try:
+                    audio: Audio = dict_to_audio(file_info['fields'])
+                    file_id = audio.file_id
+                except:
+                    file_id = file_info['file_id']
                 await process_media_audio_group(
                     content_type=content_type,
-                    file_id=file_info['file_id'],
+                    file_id=file_id,
                     media_group_id=file_info['media_group_id'],
                     media_group_ids=media_group_ids,
                     caption=file_info['caption'],
