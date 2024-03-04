@@ -132,7 +132,11 @@ async def get_search_results_items(user_id, query_data):
     for item_id in search_items:
         item: Item = await get_item(user_id, item_id)
 
-        search_fragment, page = get_search_fragment_and_page(item, text_search)
+        searchs = get_search_fragment_and_page(item, text_search)
+        if searchs:
+            search_fragment, page = searchs
+        else:
+            search_fragment, page = None, 0
 
         if item:
             item_body = item.get_body_markdown(page)
@@ -163,19 +167,22 @@ async def get_search_results_items(user_id, query_data):
 def get_search_fragment_and_page(item: Item, text_search: str):
     for page in range(item.pages_count()):
         page_text = item.get_text(page)
-        index = page_text.find(text_search)
+        index = page_text.lower().find(text_search.lower())
         if index != -1:
             if index == 0:
                 return page_text, page
             else:
-                while index > 0 and page_text[index] not in [' ', '\n']:
+                while (index > 0
+                       and (not page_text[index:].startswith(' ')
+                            and not page_text[index:].startswith('\n'))
+                ):
                     index -= 1
-                if index > 0 and page_text[index] == ' ':
+                if index > 0 and page_text[index:].startswith(' '):
                     fragment = f'...{page_text[index:].replace(' ', '', 1)}'
-                elif index > 0 and page_text[index] == '\n':
+                elif index > 0 and page_text[index:].startswith('\n'):
                     fragment = f'...{page_text[index:].replace('\n', '', 1)}'
                 else:
-                    fragment = page_text[index]
+                    fragment = page_text[index:]
                 return fragment, page
     return None
 
