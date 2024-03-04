@@ -165,7 +165,7 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
             await bot.delete_message(message.chat.id, message.message_id)
             await asyncio.sleep(0.1)
 
-    await state.clear()
+    await state.set_state(state=None)
     await show_folders(message.chat.id)
 
 
