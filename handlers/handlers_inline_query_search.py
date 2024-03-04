@@ -79,6 +79,8 @@ async def inline_query_search_files(query: InlineQuery):
     query_data = query.query
     user_id = query.from_user.id
     search_results_files = await get_search_results_files(user_id, query_data)
+    # for result in search_results_files:
+    #     print(f'result_id = {result.id}')
     await bot.answer_inline_query(
         query.id,
         results=search_results_files,
@@ -101,7 +103,7 @@ async def get_search_results_folders(user_id, query_data):
     for folder_id in search_folders:
         folder_name = search_folders[folder_id]['name']
 
-        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+        #search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
 
         inline_markup = await get_result_inline_markup(query_data)
         result_id = hashlib.md5(folder_id.encode()).hexdigest()
@@ -110,7 +112,7 @@ async def get_search_results_folders(user_id, query_data):
             title=f'{smile_folder} {folder_name}',
             input_message_content=InputTextMessageContent(message_text=f'*folders/{user_id}|{folder_id}'),
             reply_markup=inline_markup,
-            thumbnail_url=search_icon_url,
+            #thumbnail_url=search_icon_url,
         )
         search_results.append(search_folder_result)
     return search_results
@@ -135,7 +137,7 @@ async def get_search_results_items(user_id, query_data):
 
         item_title = item.get_inline_title()
 
-        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+        #search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
 
         repost_switch_inline_query = f"browse_{user_id}_{item.id}_-1"
         inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
@@ -146,7 +148,7 @@ async def get_search_results_items(user_id, query_data):
             description=item.get_text(),
             input_message_content=InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2),
             reply_markup=inline_markup,
-            thumbnail_url=search_icon_url,
+            #thumbnail_url=search_icon_url,
         )
         search_results.append(search_item_result)
     return search_results
