@@ -24,8 +24,8 @@ dp.include_router(router)
 
 @router.inline_query(
     lambda query: not query.query.startswith('browse_')
-                  and not query.query.startswith('*folders/')
-                  and not query.query.startswith('*files/')
+                  and not query.query.startswith('folders/')
+                  and not query.query.startswith('files/')
 )
 async def inline_query_search(query: InlineQuery):
     query_data = query.query
@@ -139,6 +139,7 @@ async def get_search_files(user_id, folder_id, text_search, result_search_files:
                 if is_match:
                     file_id = FileFinder.get_file_id(file_info)
                     result_search_files[file_id] = File(file_id, content_type, file_name, caption, item_id)
+                    print(f'caption = {caption}')
 
     folders_in_folder = await get_folders_in_folder(user_id, folder_id)
     for sub_folder_id in folders_in_folder:
@@ -156,18 +157,21 @@ def file_is_match(content_type: ContentType, file_info, text_search):
             or (file_name and text_search in file_name)):
         is_match = True
     if content_type == 'audio':
-        performer = file_info['fields']['performer'].lower() if file_info['fields']['performer'] else None
-        title = file_info['fields']['title'].lower() if file_info['fields']['title'] else None
-        if ((performer and text_search in performer)
-                or (title and text_search in title)):
-            is_match = True
+        if file_info['fields']:
+            performer = file_info['fields']['performer'].lower() if ('performer' in file_info['fields']
+                                                                     and file_info['fields']['performer']) else None
+            title = file_info['fields']['title'].lower() if ('title' in file_info['fields']
+                                                             and file_info['fields']['title']) else None
+            if ((performer and text_search in performer)
+                    or (title and text_search in title)):
+                is_match = True
     return file_name, caption, is_match
 
 
-@router.inline_query(lambda query: query.query.startswith('*folders/'))
+@router.inline_query(lambda query: query.query.startswith('folders/'))
 async def inline_query_search_folders(query: InlineQuery):
     query_data = query.query
-    text_search = query_data.replace('*folders/', '', 1)
+    text_search = query_data.replace('folders/', '', 1)
     print(f'query_data folders = {text_search}')
 
     user_id = query.from_user.id
@@ -201,10 +205,10 @@ async def inline_query_search_folders(query: InlineQuery):
     )
 
 
-@router.inline_query(lambda query: query.query.startswith('*files/'))
+@router.inline_query(lambda query: query.query.startswith('files/'))
 async def inline_query_search_files(query: InlineQuery):
     query_data = query.query
-    text_search = query_data.replace('*files/', '', 1)
+    text_search = query_data.replace('files/', '', 1)
     if not text_search:
         return
     print(f'query_data files = {text_search}')
@@ -219,28 +223,12 @@ async def inline_query_search_files(query: InlineQuery):
     search_results = []
     for file_id in search_files:
         file: File = search_files[file_id]
-
-        #file_name = file.file_name
-        #caption = file.caption
-
-        #search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
-
         repost_switch_inline_query = f"browse_{user_id}_{file.item_id}_-1"
         inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
-        # result_id = hashlib.md5(file_id.encode()).hexdigest()
-        # title = f'{smile_file} {file_name}' if file_name else f'{smile_file}'
         file_info = await FileFinder.get_file_info_in_item_by_file_id(
             user_id, file.item_id, file.content_type, file.file_id
         )
         search_file_result = await get_inline_query_result(file.content_type, file.file_id, file_info, inline_markup)
-        # search_file_result = InlineQueryResultArticle(
-        #     id=result_id,
-        #     title=title,
-        #     description=caption,
-        #     input_message_content=InputTextMessageContent(message_text=f'*files/{user_id}|{file_id}'),
-        #     reply_markup=inline_markup,
-        #     thumbnail_url=search_icon_url,
-        # )
         search_results.append(search_file_result)
 
     await bot.answer_inline_query(

@@ -31,6 +31,9 @@ async def get_inline_query_result(file_type: ContentType, file_id, file_info, in
             photo_url=file_id,
             thumb_url=file_id,
             thumbnail_url=file_id,
+            title=caption,
+            caption=caption,
+            description=caption,
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup_media
         )

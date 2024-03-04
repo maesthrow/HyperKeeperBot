@@ -44,11 +44,11 @@ async def get_file_info_by_short_file_id(item: Item, file_type: ContentType, sho
                  (file_id := FileFinder.get_file_id(file_info)) and file_id[16:24] == short_file_id), None)
 
 
-async def get_file_info_by_file_id(item: Item, file_type: ContentType, file_id):
+async def get_file_info_by_file_id(item: Item, file_type: ContentType, search_file_id):
     if not item.media:
         return None
     return next((file_info for file_info in item.media[file_type] if
-                 (file_id := FileFinder.get_file_id(file_info)) and file_id == file_id), None)
+                 (file_id := FileFinder.get_file_id(file_info)) and file_id == search_file_id), None)
 
 
 
