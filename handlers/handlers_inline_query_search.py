@@ -103,7 +103,9 @@ async def get_search_results_folders(user_id, query_data):
     for folder_id in search_folders:
         folder_name = search_folders[folder_id]['name']
 
-        #search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+        # search_icon_url = f"https://cdn-icons-png.flaticon.com/512/3767/3767084.png"
+        # search_icon_url = f"https://cdn-icons-png.flaticon.com/512/3979/3979425.png"
 
         inline_markup = await get_result_inline_markup(query_data)
         result_id = hashlib.md5(folder_id.encode()).hexdigest()
@@ -112,7 +114,7 @@ async def get_search_results_folders(user_id, query_data):
             title=f'{smile_folder} {folder_name}',
             input_message_content=InputTextMessageContent(message_text=f'*folders/{user_id}|{folder_id}'),
             reply_markup=inline_markup,
-            #thumbnail_url=search_icon_url,
+            thumbnail_url=search_icon_url,
         )
         search_results.append(search_folder_result)
     return search_results
@@ -130,14 +132,18 @@ async def get_search_results_items(user_id, query_data):
     for item_id in search_items:
         item: Item = await get_item(user_id, item_id)
 
+        search_fragment, page = get_search_fragment_and_page(item, text_search)
+
         if item:
-            item_body = item.get_body_markdown()
+            item_body = item.get_body_markdown(page)
         else:
             continue
 
         item_title = item.get_inline_title()
 
-        #search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+        # search_icon_url = f"https://cdn-icons-png.flaticon.com/256/9561/9561874.png"
+        # search_icon_url = f"https://cdn-icons-png.flaticon.com/512/11677/11677437.png"
 
         repost_switch_inline_query = f"browse_{user_id}_{item.id}_-1"
         inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
@@ -145,13 +151,33 @@ async def get_search_results_items(user_id, query_data):
         search_item_result = InlineQueryResultArticle(
             id=result_id,
             title=f'{smile_item} {item_title}',
-            description=item.get_text(),
+            description=search_fragment,  # item.get_text(),
             input_message_content=InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2),
             reply_markup=inline_markup,
-            #thumbnail_url=search_icon_url,
+            thumbnail_url=search_icon_url,
         )
         search_results.append(search_item_result)
     return search_results
+
+
+def get_search_fragment_and_page(item: Item, text_search: str):
+    for page in range(item.pages_count()):
+        page_text = item.get_text(page)
+        index = page_text.find(text_search)
+        if index != -1:
+            if index == 0:
+                return page_text, page
+            else:
+                while index > 0 and page_text[index] not in [' ', '\n']:
+                    index -= 1
+                if index > 0 and page_text[index] == ' ':
+                    fragment = f'...{page_text[index:].replace(' ', '', 1)}'
+                elif index > 0 and page_text[index] == '\n':
+                    fragment = f'...{page_text[index:].replace('\n', '', 1)}'
+                else:
+                    fragment = page_text[index]
+                return fragment, page
+    return None
 
 
 async def get_search_results_files(user_id, query_data):

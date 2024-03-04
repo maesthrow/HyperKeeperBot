@@ -1,4 +1,5 @@
 import math
+import re
 
 from aiogram.fsm.context import FSMContext
 from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
@@ -13,9 +14,9 @@ from utils.utils_data import get_folders_collection, get_from_user_collection
 from utils.utils_folders_reader import get_folder_data, get_folders_in_folder
 from utils.utils_items_reader import get_folder_items, get_simple_item
 
-#folder_callback = CallbackFolder()
-#folders_on_page_count = 4
-#items_on_page_count = 4
+# folder_callback = CallbackFolder()
+# folders_on_page_count = 4
+# items_on_page_count = 4
 
 invisible_char = "\u00A0"
 separator = 'из'
@@ -104,13 +105,13 @@ def get_inline_markup_for_accept_cancel(text_accept, text_cancel, callback_data)
 async def create_folder_button(folder_id, folder_name):
     return InlineKeyboardButton(
         text=f"{smile_folder} {folder_name}",
-        callback_data=FolderCallback(folder_id=folder_id).pack()  #folder_callback.new(folder_id=folder_id)
+        callback_data=FolderCallback(folder_id=folder_id).pack()  # folder_callback.new(folder_id=folder_id)
     )
 
 
 async def get_folders_for_page(user_id, current_folder_id, current_page):
     user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
-    sorted_folders = sorted(user_folders.items(), key=lambda item: sort_folders_func(item)) #item[1].get("name"))
+    sorted_folders = sorted(user_folders.items(), key=lambda item: sort_folders_func(item))  # item[1].get("name"))
 
     settings = await get_from_user_collection(user_id, 'settings')
     folders_on_page_count = settings.get('folders_on_page_count', 4)
@@ -125,20 +126,16 @@ async def get_folders_for_page(user_id, current_folder_id, current_page):
 
 def sort_folders_func(item):
     name = item[1].get("name")
-    result = name
-    if name:
-        parts = name.split()
-        if parts:
-            try:
-                result = int(parts[0])
-            except:
-                pass
-    return result
+    match = re.match(r'\d+', name)
+    if match:
+        return False, int(match.group())
+    else:
+        return True, name
 
 
 async def get_inline_markup_folders(user_id, current_folder_id, current_page):
     user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
-    sorted_folders = sorted(user_folders.items(), key=lambda item: sort_folders_func(item)) # item[1].get("name"))
+    sorted_folders = sorted(user_folders.items(), key=sort_folders_func)
 
     settings = await get_from_user_collection(user_id, 'settings')
     folders_on_page_count = settings.get('folders_on_page_count', 6)
@@ -171,8 +168,8 @@ async def get_inline_markup_folders(user_id, current_folder_id, current_page):
     last_page = math.ceil(max_folder_num / folders_on_page_count)
     if last_page > 1 and current_page > 0:
         folders_inline_markup = await get_inline_markup_for_pages('folders', folders_inline_markup, current_page,
-                                                          last_page, folders_on_page_count,
-                                                          max_folder_num, 'go_to_page_folders_')
+                                                                  last_page, folders_on_page_count,
+                                                                  max_folder_num, 'go_to_page_folders_')
 
     return folders_inline_markup
 
@@ -217,7 +214,7 @@ async def get_inline_markup_items_in_folder(
             buttons.append([InlineKeyboardButton(
                 text=f"{smile_item} {item_button_text}",
                 callback_data=ItemShowCallback(author_user_id=user_id, item_id=item_id, with_folders=False).pack())])
-                                                 #f"item_{item_id}")])
+            # f"item_{item_id}")])
 
     # Создаем разметку и отправляем сообщение с кнопками для каждой item
     items_inline_markup = InlineKeyboardMarkup(row_width=3, inline_keyboard=buttons)

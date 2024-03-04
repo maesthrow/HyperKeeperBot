@@ -106,8 +106,9 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
 
         input_message_content = InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2)
 
-        photo_url = (f"https://avatars.mds.yandex.net/i?id=e915ed8674cf1b1719106eef318b439f5f63d37f-"
-                     f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
+        # icon_url = (f"https://avatars.mds.yandex.net/i?id=e915ed8674cf1b1719106eef318b439f5f63d37f-"
+        #              f"9236004-images-thumbs&ref=rim&n=33&w=250&h=250")
+        icon_url = "https://p2.trrsf.com/image/fget/cf/1200/1200/middle/images.terra.com/2023/01/14/1510187297-i612355.jpeg"
 
         repost_switch_inline_query = f"browse_{author_user_id}_{item.id}_{text_page}"
         inline_markup = await get_main_inline_markup(repost_switch_inline_query)
@@ -117,7 +118,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
             description=item.get_text(),
             input_message_content=input_message_content,
             reply_markup=inline_markup,
-            thumbnail_url=photo_url,
+            thumbnail_url=icon_url,
         )
         media_results.append(item_body_result)
 
@@ -315,7 +316,6 @@ async def create_photo_results(item: Item, media_results: list, inline_markup, t
                 file_id=file_id
             )
 
-        item_inline_title = item.get_inline_title()
         media_results.append(
             InlineQueryResultPhoto(
                 id=hashlib.md5(file_id.encode()).hexdigest(),

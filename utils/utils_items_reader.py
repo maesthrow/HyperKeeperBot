@@ -19,7 +19,7 @@ async def get_folder_items(user_id, folder_id, text_search=None):
         # Фильтрация элементов по текстовому поиску в title или text
         filtered_items = {key: value for key, value in items.items()
                           if (text_search.lower() in str(value.get("title", "")).lower()) or
-                          (text_search.lower() in str(value.get("text", "")).lower())}
+                          (text_search.lower() in " ".join(value.get("text", [])).lower())}
     else:
         filtered_items = items
 
