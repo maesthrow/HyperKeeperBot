@@ -25,6 +25,7 @@ dp.include_router(router)
 @router.inline_query(
     lambda query: not query.query.startswith('browse_')
                   and not query.query.startswith('folders/')
+                  and not query.query.startswith('items/')
                   and not query.query.startswith('files/')
 )
 async def inline_query_search(query: InlineQuery):
@@ -35,38 +36,14 @@ async def inline_query_search(query: InlineQuery):
 
     user_id = query.from_user.id
 
-    search_items = await get_search_items(
-        user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=query_data, result_search_items={}
-    )
-    if not search_items:
-        return
-    # print(f'search_items:\n{search_items}')
+    search_results_folders = await get_search_results_folders(user_id, query_data)
+    search_results_items = await get_search_results_items(user_id, query_data)
+    search_results_files = await get_search_results_files(user_id, query_data)
 
     search_results = []
-    for item_id in search_items:
-        item: Item = await get_item(user_id, item_id)
-
-        if item:
-            item_body = item.get_body_markdown()
-        else:
-            continue
-
-        item_title = item.get_inline_title()
-
-        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
-
-        repost_switch_inline_query = f"browse_{user_id}_{item.id}_-1"
-        inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
-        result_id = hashlib.md5(item.id.encode()).hexdigest()
-        search_item_result = InlineQueryResultArticle(
-            id=result_id,
-            title=f'{smile_item} {item_title}',
-            description=item.get_text(),
-            input_message_content=InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2),
-            reply_markup=inline_markup,
-            thumbnail_url=search_icon_url,
-        )
-        search_results.append(search_item_result)
+    search_results.extend(search_results_folders)
+    search_results.extend(search_results_items)
+    search_results.extend(search_results_files)
 
     await bot.answer_inline_query(
         query.id,
@@ -171,15 +148,49 @@ def file_is_match(content_type: ContentType, file_info, text_search):
 @router.inline_query(lambda query: query.query.startswith('folders/'))
 async def inline_query_search_folders(query: InlineQuery):
     query_data = query.query
+    user_id = query.from_user.id
+    search_results_folders = await get_search_results_folders(user_id, query_data)
+    await bot.answer_inline_query(
+        query.id,
+        results=search_results_folders,
+        cache_time=0,
+    )
+
+
+@router.inline_query(lambda query: query.query.startswith('items/'))
+async def inline_query_search_items(query: InlineQuery):
+    query_data = query.query
+    user_id = query.from_user.id
+    search_results_items = await get_search_results_items(user_id, query_data)
+    await bot.answer_inline_query(
+        query.id,
+        results=search_results_items,
+        cache_time=0,
+    )
+
+
+@router.inline_query(lambda query: query.query.startswith('files/'))
+async def inline_query_search_files(query: InlineQuery):
+    query_data = query.query
+    user_id = query.from_user.id
+    search_results_files = await get_search_results_files(user_id, query_data)
+    await bot.answer_inline_query(
+        query.id,
+        results=search_results_files,
+        cache_time=0,
+    )
+
+
+async def get_search_results_folders(user_id, query_data):
+    search_results = []
     text_search = query_data.replace('folders/', '', 1)
     print(f'query_data folders = {text_search}')
 
-    user_id = query.from_user.id
     search_folders = await get_search_folders(
         user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=text_search, result_search_folders={}
     )
     if not search_folders:
-        return
+        return search_results
 
     search_results = []
     for folder_id in search_folders:
@@ -197,28 +208,57 @@ async def inline_query_search_folders(query: InlineQuery):
             thumbnail_url=search_icon_url,
         )
         search_results.append(search_folder_result)
+    return search_results
 
-    await bot.answer_inline_query(
-        query.id,
-        results=search_results,
-        cache_time=0,
+
+async def get_search_results_items(user_id, query_data):
+    search_results = []
+    text_search = query_data.replace('items/', '', 1)
+    search_items = await get_search_items(
+        user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=text_search, result_search_items={}
     )
+    if not search_items:
+        return search_results
+
+    for item_id in search_items:
+        item: Item = await get_item(user_id, item_id)
+
+        if item:
+            item_body = item.get_body_markdown()
+        else:
+            continue
+
+        item_title = item.get_inline_title()
+
+        search_icon_url = f"https://avatars.dzeninfra.ru/get-zen-logos/1526540/pub_621e86861d7c8367c948c8ab_622247ebaf5140641266fc11/xh"
+
+        repost_switch_inline_query = f"browse_{user_id}_{item.id}_-1"
+        inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
+        result_id = hashlib.md5(item.id.encode()).hexdigest()
+        search_item_result = InlineQueryResultArticle(
+            id=result_id,
+            title=f'{smile_item} {item_title}',
+            description=item.get_text(),
+            input_message_content=InputTextMessageContent(message_text=item_body, parse_mode=ParseMode.MARKDOWN_V2),
+            reply_markup=inline_markup,
+            thumbnail_url=search_icon_url,
+        )
+        search_results.append(search_item_result)
+    return search_results
 
 
-@router.inline_query(lambda query: query.query.startswith('files/'))
-async def inline_query_search_files(query: InlineQuery):
-    query_data = query.query
+async def get_search_results_files(user_id, query_data):
+    search_results = []
     text_search = query_data.replace('files/', '', 1)
     if not text_search:
-        return
+        return search_results
     print(f'query_data files = {text_search}')
 
-    user_id = query.from_user.id
     search_files = await get_search_files(
         user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=text_search, result_search_files={}
     )
     if not search_files:
-        return
+        return search_results
 
     search_results = []
     for file_id in search_files:
@@ -230,9 +270,4 @@ async def inline_query_search_files(query: InlineQuery):
         )
         search_file_result = await get_inline_query_result(file.content_type, file.file_id, file_info, inline_markup)
         search_results.append(search_file_result)
-
-    await bot.answer_inline_query(
-        query.id,
-        results=search_results,
-        cache_time=0,
-    )
+    return search_results

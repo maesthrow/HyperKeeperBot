@@ -196,9 +196,10 @@ async def inline_search(message: Message, state: FSMContext):
     ).format(bot_username)
 
     builder = InlineKeyboardBuilder()
-    builder.button(text=f"🔍 Поиск записей {smile_item}", switch_inline_query_current_chat="")
-    builder.button(text=f"🔍 Поиск файлов {smile_file}", switch_inline_query_current_chat="files/")
+    builder.button(text=f"🔍 Поиск глобальный 🌐", switch_inline_query_current_chat="")
     builder.button(text=f"🔍 Поиск папок {smile_folder}", switch_inline_query_current_chat="folders/")
+    builder.button(text=f"🔍 Поиск записей {smile_item}", switch_inline_query_current_chat="items/")
+    builder.button(text=f"🔍 Поиск файлов {smile_file}", switch_inline_query_current_chat="files/")
     builder.button(text="✖️ Закрыть", callback_data=MessageBoxCallback(result='cancel').pack())
     builder.adjust(1)
     await message.answer(
