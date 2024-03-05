@@ -39,6 +39,8 @@ def escape_markdown(text) -> str:
 
 
 def full_escape_markdown(text) -> str:
+    if not text:
+        return text
     text = text.replace("```", "")
     escape_chars = '\\*_[]()<>#+-=|{}.!'
     escaped_text = ''

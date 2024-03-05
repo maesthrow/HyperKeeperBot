@@ -85,7 +85,7 @@ async def start_url_data_item_handler(message, state, tg_user):
     if not author_user_id:
         data['author_user_id'] = author_user_id
         await set_data(user_id=tg_user.id, data=data)
-        #await start_handler(message, state, tg_user)
+        # await start_handler(message, state, tg_user)
         url_data = from_url_data_item(message.text).split()[1]
         url_data_split = url_data.split('_')
         author_user_id = int(url_data_split[1])
@@ -122,7 +122,7 @@ async def start_url_data_file_handler(message, state, tg_user):
     if not author_user_id:
         data['author_user_id'] = author_user_id
         await set_data(user_id=tg_user.id, data=data)
-        #await start_handler(message, state, tg_user)
+        # await start_handler(message, state, tg_user)
 
         url_data = from_url_data_item(message.text).split()[1]
         print(f"url_data = {url_data}")
@@ -136,7 +136,8 @@ async def start_url_data_file_handler(message, state, tg_user):
         if str_content_type == 'video-note':
             str_content_type = 'video_note'
         file_type: ContentType = ContentType(str_content_type)
-        file_info = await FileFinder.get_file_info_in_item_by_short_file_id(author_user_id, item_id, file_type, short_file_id)
+        file_info = await FileFinder.get_file_info_in_item_by_short_file_id(author_user_id, item_id, file_type,
+                                                                            short_file_id)
         file_id = FileFinder.get_file_id(file_info)
         caption = file_info['caption']
 
@@ -178,7 +179,7 @@ async def start_url_data_file_handler(message, state, tg_user):
                 vcard=contact.vcard,
                 reply_markup=inline_markup
             )
-            #await bot.send_contact(chat_id=tg_user.id, latitude=None, longitude=None, reply_markup=inline_markup)
+            # await bot.send_contact(chat_id=tg_user.id, latitude=None, longitude=None, reply_markup=inline_markup)
 
         await asyncio.sleep(0.5)
         data['author_user_id'] = None
@@ -190,13 +191,19 @@ async def start_url_data_file_handler(message, state, tg_user):
 @router.message(Command(commands=["search"]))
 async def inline_search(message: Message, state: FSMContext):
     bot_username = (await message.bot.get_me()).username
-    prompt_text = (
-        "Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\.\n"
-        "Просто напишите\:\n'@{} _ваш\_запрос_'\.\n\nЛибо используйте кнопки ⬇️"
-    ).format(bot_username)
+    prompt_text = "\n*Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\:*" \
+                  "\n\nГлобальный поиск 🌐" \
+                  f"\n'@{bot_username} _ваш\_запрос_'" \
+                  f"\n\nПоиск папок {smile_folder}" \
+                  f"\n'@{bot_username} folders/_ваш\_запрос_'" \
+                  f"\n\nПоиск записей {smile_item}" \
+                  f"\n'@{bot_username} items/_ваш\_запрос_'" \
+                  f"\n\nПоиск файлов {smile_file}" \
+                  f"\n'@{bot_username} files/_ваш\_запрос_'" \
+                  "\n\nЛибо используйте кнопки ⬇️"
 
     builder = InlineKeyboardBuilder()
-    builder.button(text=f"🔍 Поиск глобальный 🌐", switch_inline_query_current_chat="")
+    builder.button(text=f"🔍 Глобальный поиск 🌐", switch_inline_query_current_chat="")
     builder.button(text=f"🔍 Поиск папок {smile_folder}", switch_inline_query_current_chat="folders/")
     builder.button(text=f"🔍 Поиск записей {smile_item}", switch_inline_query_current_chat="items/")
     builder.button(text=f"🔍 Поиск файлов {smile_file}", switch_inline_query_current_chat="files/")
@@ -313,7 +320,7 @@ async def any_message(message: Message, state: FSMContext):
     if not await is_message_allowed_new_item(message):
         return
 
-    #_state = await state.get_state()
+    # _state = await state.get_state()
     # is_new_item = states.Item.NewStepAdd
 
     data = await state.get_data()
@@ -408,7 +415,7 @@ async def save_text_to_new_item_and_set_title(
 async def media_files_handler(message: Message, state: FSMContext):
     # if message.via_bot:
     #     return
-    #print(f'message = {message}')
+    # print(f'message = {message}')
     if message.content_type == 'audio':
         print(f"message.audio = {message.audio}")
     _state = await state.get_state()
@@ -496,4 +503,3 @@ async def is_message_allowed_new_item(message: aiogram.types.Message):
 @router.callback_query(MessageBoxCallback.filter())
 async def message_box_show_handler(call: CallbackQuery):
     await bot.delete_message(call.from_user.id, call.message.message_id)
-
