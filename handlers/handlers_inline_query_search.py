@@ -9,10 +9,10 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from handlers.handlers_inline_query_share import update_markup_for_content_mode
 from load_all import dp, bot
 from models.file_model import File
-from models.item_model import Item
+from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_ import smile_item, smile_folder
-from utils.utils_bot import get_bot_name, get_bot_link, to_url_data_item
+from utils.utils_bot import get_bot_name, get_bot_link, to_url_data
 from utils.utils_file_finder import FileFinder
 from utils.utils_folders_reader import get_folders_in_folder
 from utils.utils_inline_query import get_inline_query_result
@@ -110,12 +110,17 @@ async def get_search_results_folders(user_id, query_data):
         # search_icon_url = f"https://cdn-icons-png.flaticon.com/512/3767/3767084.png"
         # search_icon_url = f"https://cdn-icons-png.flaticon.com/512/3979/3979425.png"
 
-        inline_markup = await get_result_inline_markup(query_data)
+        #message_content = InputTextMessageContent(message_text=f'folders/{user_id}|{folder_id}')
+        message_content = InputTextMessageContent(message_text=f'{smile_folder} {folder_name}')
+
+        folder_url_data = f'{user_id}_{folder_id}'
+        inline_markup = await get_result_inline_markup(query_data, folder_url_data=folder_url_data)
+
         result_id = hashlib.md5(folder_id.encode()).hexdigest()
         search_folder_result = InlineQueryResultArticle(
             id=result_id,
             title=f'{smile_folder} {folder_name}',
-            input_message_content=InputTextMessageContent(message_text=f'*folders/{user_id}|{folder_id}'),
+            input_message_content=message_content,
             reply_markup=inline_markup,
             thumbnail_url=search_icon_url,
         )
@@ -152,7 +157,7 @@ async def get_search_results_items(user_id, query_data):
         # search_icon_url = f"https://cdn-icons-png.flaticon.com/512/11677/11677437.png"
 
         repost_switch_inline_query = f"browse_{user_id}_{item.id}_-1"
-        inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
+        inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query=repost_switch_inline_query)
         result_id = hashlib.md5(item.id.encode()).hexdigest()
         search_item_result = InlineQueryResultArticle(
             id=result_id,
@@ -187,7 +192,11 @@ async def get_search_results_files(user_id, query_data):
         file: File = search_files[file_id]
         repost_switch_inline_query = f"browse_{user_id}_{file.item_id}_-1"
         inline_markup = await get_result_inline_markup(
-            query_data, repost_switch_inline_query, file.content_type, file.file_id)
+            query_data=query_data,
+            repost_switch_inline_query=repost_switch_inline_query,
+            content_type=file.content_type,
+            file_id=file.file_id
+        )
         file_info = await FileFinder.get_file_info_in_item_by_file_id(
             user_id, file.item_id, file.content_type, file.file_id
         )
@@ -262,20 +271,20 @@ def file_is_match(content_type: ContentType, file_info, text_search):
 
 async def get_result_inline_markup(
         query_data,
+        folder_url_data=None,
         repost_switch_inline_query=None,
         content_type: ContentType = None,
         file_id: str = None
 ):
+    bot_link = await get_bot_link()
+
     builder = InlineKeyboardBuilder()
     search_results_button = InlineKeyboardButton(
-                text="🧐 Все результаты поиска 🔍",
+                text="🧐 Все результаты 🔍", # 🔍 🔎
                 switch_inline_query_current_chat=query_data,
             )
 
     if repost_switch_inline_query:
-        bot_name = await get_bot_name()
-        bot_link = await get_bot_link()
-
         builder.add(
             InlineKeyboardButton(
                 text="Поделиться",
@@ -285,18 +294,25 @@ async def get_result_inline_markup(
         builder.add(
             InlineKeyboardButton(
                 text=f"🚀️ Показать запись {smile_item}",
-                url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
+                url=f"{bot_link}?start={to_url_data(repost_switch_inline_query)}",
             )
         )
-        builder.adjust(2)
         inline_markup = builder.as_markup()
         if content_type and file_id:
             await update_markup_for_search_file(inline_markup, content_type, file_id)
         inline_markup.inline_keyboard.append([search_results_button])
     else:
+        if folder_url_data:
+            builder.add(
+                InlineKeyboardButton(
+                    text=f'Открыть папку {smile_folder}',
+                    url=f"{bot_link}?start={to_url_data(folder_url_data)}",
+                )
+            )
         builder.add(search_results_button)
         inline_markup = builder.as_markup()
 
+    builder.adjust(2)
     return inline_markup
 
 
@@ -304,3 +320,13 @@ async def update_markup_for_search_file(inline_markup: InlineKeyboardMarkup, con
     query_base = "_".join(inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:4])
     switch_inline_query = f"{query_base}_{content_type}_{file_id}"
     inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
+
+    bot_link = await get_bot_link()
+    file_data = to_url_data(f'{query_base}_{content_type}_{file_id[16:24]}')
+    #print(f'switch_inline_query {switch_inline_query}\nfile_data {file_data}')
+    url = f"{bot_link}?start={file_data}"
+    inline_button: InlineKeyboardButton = inline_markup.inline_keyboard[-1][1]
+    inline_button.url = url
+    bot_name = await get_bot_name()
+    inline_button.text = f'{bot_name}'
+    #print(f'inline_button.url = {url}')

@@ -14,9 +14,9 @@ async def get_bot_name():
     return name
 
 
-def to_url_data_item(data: str) -> str:
+def to_url_data(data: str) -> str:
     return data.replace("/", "__")
 
 
-def from_url_data_item(data: str) -> str:
+def from_url_data(data: str) -> str:
     return data.replace("__", "/")

@@ -27,7 +27,7 @@ from mongo_db.mongo_collection_users import add_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names, \
     invisible_char, smile_item, smile_folder, smile_file
-from utils.utils_bot import from_url_data_item
+from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
     get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons
@@ -50,11 +50,13 @@ dp.include_router(router)
 async def start(message: Message, state: FSMContext):
     tg_user = message.from_user
     print(f'start: tg_user {tg_user}')
-    url_data = from_url_data_item(message.text).split()
+    url_data = from_url_data(message.text).split()
     if len(url_data) > 1:
-        if len(url_data[1].split('_')) <= 4:
-            await start_url_data_item_handler(message, state, tg_user)
-        else:
+        if len(url_data[1].split('_')) == 2:
+            await start_url_data_folder_handler(message, tg_user)
+        elif 2 < len(url_data[1].split('_')) <= 4:
+            await start_url_data_item_handler(message, tg_user)
+        elif len(url_data[1].split('_')) > 4:
             await start_url_data_file_handler(message, state, tg_user)
     else:
         await start_handler(message, state, tg_user)
@@ -78,7 +80,7 @@ async def start_handler(message: Message, state: FSMContext, tg_user):
     await bot.send_message(tg_user.id, text, reply_markup=ReplyKeyboardRemove())
 
 
-async def start_url_data_item_handler(message, state, tg_user):
+async def start_url_data_folder_handler(message, tg_user):
     await asyncio.sleep(0.3)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
@@ -86,7 +88,41 @@ async def start_url_data_item_handler(message, state, tg_user):
         data['author_user_id'] = author_user_id
         await set_data(user_id=tg_user.id, data=data)
         # await start_handler(message, state, tg_user)
-        url_data = from_url_data_item(message.text).split()[1]
+        url_data = from_url_data(message.text).split()[1]
+        url_data_split = url_data.split('_')
+        author_user_id = int(url_data_split[0])
+        folder_id = url_data_split[1]
+
+        if author_user_id == tg_user.id:
+            await show_folders(user_id=tg_user.id, current_folder_id=folder_id, need_to_resend=True)
+        else:
+            author_user_chat_member = await bot.get_chat_member(author_user_id, author_user_id)
+            print(f'author_user = {author_user_chat_member.user}')
+            await bot.send_message(
+                tg_user.id,
+                f"Папка, которую вы пытаетесь открыть, "
+                f"принадлежит пользователю @{author_user_chat_member.user.username}"
+                f"\n\nВы можете запросить у него доступ к этой папке {smile_folder}🔑"
+            )
+
+        data = await get_data(tg_user.id)
+        await asyncio.sleep(0.5)
+        data['author_user_id'] = None
+        await set_data(user_id=tg_user.id, data=data)
+
+    else:
+        await bot.delete_message(tg_user.id, message.message_id)
+
+
+async def start_url_data_item_handler(message, tg_user):
+    await asyncio.sleep(0.3)
+    data = await get_data(tg_user.id)
+    author_user_id = data.get('author_user_id', None)
+    if not author_user_id:
+        data['author_user_id'] = author_user_id
+        await set_data(user_id=tg_user.id, data=data)
+        # await start_handler(message, state, tg_user)
+        url_data = from_url_data(message.text).split()[1]
         url_data_split = url_data.split('_')
         author_user_id = int(url_data_split[1])
         item_id = url_data_split[2]
@@ -104,8 +140,8 @@ async def start_url_data_item_handler(message, state, tg_user):
             await show_item_page_as_text_only(
                 user_id=message.from_user.id, author_user_id=author_user_id, item_id=item_id, page=page
             )
-        data = await get_data(tg_user.id)
 
+        data = await get_data(tg_user.id)
         await asyncio.sleep(0.5)
         data['author_user_id'] = None
         await set_data(user_id=tg_user.id, data=data)
@@ -124,7 +160,7 @@ async def start_url_data_file_handler(message, state, tg_user):
         await set_data(user_id=tg_user.id, data=data)
         # await start_handler(message, state, tg_user)
 
-        url_data = from_url_data_item(message.text).split()[1]
+        url_data = from_url_data(message.text).split()[1]
         print(f"url_data = {url_data}")
         url_data_split = url_data.split('_')
 
@@ -191,15 +227,15 @@ async def start_url_data_file_handler(message, state, tg_user):
 @router.message(Command(commands=["search"]))
 async def inline_search(message: Message, state: FSMContext):
     bot_username = (await message.bot.get_me()).username
-    prompt_text = "\n*Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\:*" \
+    prompt_text = "\n*Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\\:*" \
                   "\n\nГлобальный поиск 🌐" \
-                  f"\n'@{bot_username} _ваш\_запрос_'" \
-                  f"\n\nПоиск папок {smile_folder}" \
-                  f"\n'@{bot_username} folders/_ваш\_запрос_'" \
+                  f"\n'@{bot_username} _ваш\\_запрос'_" \
+                  f"\n\nПоиск папок {smile_folder} \\(только в чате с ботом\\)" \
+                  f"\n'@{bot_username} folders/_ваш\\_запрос_'" \
                   f"\n\nПоиск записей {smile_item}" \
-                  f"\n'@{bot_username} items/_ваш\_запрос_'" \
+                  f"\n'@{bot_username} items/_ваш\\_запрос_'" \
                   f"\n\nПоиск файлов {smile_file}" \
-                  f"\n'@{bot_username} files/_ваш\_запрос_'" \
+                  f"\n'@{bot_username} files/_ваш\\_запрос_'" \
                   "\n\nЛибо используйте кнопки ⬇️"
 
     builder = InlineKeyboardBuilder()
@@ -332,13 +368,13 @@ async def any_message(message: Message, state: FSMContext):
         await text_to_new_item_handler(text_messages, state)
 
 
-@router.message(NotEditFileCaptionFilter(), F.via_bot, F.text.startswith('*folders/'))  # NotAddToFilter(),
-async def search_folder_result_message(message: Message, state: FSMContext):
-    message_data = message.text.replace('*folders/', '', 1)
-    author_user_id, folder_id = message_data.split('|')
-    author_user_id = int(author_user_id)
-    if author_user_id == message.from_user.id:
-        await show_folders(user_id=author_user_id, current_folder_id=folder_id, need_to_resend=True)
+# @router.message(NotEditFileCaptionFilter(), F.via_bot, F.text.startswith('folders/'))  # NotAddToFilter(),
+# async def search_folder_result_message(message: Message, state: FSMContext):
+#     message_data = message.text.replace('folders/', '', 1)
+#     author_user_id, folder_id = message_data.split('|')
+#     author_user_id = int(author_user_id)
+#     if author_user_id == message.from_user.id:
+#         await show_folders(user_id=author_user_id, current_folder_id=folder_id, need_to_resend=True)
 
 
 async def text_to_new_item_handler(messages: List[Message], state: FSMContext):

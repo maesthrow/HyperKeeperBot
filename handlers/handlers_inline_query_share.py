@@ -20,7 +20,7 @@ from models.item_model import Item
 from mongo_db.mongo_collection_folders import get_user_folders_data
 from utils.data_manager import get_data
 from utils.utils_ import smile_item
-from utils.utils_bot import get_bot_link, get_bot_name, to_url_data_item
+from utils.utils_bot import get_bot_link, get_bot_name, to_url_data
 from utils.utils_file_finder import FileFinder
 from utils.utils_files import dict_to_sticker, dict_to_location, dict_to_contact
 from utils.utils_inline_query import get_inline_query_result
@@ -44,7 +44,7 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     repost_switch_inline_query = query.query
     bot_name = await get_bot_name()
     bot_link = await get_bot_link()
-    file_data = to_url_data_item("_".join(['browse', str(author_user_id), item_id, text_page, file_type, file_id[16:24]]))
+    file_data = to_url_data("_".join(['browse', str(author_user_id), item_id, text_page, file_type, file_id[16:24]]))
     url = f"{bot_link}?start={file_data}"
     builder = InlineKeyboardBuilder()
     builder.add(
@@ -133,7 +133,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
         builder.add(
             InlineKeyboardButton(
                 text=f"🚀️ Показать запись {smile_item}",
-                url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
+                url=f"{bot_link}?start={to_url_data(repost_switch_inline_query)}",
                 #callback_data=ItemShowCallback(author_user_id=author_user_id, item_id=item_id, with_folders=True).pack()
                 #f'item_{item_id}_with-folders',
             )
@@ -154,7 +154,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
         builder.add(
             InlineKeyboardButton(
                 text=bot_name,
-                url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
+                url=f"{bot_link}?start={to_url_data(repost_switch_inline_query)}",
             )
         )
     inline_markup_media = builder.as_markup()
@@ -202,7 +202,7 @@ async def get_main_inline_markup(repost_switch_inline_query):
     builder.add(
         InlineKeyboardButton(
             text=f"💾 {bot_name}",
-            url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
+            url=f"{bot_link}?start={to_url_data(repost_switch_inline_query)}",
         )
     )
     builder.add(
@@ -268,7 +268,7 @@ async def update_markup_for_content_mode(inline_markup: InlineKeyboardMarkup, co
     inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query
 
     bot_link = await get_bot_link()
-    file_data = to_url_data_item(f'{query_base}_{content_type}_{file_id[16:24]}')
+    file_data = to_url_data(f'{query_base}_{content_type}_{file_id[16:24]}')
     print(f'switch_inline_query {switch_inline_query}\nfile_data {file_data}')
     url = f"{bot_link}?start={file_data}"
     inline_button: InlineKeyboardButton = inline_markup.inline_keyboard[-1][1]
