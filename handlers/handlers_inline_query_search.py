@@ -323,10 +323,9 @@ async def update_markup_for_search_file(inline_markup: InlineKeyboardMarkup, con
 
     bot_link = await get_bot_link()
     file_data = to_url_data(f'{query_base}_{content_type}_{file_id[16:24]}')
-    #print(f'switch_inline_query {switch_inline_query}\nfile_data {file_data}')
     url = f"{bot_link}?start={file_data}"
     inline_button: InlineKeyboardButton = inline_markup.inline_keyboard[-1][1]
     inline_button.url = url
     bot_name = await get_bot_name()
     inline_button.text = f'{bot_name}'
-    #print(f'inline_button.url = {url}')
+
