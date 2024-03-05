@@ -26,6 +26,7 @@ from utils.utils_files import dict_to_sticker, dict_to_location, dict_to_contact
 from utils.utils_inline_query import get_inline_query_result
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_reader import get_item
+from utils.utils_parse_mode_converter import escape_markdown
 
 router = Router()
 dp.include_router(router)
@@ -43,7 +44,7 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     repost_switch_inline_query = query.query
     bot_name = await get_bot_name()
     bot_link = await get_bot_link()
-    file_data = to_url_data_item("_".join([str(author_user_id), item_id, text_page, file_type, file_id[16:24]]))
+    file_data = to_url_data_item("_".join(['browse', str(author_user_id), item_id, text_page, file_type, file_id[16:24]]))
     url = f"{bot_link}?start={file_data}"
     builder = InlineKeyboardBuilder()
     builder.add(
@@ -66,7 +67,7 @@ async def inline_query_file(query: Union[types.InlineQuery, types.CallbackQuery]
     await bot.answer_inline_query(
         query.id,
         results=[result],
-        cache_time=0,
+        cache_time=60,
     )
 
 
@@ -183,7 +184,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
     await bot.answer_inline_query(
         query.id,
         results=media_results,
-        cache_time=0,
+        cache_time=120,
     )
 
 
@@ -272,11 +273,12 @@ async def update_markup_for_content_mode(inline_markup: InlineKeyboardMarkup, co
     url = f"{bot_link}?start={file_data}"
     inline_button: InlineKeyboardButton = inline_markup.inline_keyboard[-1][1]
     inline_button.url = url
+    print(f'inline_button.url = {url}')
 
 
 async def create_document_results(item: Item, media_results: list, inline_markup, tag):
     for file_info in item.media['document']:
-        caption = file_info['caption']
+        caption = escape_markdown(file_info['caption'])
         file_id = FileFinder.get_file_id(file_info)
 
         this_inline_markup = copy.deepcopy(inline_markup)
@@ -288,7 +290,7 @@ async def create_document_results(item: Item, media_results: list, inline_markup
             )
 
         file_name = file_info['fields'].get('file_name')
-        mime_type = file_info['fields'].get('mime_type')
+        mime_type = file_info['fields'].get('mime_type') or 'application/octet-stream'
         result = InlineQueryResultDocument(
             id=hashlib.md5(file_id.encode()).hexdigest(),
             title=file_name,
@@ -296,7 +298,7 @@ async def create_document_results(item: Item, media_results: list, inline_markup
             caption=caption,
             description=caption,
             mime_type=mime_type,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=this_inline_markup
         )
         media_results.append(result)
@@ -305,7 +307,7 @@ async def create_document_results(item: Item, media_results: list, inline_markup
 
 async def create_photo_results(item: Item, media_results: list, inline_markup, tag):
     for file_info in item.media['photo']:
-        caption = file_info['caption']
+        caption = escape_markdown(file_info['caption'])
         file_id = FileFinder.get_file_id(file_info)
 
         this_inline_markup = copy.deepcopy(inline_markup)
@@ -325,7 +327,7 @@ async def create_photo_results(item: Item, media_results: list, inline_markup, t
                 title=caption,
                 description=caption,
                 caption=caption,
-                parse_mode=ParseMode.MARKDOWN,
+                parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=this_inline_markup,
             )
         )
@@ -335,7 +337,7 @@ async def create_photo_results(item: Item, media_results: list, inline_markup, t
 
 async def create_audio_results(item: Item, media_results: list, inline_markup, tag):
     for file_info in item.media['audio']:
-        caption = file_info['caption']
+        caption = escape_markdown(file_info['caption'])
         file_id = FileFinder.get_file_id(file_info)
         file: InputMediaAudio = await bot.get_file(file_id)
 
@@ -352,7 +354,7 @@ async def create_audio_results(item: Item, media_results: list, inline_markup, t
             audio_url=file_id,
             title=file.file_path,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=this_inline_markup
         )
         media_results.append(result)
@@ -361,7 +363,7 @@ async def create_audio_results(item: Item, media_results: list, inline_markup, t
 
 async def create_voice_results(item: Item, media_results: list, inline_markup, tag):
     for file_info in item.media['voice']:
-        caption = file_info['caption']
+        caption = escape_markdown(file_info['caption'])
         file_id = FileFinder.get_file_id(file_info)
         file = await bot.get_file(file_id)
 
@@ -378,7 +380,7 @@ async def create_voice_results(item: Item, media_results: list, inline_markup, t
             voice_url=file_id,
             title=file.file_path,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=this_inline_markup
         )
         media_results.append(result)
@@ -387,7 +389,7 @@ async def create_voice_results(item: Item, media_results: list, inline_markup, t
 
 async def create_video_results(item: Item, media_results: list, inline_markup, tag):
     for file_info in item.media['video']:
-        caption = file_info['caption']
+        caption = escape_markdown(file_info['caption'])
         file_id = FileFinder.get_file_id(file_info)
         file = await bot.get_file(file_id)
 
@@ -408,7 +410,7 @@ async def create_video_results(item: Item, media_results: list, inline_markup, t
             title=file.file_path,
             description=caption,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=this_inline_markup
         )
         media_results.append(result)
@@ -417,7 +419,7 @@ async def create_video_results(item: Item, media_results: list, inline_markup, t
 
 async def create_video_note_results(item: Item, media_results: list, inline_markup, tag):
     for file_info in item.media['video_note']:
-        caption = file_info['caption']
+        caption = escape_markdown(file_info['caption'])
         file_id = FileFinder.get_file_id(file_info)
         file = await bot.get_file(file_id)
 
@@ -437,7 +439,7 @@ async def create_video_note_results(item: Item, media_results: list, inline_mark
             mime_type='video/mp4',
             title=file.file_path,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=this_inline_markup
         )
         media_results.append(result)

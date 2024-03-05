@@ -2,9 +2,11 @@ import hashlib
 
 from aiogram import Router
 from aiogram.enums import ParseMode, ContentType
-from aiogram.types import InlineQuery, InputTextMessageContent, InlineQueryResultArticle, InlineKeyboardButton
+from aiogram.types import InlineQuery, InputTextMessageContent, InlineQueryResultArticle, InlineKeyboardButton, \
+    InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from handlers.handlers_inline_query_share import update_markup_for_content_mode
 from load_all import dp, bot
 from models.file_model import File
 from models.item_model import Item
@@ -47,7 +49,7 @@ async def inline_query_search(query: InlineQuery):
     await bot.answer_inline_query(
         query.id,
         results=search_results,
-        cache_time=0,
+        cache_time=60,
     )
 
 
@@ -59,7 +61,7 @@ async def inline_query_search_folders(query: InlineQuery):
     await bot.answer_inline_query(
         query.id,
         results=search_results_folders,
-        cache_time=0,
+        cache_time=60,
     )
 
 
@@ -71,7 +73,7 @@ async def inline_query_search_items(query: InlineQuery):
     await bot.answer_inline_query(
         query.id,
         results=search_results_items,
-        cache_time=0,
+        cache_time=60,
     )
 
 
@@ -85,7 +87,7 @@ async def inline_query_search_files(query: InlineQuery):
     await bot.answer_inline_query(
         query.id,
         results=search_results_files,
-        cache_time=0,
+        cache_time=60,
     )
 
 
@@ -184,7 +186,8 @@ async def get_search_results_files(user_id, query_data):
     for file_id in search_files:
         file: File = search_files[file_id]
         repost_switch_inline_query = f"browse_{user_id}_{file.item_id}_-1"
-        inline_markup = await get_result_inline_markup(query_data, repost_switch_inline_query)
+        inline_markup = await get_result_inline_markup(
+            query_data, repost_switch_inline_query, file.content_type, file.file_id)
         file_info = await FileFinder.get_file_info_in_item_by_file_id(
             user_id, file.item_id, file.content_type, file.file_id
         )
@@ -257,8 +260,18 @@ def file_is_match(content_type: ContentType, file_info, text_search):
     return file_name, caption, is_match
 
 
-async def get_result_inline_markup(query_data, repost_switch_inline_query=None):
+async def get_result_inline_markup(
+        query_data,
+        repost_switch_inline_query=None,
+        content_type: ContentType = None,
+        file_id: str = None
+):
     builder = InlineKeyboardBuilder()
+    search_results_button = InlineKeyboardButton(
+                text="🧐 Все результаты поиска 🔍",
+                switch_inline_query_current_chat=query_data,
+            )
+
     if repost_switch_inline_query:
         bot_name = await get_bot_name()
         bot_link = await get_bot_link()
@@ -275,13 +288,19 @@ async def get_result_inline_markup(query_data, repost_switch_inline_query=None):
                 url=f"{bot_link}?start={to_url_data_item(repost_switch_inline_query)}",
             )
         )
+        builder.adjust(2)
+        inline_markup = builder.as_markup()
+        if content_type and file_id:
+            await update_markup_for_search_file(inline_markup, content_type, file_id)
+            inline_markup.inline_keyboard.append([search_results_button])
+    else:
+        builder.add(search_results_button)
+        inline_markup = builder.as_markup()
 
-    builder.add(
-        InlineKeyboardButton(
-            text="🧐 Все результаты поиска 🔍",
-            switch_inline_query_current_chat=query_data,
-        )
-    )
+    return inline_markup
 
-    builder.adjust(2)
-    return builder.as_markup()
+
+async def update_markup_for_search_file(inline_markup: InlineKeyboardMarkup, content_type: str, file_id):
+    query_base = "_".join(inline_markup.inline_keyboard[-1][0].switch_inline_query.split("_")[:4])
+    switch_inline_query = f"{query_base}_{content_type}_{file_id}"
+    inline_markup.inline_keyboard[-1][0].switch_inline_query = switch_inline_query

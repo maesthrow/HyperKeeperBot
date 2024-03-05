@@ -229,7 +229,10 @@ async def on_create_new_item(state: FSMContext, item: Item, message: Message = N
     add_item_messages = data.get('add_item_messages')
     if add_item_messages:
         for message_del in add_item_messages:
-            await bot.delete_message(message_del.chat.id, message_del.message_id)
+            try:
+                await bot.delete_message(message_del.chat.id, message_del.message_id)
+            except:
+                pass
 
     await state.clear()
     data = await state.get_data()

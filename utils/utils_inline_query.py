@@ -8,6 +8,7 @@ from aiogram.types import InlineQueryResult, InlineQueryResultDocument, InlineQu
 
 from load_all import bot
 from utils.utils_files import dict_to_location, dict_to_contact
+from utils.utils_parse_mode_converter import escape_markdown
 from utils.utils_search_fragmentator import SearchFragmentator
 
 
@@ -24,15 +25,15 @@ async def get_inline_query_result(
 ) -> InlineQueryResult:
     result = InlineQueryResult
 
-    caption = file_info['caption']
+    caption = escape_markdown(file_info['caption'])
     # текст, который отображается справа от файла в результатах
-    description = caption
-    if text_search and text_search.lower() in caption.lower():
+    description = file_info['caption']
+    if text_search and caption and text_search.lower() in caption.lower():
         description = SearchFragmentator.get_search_file_caption_fragment(caption, text_search)
 
     if file_type == 'document':
         file_name = file_info['fields'].get('file_name')
-        mime_type = file_info['fields'].get('mime_type')
+        mime_type = file_info['fields'].get('mime_type') or 'application/octet-stream'
         result_id = get_result_id(file_type, file_id)
         result = InlineQueryResultDocument(
             id=result_id,
@@ -41,7 +42,7 @@ async def get_inline_query_result(
             caption=caption,
             description=description,
             mime_type=mime_type,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup_media
         )
     elif file_type == 'photo':
@@ -54,7 +55,7 @@ async def get_inline_query_result(
             title=caption,
             caption=caption,
             description=description,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup_media
         )
     elif file_type == 'audio':
@@ -65,7 +66,7 @@ async def get_inline_query_result(
             audio_url=file_id,
             title=file.file_path,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup_media
         )
     elif file_type == 'voice':
@@ -76,7 +77,7 @@ async def get_inline_query_result(
             voice_url=file_id,
             title=file.file_path,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup_media
         )
     elif file_type == 'video':
@@ -91,7 +92,7 @@ async def get_inline_query_result(
             title=file.file_path,
             description=description,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup_media
         )
     elif file_type == 'video_note':
@@ -105,7 +106,7 @@ async def get_inline_query_result(
             mime_type='video/mp4',
             title=file.file_path,
             caption=caption,
-            parse_mode=ParseMode.HTML,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup_media
         )
     elif file_type == 'sticker':

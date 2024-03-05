@@ -50,7 +50,7 @@ async def send_storage(
                 print(f"inline_markup.inline_keyboard = {inline_markup.inline_keyboard}")
                 return await asyncio.wait_for(message.edit_reply_markup(
                     reply_markup=inline_markup,
-                ), timeout=0.5)
+                ), timeout=1)
                 # return await message.edit_reply_markup(
                 #         reply_markup=inline_markup,
                 #     )
@@ -60,7 +60,7 @@ async def send_storage(
                     message_id=message.message_id,
                     text=text,
                     reply_markup=inline_markup,
-                ), timeout=0.5)
+                ), timeout=1)
                 # message = await bot.edit_message_text(
                 #         chat_id=user_id,
                 #         message_id=message.message_id,
@@ -70,7 +70,7 @@ async def send_storage(
 
             success = True
             await delete_wait_message(user_id, wait_message)
-            await asyncio.sleep(0.3)
+            await asyncio.sleep(0.5)
             return message
 
         except Exception as e:
