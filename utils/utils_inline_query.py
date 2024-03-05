@@ -8,7 +8,7 @@ from aiogram.types import InlineQueryResult, InlineQueryResultDocument, InlineQu
 
 from load_all import bot
 from utils.utils_files import dict_to_location, dict_to_contact
-from utils.utils_parse_mode_converter import escape_markdown
+from utils.utils_parse_mode_converter import escape_markdown, full_escape_markdown
 from utils.utils_search_fragmentator import SearchFragmentator
 
 
@@ -27,9 +27,9 @@ async def get_inline_query_result(
 
     caption = escape_markdown(file_info['caption'])
     # текст, который отображается справа от файла в результатах
-    description = file_info['caption']
+    description = full_escape_markdown(file_info['caption'])
     if text_search and caption and text_search.lower() in caption.lower():
-        description = SearchFragmentator.get_search_file_caption_fragment(caption, text_search)
+        description = SearchFragmentator.get_search_file_caption_fragment(description, text_search)
 
     if file_type == 'document':
         file_name = file_info['fields'].get('file_name')

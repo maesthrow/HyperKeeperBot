@@ -292,7 +292,7 @@ async def get_result_inline_markup(
         inline_markup = builder.as_markup()
         if content_type and file_id:
             await update_markup_for_search_file(inline_markup, content_type, file_id)
-            inline_markup.inline_keyboard.append([search_results_button])
+        inline_markup.inline_keyboard.append([search_results_button])
     else:
         builder.add(search_results_button)
         inline_markup = builder.as_markup()

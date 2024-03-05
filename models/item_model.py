@@ -5,7 +5,7 @@ from typing import List, Union
 
 from aiogram.enums import ContentType
 
-from utils.utils_parse_mode_converter import escape_markdown
+from utils.utils_parse_mode_converter import escape_markdown, full_escape_markdown
 
 INVISIBLE_CHAR = "\u00A0"
 
@@ -121,6 +121,9 @@ class Item:
 
     def get_text_markdown(self, page=0):
         return escape_markdown(self.text[page])
+
+    def get_text_full_markdown(self, page=0):
+        return full_escape_markdown(self.text[page])
 
     def pages_count(self):
         return len(self.text)
