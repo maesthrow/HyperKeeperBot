@@ -15,6 +15,7 @@ from utils.utils_file_finder import FileFinder
 from utils.utils_folders_reader import get_folders_in_folder
 from utils.utils_inline_query import get_inline_query_result
 from utils.utils_items_reader import get_folder_items, get_item
+from utils.utils_search_fragmentator import SearchFragmentator
 
 router = Router()
 dp.include_router(router)
@@ -132,13 +133,12 @@ async def get_search_results_items(user_id, query_data):
     for item_id in search_items:
         item: Item = await get_item(user_id, item_id)
 
-        searchs = get_search_fragment_and_page(item, text_search)
-        if searchs:
-            search_fragment, page = searchs
-        else:
-            search_fragment, page = None, 0
-
         if item:
+            required = SearchFragmentator.get_search_item_fragment_and_page(item, text_search)
+            if required:
+                search_fragment, page = required
+            else:
+                search_fragment, page = None, 0
             item_body = item.get_body_markdown(page)
         else:
             continue
@@ -164,27 +164,7 @@ async def get_search_results_items(user_id, query_data):
     return search_results
 
 
-def get_search_fragment_and_page(item: Item, text_search: str):
-    for page in range(item.pages_count()):
-        page_text = item.get_text(page)
-        index = page_text.lower().find(text_search.lower())
-        if index != -1:
-            if index == 0:
-                return page_text, page
-            else:
-                while (index > 0
-                       and (not page_text[index:].startswith(' ')
-                            and not page_text[index:].startswith('\n'))
-                ):
-                    index -= 1
-                if index > 0 and page_text[index:].startswith(' '):
-                    fragment = f'...{page_text[index:].replace(' ', '', 1)}'
-                elif index > 0 and page_text[index:].startswith('\n'):
-                    fragment = f'...{page_text[index:].replace('\n', '', 1)}'
-                else:
-                    fragment = page_text[index:]
-                return fragment, page
-    return None
+
 
 
 async def get_search_results_files(user_id, query_data):
@@ -208,7 +188,9 @@ async def get_search_results_files(user_id, query_data):
         file_info = await FileFinder.get_file_info_in_item_by_file_id(
             user_id, file.item_id, file.content_type, file.file_id
         )
-        search_file_result = await get_inline_query_result(file.content_type, file.file_id, file_info, inline_markup)
+        search_file_result = await get_inline_query_result(
+            file.content_type, file.file_id, file_info, inline_markup, text_search
+        )
         search_results.append(search_file_result)
     return search_results
 

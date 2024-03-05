@@ -8,15 +8,28 @@ from aiogram.types import InlineQueryResult, InlineQueryResultDocument, InlineQu
 
 from load_all import bot
 from utils.utils_files import dict_to_location, dict_to_contact
+from utils.utils_search_fragmentator import SearchFragmentator
 
 
 def get_result_id(file_type, file_id):
     return hashlib.md5(f'{file_type}{file_id}{datetime.now()}'.encode()).hexdigest()
 
 
-async def get_inline_query_result(file_type: ContentType, file_id, file_info, inline_markup_media) -> InlineQueryResult:
+async def get_inline_query_result(
+        file_type: ContentType,
+        file_id,
+        file_info,
+        inline_markup_media,
+        text_search: str = None
+) -> InlineQueryResult:
     result = InlineQueryResult
+
     caption = file_info['caption']
+    # текст, который отображается справа от файла в результатах
+    description = caption
+    if text_search and text_search.lower() in caption.lower():
+        description = SearchFragmentator.get_search_file_caption_fragment(caption, text_search)
+
     if file_type == 'document':
         file_name = file_info['fields'].get('file_name')
         mime_type = file_info['fields'].get('mime_type')
@@ -26,7 +39,7 @@ async def get_inline_query_result(file_type: ContentType, file_id, file_info, in
             title=file_name,
             document_url=file_id,
             caption=caption,
-            description=caption,
+            description=description,
             mime_type=mime_type,
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup_media
@@ -40,7 +53,7 @@ async def get_inline_query_result(file_type: ContentType, file_id, file_info, in
             thumbnail_url=file_id,
             title=caption,
             caption=caption,
-            description=caption,
+            description=description,
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup_media
         )
@@ -76,7 +89,7 @@ async def get_inline_query_result(file_type: ContentType, file_id, file_info, in
             thumbnail_url=file_id,
             mime_type='video/mp4',
             title=file.file_path,
-            description=caption,
+            description=description,
             caption=caption,
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup_media
@@ -127,3 +140,4 @@ async def get_inline_query_result(file_type: ContentType, file_id, file_info, in
             reply_markup=inline_markup_media
         )
     return result
+
