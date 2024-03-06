@@ -6,6 +6,7 @@ from html import escape
 
 import aiogram
 from aiogram import Router, F
+from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, \
     KeyboardButton, Message
@@ -237,7 +238,10 @@ async def delete_folder_request(call: CallbackQuery):
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
             # await call.answer(text=f"Папка '{folder_name}' удалена", show_alert=True)
-            result_message = await bot.send_message(call.message.chat.id, f"Папка '{folder_name}' удалена ☑️")
+            result_message = await bot.send_message(
+                chat_id=call.message.chat.id,
+                text=f"Папка {smile_folder}'{folder_name}' удалена ☑️"
+            )
             await asyncio.sleep(0.5)
             parent_folder_id = get_parent_folder_id(folder_id)
             await to_folder(call=call, callback_data=FolderCallback(folder_id=parent_folder_id))
@@ -246,7 +250,7 @@ async def delete_folder_request(call: CallbackQuery):
             # Отправляем ответ в виде всплывающего уведомления
             # await call.answer(text=f"Не получилось удалить папку '{folder_name}'", show_alert=True)
             result_message = await bot.send_message(call.message.chat.id,
-                                                    f"Не получилось удалить папку '{folder_name}'")
+                                                    f"Не получилось удалить папку {smile_folder}'{folder_name}'")
             await asyncio.sleep(0.5)
             await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
     except:
@@ -269,10 +273,13 @@ async def edit_this_folder(message: aiogram.types.Message, folder_id, state: FSM
     data['folder_id'] = folder_id
     await set_data(user_id, data)
 
-    await bot.send_message(message.chat.id, f"<b>Переименовать папку</b> {smile_folder}\n'{folder_name}'",
-                           reply_markup=inline_markup)
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text=f"*Переименовать папку* {smile_folder}\n'`{folder_name}`'",
+        parse_mode=ParseMode.MARKDOWN_V2,
+        reply_markup=inline_markup)
     await bot.send_message(message.chat.id,
-                           "Придумайте новое название папки:", reply_markup=ReplyKeyboardRemove())
+                           "Напишите новое название папки:", reply_markup=ReplyKeyboardRemove())
 
     await state.set_state(states.Folder.EditName)
 
