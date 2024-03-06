@@ -21,7 +21,7 @@ from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment, update_message_reply_markup
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, \
-    cancel_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, \
+    complete_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, \
     general_new_item_buttons, \
     without_title_button, add_to_item_button, FilesButtons, text_pages_buttons, get_text_pages_buttons, \
     create_general_reply_markup, general_add_to_new_item_mode_buttons, cancel_add_mode_button, file_mark_on, \
@@ -30,7 +30,7 @@ from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
     util_move_item
-from utils.utils_items_reader import get_item, get_folder_id
+from utils.utils_items_reader import get_item, get_folder_id, get_folder_items
 from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, escape_markdown, full_escape_markdown
 from utils.utils_show_item_entities import show_item_full_mode
 
@@ -251,85 +251,23 @@ async def on_create_new_item(state: FSMContext, item: Item, message: Message = N
         await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=True)
 
 
-# @router.message(F.text == "🗑 Удалить")
-# async def delete_handler(message: aiogram.types.Message):
-#     await on_delete_item(message)
-#
-#
-# async def on_delete_item(message: aiogram.types.Message):
-#     tg_user = aiogram.types.User.get_current()
-#     data = await dp.storage.get_data(chat=message.chat, user=tg_user)
-#     item_id = data.get('item_id')
-#
-#     # sent_message = await bot.send_message(message.chat.id, "⌛️",
-#     #                                       reply_markup=ReplyKeyboardRemove())
-#
-#     inline_markup = await get_inline_markup_for_accept_cancel(text_accept="Да, удалить", text_cancel="Не удалять",
-#                                                               callback_data=f"delete_item_request_{item_id}")
-#
-#     # await asyncio.sleep(0.5)
-#
-#     await bot.send_message(message.chat.id,
-#                            f"Хотите удалить эту запись ?",
-#                            reply_markup=inline_markup)
-#     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-
-
-# @router.callback_query(F.data == "delete_item_request")
-# async def delete_item_request(call: CallbackQuery):
-#     user_id = call.from_user.id
-#     data = await get_data(user_id)
-#     item_id = data.get('item_id')
-#
-#     if "cancel" in call.data:
-#         await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-#         # await show_item(item_id)
-#         await call.answer()
-#         return
-#
-#     try:
-#         # Вызываем метод для удаления папки
-#         result = await util_delete_item(user_id, item_id)
-#         if result:
-#             await bot.send_message(call.message.chat.id,
-#                                    f"Запись удалена ☑️")  # , reply_markup=inline_markup)
-#             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-#             # await call.answer(text=f"Запись удалена ☑️", show_alert=True)
-#
-#             await asyncio.sleep(0.4)
-#             folder_id = await get_current_folder_id(user_id)
-#             await show_folders(user_id, current_folder_id=folder_id, need_to_resend=True)
-#             item_message = data.get('bot_message', None)
-#             if item_message:
-#                 await bot.delete_message(chat_id=item_message.chat.id, message_id=item_message.message_id)
-#         else:
-#             # Отправляем ответ в виде всплывающего уведомления
-#             await call.answer(text=f"Не получилось удалить запись.'", show_alert=True)
-#
-#     except:
-#         await call.answer(text=f"Что то пошло не так при удалении записи.", show_alert=True)
-#         # await show_folders(need_to_resend=True)
-#
-#     await call.answer()
-
-
 @router.message(F.text == "️🧹 Удалить все записи в папке")
 async def delete_all_items_handler(message: Message):
     current_folder_id = await get_current_folder_id(message.from_user.id)
-
-    sent_message = await bot.send_message(message.chat.id, "⌛️")  # , reply_markup=ReplyKeyboardRemove())
-
-    inline_markup = get_inline_markup_for_accept_cancel(
-        text_accept="✔️Да, удалить", text_cancel="✖️Не удалять",
-        callback_data=f"delete_all_items_request")
-
-    # await asyncio.sleep(0.5)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.send_message(message.chat.id,
-                           f"Действительно хотите удалить все записи в этой папке?",
-                           reply_markup=inline_markup)
-
-    await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
+    count_items = len(await get_folder_items(message.from_user.id, current_folder_id))
+    if not count_items:
+        sent_message = await bot.send_message(message.chat.id, "В этой папке нет записей.")
+        await asyncio.sleep(1)
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+        await bot.delete_message(chat_id=sent_message.chat.id, message_id=sent_message.message_id)
+    else:
+        inline_markup = get_inline_markup_for_accept_cancel(
+            text_accept="✔️Да, удалить", text_cancel="✖️Не удалять",
+            callback_data=f"delete_all_items_request")
+        await bot.send_message(message.chat.id,
+                               f"Действительно хотите удалить все записи ({count_items}) в этой папке?",
+                               reply_markup=inline_markup)
+        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
 
 @router.callback_query(F.data.contains("delete_all_items_request"))
@@ -371,8 +309,8 @@ async def delete_all_items_request(call: CallbackQuery):
     await call.answer()
 
 
-@router.message(states.Item.EditTitle, NotInButtonsFilter(clean_title_buttons + [cancel_edit_item_button]))
-@router.message(states.Item.EditText, NotInButtonsFilter(clean_text_buttons + [cancel_edit_item_button]))
+@router.message(states.Item.EditTitle, NotInButtonsFilter(clean_title_buttons + [complete_edit_item_button]))
+@router.message(states.Item.EditText, NotInButtonsFilter(clean_text_buttons + [complete_edit_item_button]))
 async def edit_item_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
@@ -400,10 +338,10 @@ async def do_edit_item(user_id, item_id, state, edit_text):
     await show_item(user_id, item_id, page=text_page)
 
 
-@router.message(states.Item.EditTitle, F.text == cancel_edit_item_button.text)
-@router.message(states.Item.EditText, F.text == cancel_edit_item_button.text)
-@router.message(states.Item.EditFiles, F.text == cancel_edit_item_button.text)
-@router.message(states.Item.EditFileCaption, F.text == cancel_edit_item_button.text)
+@router.message(states.Item.EditTitle, F.text == complete_edit_item_button.text)
+@router.message(states.Item.EditText, F.text == complete_edit_item_button.text)
+@router.message(states.Item.EditFiles, F.text == complete_edit_item_button.text)
+@router.message(states.Item.EditFileCaption, F.text == complete_edit_item_button.text)
 async def cancel_edit_item(message: Message, state: FSMContext):
     user_id = message.from_user.id
     await on_cancel_edit_item(user_id, state)

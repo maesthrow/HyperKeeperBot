@@ -9,7 +9,9 @@ from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback,
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, RequestDeleteFilesCallback
 from models.item_model import Item
 
-cancel_edit_item_button = KeyboardButton(text="✔️ Завершить редактирование") # ❎
+cancel_button = KeyboardButton(text="️🚫 Отменить")
+
+complete_edit_item_button = KeyboardButton(text="✔️ Завершить редактирование") # ❎
 clean_title_buttons = [
     KeyboardButton(text="🪧 Сделать пустой заголовок"),
     KeyboardButton(text="💾 Сохранить без заголовка"),
@@ -50,7 +52,7 @@ general_buttons_edit_item_files = [
         KeyboardButton(text="🧹 Удалить все файлы 🗃️")
     ],
     [
-        cancel_edit_item_button
+        complete_edit_item_button
     ],
 ]
 
@@ -63,7 +65,7 @@ general_buttons_edit_file_caption = [
         leave_current_caption_button
     ],
     [
-        cancel_edit_item_button
+        complete_edit_item_button
     ],
 ]
 
@@ -251,12 +253,12 @@ def get_edit_item_title_keyboard(item_title: str):
     if item_title:
         return [
             [clean_title_buttons[0]],
-            [cancel_edit_item_button],
+            [complete_edit_item_button],
         ]
     else:
         return [
             [clean_title_buttons[1]],
-            [cancel_edit_item_button],
+            [complete_edit_item_button],
         ]
 
 
@@ -264,14 +266,14 @@ def get_edit_item_text_keyboard(item: Item):
     if item.pages_count() > 1 or item.page_not_empty(0):
         buttons = [
             [clean_text_buttons[0]],
-            [cancel_edit_item_button],
+            [complete_edit_item_button],
         ]
         # if len(item_text) > 1:
         #     buttons.insert(0, [delete_page_button])
     else:
         buttons = [
             [clean_text_buttons[1]],
-            [cancel_edit_item_button],
+            [complete_edit_item_button],
         ]
     return buttons
 
