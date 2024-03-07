@@ -446,20 +446,20 @@ def get_folder_pin_inline_markup(user_id, folder_id):
     builder = InlineKeyboardBuilder()
     for n in range(1, 10):
         builder.button(
-            text=numbers[str(n)],
-            callback_data=PinKeyboardNumberHandler(number=n).pack()
+            text=str(n),
+            callback_data=PinKeyboardNumberHandler(number=n, folder_id=folder_id).pack()
         )
     builder.button(
-        text='❎',
-        callback_data=PinKeyboardButtonHandler(action='close').pack()
+        text='×',
+        callback_data=PinKeyboardButtonHandler(action='close', folder_id=folder_id).pack()
     )
     builder.button(
-        text=numbers['0'],
-        callback_data=PinKeyboardNumberHandler(number=0).pack()
+        text='0',
+        callback_data=PinKeyboardNumberHandler(number=0, folder_id=folder_id).pack()
     )
     builder.button(
-        text='⬅️',
-        callback_data=PinKeyboardButtonHandler(action='backspace').pack()
+        text='«',
+        callback_data=PinKeyboardButtonHandler(action='backspace', folder_id=folder_id).pack()
     )
     builder.adjust(3)
     return builder.as_markup()

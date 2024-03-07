@@ -123,7 +123,9 @@ class PinFolderHandler(CallbackData, prefix='pin_folder'):
 
 class PinKeyboardNumberHandler(CallbackData, prefix='pin_keyboard_number'):
     number: int
+    folder_id: str
 
 
 class PinKeyboardButtonHandler(CallbackData, prefix='pin_keyboard_button'):
     action: str
+    folder_id: str

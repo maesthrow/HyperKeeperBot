@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from callbacks.callbackdata import EditFolderCallback, StatisticFolderHandler, MessageBoxCallback, \
-    SearchInFolderHandler, PinFolderHandler
+    SearchInFolderHandler, PinFolderHandler, PinKeyboardNumberHandler
 from handlers import states
 from load_all import dp, bot
 from utils.data_manager import get_data, set_data
@@ -14,6 +14,7 @@ from utils.utils_ import get_folder_name, smile_folder, get_inline_markup_for_ac
 from utils.utils_button_manager import cancel_button, create_general_reply_markup, general_buttons_search_items, \
     get_folder_pin_inline_markup
 from utils.utils_folders import get_folder_statistic
+from utils.utils_folders_writer import set_pin_folder
 from utils.utils_items_reader import get_folder_items
 
 router = Router()
@@ -106,12 +107,7 @@ async def statistic_handler(call: CallbackQuery):
 
     # general_buttons = general_buttons_statistic_folder[:]
     # markup = create_general_reply_markup(general_buttons)
-    inline_markup = (
-        InlineKeyboardMarkup(
-            inline_keyboard=[[
-                InlineKeyboardButton(text='☑️ OK', callback_data=MessageBoxCallback(result='ok').pack()) # ☑️ ✔️
-            ]])
-    )
+    inline_markup = get_ok_inline_markup()
     await bot.send_message(user_id, f"📊 <b>Статистика папки</b>\n"
                                             f"{smile_folder} {folder_name}:\n\n"
                                             f"{statistic_text}",
@@ -122,6 +118,15 @@ async def statistic_handler(call: CallbackQuery):
     # await set_data(user_id, data)
     await call.answer()
 
+
+def get_ok_inline_markup():
+    inline_markup = (
+        InlineKeyboardMarkup(
+            inline_keyboard=[[
+                InlineKeyboardButton(text='☑️ OK', callback_data=MessageBoxCallback(result='ok').pack())  # ☑️ ✔️
+            ]])
+    )
+    return inline_markup
 
 @router.callback_query(SearchInFolderHandler.filter())
 async def search_in_folder_handler(call: CallbackQuery, state: FSMContext):
@@ -155,6 +160,55 @@ async def pin_folder_handler(call: CallbackQuery, state: FSMContext):
     if not pin:
         await bot.send_message(
             chat_id=user_id,
-            text=f'Придумайте PIN-код для папки\n{smile_folder} {folder_name}:',
+            text=f'Придумайте PIN-код для папки\n{smile_folder} {folder_name}:\n\n➖ ➖ ➖ ➖',
             reply_markup=inline_markup
         )
+    else:
+        await bot.send_message(
+            chat_id=user_id,
+            text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder_name}:\n\n➖ ➖ ➖ ➖',
+            reply_markup=inline_markup
+        )
+    data = await get_data(user_id)
+    data['enter_pin'] = ''
+    await set_data(user_id, data)
+    await call.answer()
+
+
+@router.callback_query(PinKeyboardNumberHandler.filter())
+async def number_pin_folder_handler(call: CallbackQuery, state: FSMContext):
+    message_text = call.message.text
+    inline_markup = call.message.reply_markup
+    user_id = call.from_user.id
+
+    data = await get_data(user_id)
+    enter_pin = data['enter_pin']
+
+    call_data = PinKeyboardNumberHandler.unpack(call.data)
+    folder_id = call_data.folder_id
+    number = call_data.number
+    pin_str = message_text.split('\n')[-1]
+    numbers = pin_str.split()
+    for char in numbers:
+        if char == '➖':
+            enter_pin += str(number)
+            message_text = call.message.text.replace('➖', '🔘', 1)
+            await bot.edit_message_text(
+                text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+            )
+            await asyncio.sleep(0.4)
+            break
+    if message_text.find('➖') < 0:
+        message_text = 'PIN-код установлен ✅'
+        await set_pin_folder(user_id, folder_id, enter_pin)
+        data['enter_pin'] = None
+        inline_markup = get_ok_inline_markup()
+        await bot.edit_message_text(
+            text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+        )
+    else:
+        data['enter_pin'] = enter_pin
+    await set_data(user_id, data)
+    await call.answer()
+
+
