@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 
 from callbacks.callbackdata import EditFolderCallback, StatisticFolderHandler, MessageBoxCallback, \
-    SearchInFolderHandler, PinFolderHandler, PinKeyboardNumberHandler
+    SearchInFolderHandler, PinFolderHandler, PinKeyboardNumberHandler, PinKeyboardButtonHandler
 from handlers import states
 from load_all import dp, bot
 from utils.data_manager import get_data, set_data
@@ -192,23 +192,45 @@ async def number_pin_folder_handler(call: CallbackQuery, state: FSMContext):
     for char in numbers:
         if char == '➖':
             enter_pin += str(number)
+            data['enter_pin'] = enter_pin
+            await set_data(user_id, data)
             message_text = call.message.text.replace('➖', '🔘', 1)
             await bot.edit_message_text(
                 text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
             )
-            await asyncio.sleep(0.4)
             break
     if message_text.find('➖') < 0:
         message_text = 'PIN-код установлен ✅'
-        await set_pin_folder(user_id, folder_id, enter_pin)
+        await set_pin_folder(user_id, folder_id, enter_pin[-4:])
         data['enter_pin'] = None
+        await set_data(user_id, data)
+        await asyncio.sleep(0.4)
         inline_markup = get_ok_inline_markup()
         await bot.edit_message_text(
             text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
         )
-    else:
-        data['enter_pin'] = enter_pin
-    await set_data(user_id, data)
     await call.answer()
 
 
+@router.callback_query(PinKeyboardButtonHandler.filter())
+async def button_pin_folder_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    call_data = PinKeyboardButtonHandler.unpack(call.data)
+    action = call_data.action
+    data = await get_data(user_id)
+    if action == 'close':
+        data['enter_pin'] = None
+        await set_data(user_id, data)
+        await bot.delete_message(user_id, call.message.message_id)
+    elif action == 'backspace':
+        enter_pin = data['enter_pin']
+        if enter_pin:
+            enter_pin = enter_pin[:-1]
+            await set_data(user_id, data)
+            message_text = call.message.text[::-1].replace('🔘', '➖',1)[::-1]
+            inline_markup = call.message.reply_markup
+            await bot.edit_message_text(
+                text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+            )
+            data['enter_pin'] = enter_pin
+    await call.answer()
