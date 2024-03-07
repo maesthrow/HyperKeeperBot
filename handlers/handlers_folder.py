@@ -25,7 +25,8 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
 from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
                                         general_buttons_statistic_folder, check_button_exists_part_of_text,
-                                        get_folders_with_items_inline_markup, cancel_button, new_general_buttons_folder)
+                                        get_folders_with_items_inline_markup, cancel_button, new_general_buttons_folder,
+                                        current_folder_control_button, get_folder_control_inline_markup)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_folders import get_folder_statistic, \
     get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
@@ -86,8 +87,6 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         await show_all_items(user_id, need_to_resend=True)
         return
 
-    current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
-
     folders_inline_markup = await get_inline_markup_folders(user_id, current_folder_id, current_folder_page)
     folders_message: Message = data.get('folders_message')
 
@@ -104,11 +103,14 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
     if await is_only_folders_mode_keyboard(user_id) and current_folder_page > 0:
         need_to_resend = True
 
+    current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
+    folders_message_text = await get_folders_message_text(user_id, current_folder_id, current_folder_path_names)
+
     try:
         if not need_to_resend and folders_message:
             # Изменение существующего сообщения
             folders_message = await folders_message.edit_text(
-                text=f"🗂️ <b>{current_folder_path_names}</b>",
+                text=folders_message_text,
                 reply_markup=folders_inline_markup,
             )
         else:
@@ -126,6 +128,13 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
     data['page_folders'] = str(new_page_folders)
     data['page_items'] = str(new_page_items)
     await set_data(user_id, data)
+
+
+async def get_folders_message_text(user_id, current_folder_id, current_folder_path_names=None):
+    if not current_folder_path_names:
+        current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
+    folders_message_text = f"🗂️ <b>{current_folder_path_names}</b>"
+    return folders_message_text
 
 
 async def send_new_folders_message(user_id, current_folder_path_names, folders_inline_markup):
@@ -558,6 +567,17 @@ async def go_to_page_items(call: CallbackQuery):
         await set_data(user_id, data)
 
     await call.answer()
+
+
+@router.message(F.text == current_folder_control_button.text)
+async def folder_control_menu_handler(message: aiogram.types.Message):
+    user_id = message.from_user.id
+    current_folder_id = await get_current_folder_id(user_id)
+    folders_message_text = await get_folders_message_text(user_id, current_folder_id)
+    folders_message_text = f'<i>Меню управления текущей папкой:</i>\n\n{folders_message_text}'
+    inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
+    await bot.send_message(chat_id=user_id, text=folders_message_text, reply_markup=inline_markup)
+    await bot.delete_message(message.chat.id, message.message_id)
 
 
 @router.message(F.text == "️📊 Статистика")

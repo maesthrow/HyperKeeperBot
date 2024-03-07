@@ -6,8 +6,10 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
-    EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, RequestDeleteFilesCallback
+    EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
+    RequestDeleteFilesCallback, MessageBoxCallback
 from models.item_model import Item
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 cancel_button = KeyboardButton(text="️🚫 Отменить")
 
@@ -32,10 +34,11 @@ general_buttons_folder = [
     [KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")]
 ]
 
+current_folder_control_button = KeyboardButton(text=f"🛠 Управление текущей папкой") # 🛠 ⚡️ 👨‍🔧👨‍🔬
 new_general_buttons_folder = [
     [
         KeyboardButton(text=f"➕ Новая папка"),
-        KeyboardButton(text=f"🛠 Управление текущей папкой") # 🛠 ⚡️ 👨‍🔧👨‍🔬
+        current_folder_control_button
     ]
 ]
 
@@ -295,6 +298,7 @@ def get_edit_file_caption_keyboard(caption: str):
         buttons[0].pop(0)
     return buttons
 
+
 def get_text_pages_buttons(author_user_id: int, item: Item, page_number: int, mode='show'):
     pages_buttons = text_pages_buttons.copy()
     display_page_number = page_number + 1
@@ -385,6 +389,47 @@ def get_delete_files_inline_markup(item_id: str, is_all=False):
     builder.button(
         text='✖️Не удалять',
         callback_data=RequestDeleteFilesCallback(item_id=item_id, res='n', is_all=is_all).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+def get_folder_control_inline_markup(user_id, folder_id):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='🔑 PIN-код',
+        callback_data='1'
+        #callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+    )
+    builder.button(
+        text='👥 Настроить доступ',
+        callback_data='2'
+        # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+    )
+    builder.button(
+        text='📊 Статистика',
+        callback_data='3'
+        # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+    )
+    builder.button(
+        text='🧹Удалить все записи',
+        callback_data='4'
+        # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+    )
+    if folder_id != ROOT_FOLDER_ID:
+        builder.button(
+            text='✏️ Переименовать',
+            callback_data='5'
+            # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+        )
+        builder.button(
+            text='🗑 Удалить папку',
+            callback_data='6'
+            # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+        )
+    builder.button(
+        text='✖️ Закрыть меню',
+        callback_data=MessageBoxCallback(result='close').pack()
     )
     builder.adjust(2)
     return builder.as_markup()
