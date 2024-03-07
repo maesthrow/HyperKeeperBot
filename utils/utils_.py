@@ -75,7 +75,7 @@ async def get_folder_path_names(user_id, folder_id=ROOT_FOLDER_ID):
         path_names.append(target_folder_name)
         target_folders = target_folder.get("folders", {})
 
-    return " > ".join(path_names) + ":"
+    return " / ".join(path_names) + " /"
 
 
 async def get_environment(user_id):
