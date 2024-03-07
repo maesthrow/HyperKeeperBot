@@ -19,6 +19,7 @@ class Item(StatesGroup):
     EditFiles = State()
     EditFileCaption = State()
     Search = State()
+    SearchResults = State()
 
 
 class FileProcess(State):

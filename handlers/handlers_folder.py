@@ -250,7 +250,16 @@ async def delete_folder_request(call: CallbackQuery):
                 chat_id=call.message.chat.id,
                 text=f"Папка {smile_folder}'{folder_name}' удалена ☑️"
             )
-            await asyncio.sleep(0.5)
+
+            data = await get_data(user_id)
+            folder_control_menu_message = data.get('folder_control_menu_message', None)
+            if folder_control_menu_message:
+                try:
+                    await bot.delete_message(user_id, folder_control_menu_message.message_id)
+                except:
+                    pass
+
+            #await asyncio.sleep(0.5)
             parent_folder_id = get_parent_folder_id(folder_id)
             await to_folder(call=call, callback_data=FolderCallback(folder_id=parent_folder_id))
             await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
@@ -271,35 +280,33 @@ async def delete_folder_request(call: CallbackQuery):
     await call.answer()
 
 
-async def edit_this_folder(message: aiogram.types.Message, folder_id, state: FSMContext):
-    # buttons = [[cancel_enter_folder_name_button]]
-    # inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
-    user_id = message.from_user.id
-    folder_name = await get_folder_name(user_id, folder_id)
-
-    data = await get_data(user_id)
-    data['folder_id'] = folder_id
-    await set_data(user_id, data)
-
-    general_buttons = [[cancel_button]]
-    markup = create_general_reply_markup(general_buttons)
-
-    question_messages = data.get('question_messages', [])
-    question_messages.append(
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text=f"*Переименовать папку* {smile_folder}"
-                 f"\n\nМожете скопировать текущее название:"
-                 f"\n'`{folder_name}`'"
-                 f"\n\n_Напишите новое название папки:_",
-            parse_mode=ParseMode.MARKDOWN_V2,
-            reply_markup=markup
-        )
-    )
-    # await bot.send_message(message.chat.id,
-    #                        "Напишите новое название папки:", reply_markup=ReplyKeyboardRemove())
-    await state.update_data(question_messages=question_messages)
-    await state.set_state(states.Folder.EditName)
+# async def edit_this_folder(message: aiogram.types.Message, folder_id, state: FSMContext):
+#     user_id = message.from_user.id
+#     folder_name = await get_folder_name(user_id, folder_id)
+#
+#     data = await get_data(user_id)
+#     data['folder_id'] = folder_id
+#     await set_data(user_id, data)
+#
+#     general_buttons = [[cancel_button]]
+#     markup = create_general_reply_markup(general_buttons)
+#
+#     question_messages = data.get('question_messages', [])
+#     question_messages.append(
+#         await bot.send_message(
+#             chat_id=message.chat.id,
+#             text=f"*Переименовать папку* {smile_folder}"
+#                  f"\n\nМожете скопировать текущее название:"
+#                  f"\n'`{folder_name}`'"
+#                  f"\n\n_Напишите новое название папки:_",
+#             parse_mode=ParseMode.MARKDOWN_V2,
+#             reply_markup=markup
+#         )
+#     )
+#     # await bot.send_message(message.chat.id,
+#     #                        "Напишите новое название папки:", reply_markup=ReplyKeyboardRemove())
+#     await state.update_data(question_messages=question_messages)
+#     await state.set_state(states.Folder.EditName)
 
 
 @router.message(states.Folder.NewName, F.text == cancel_button.text)
@@ -318,7 +325,7 @@ async def cancel_handler(message: aiogram.types.Message, state: FSMContext):
     await state.set_state()
 
 
-async def get_enter_folder_name(message: aiogram.types.Message):
+async def get_enter_folder_name(message: Message, is_edit=False):
     user_id = message.from_user.id
     new_folder_name = message.text
 
@@ -343,16 +350,17 @@ async def get_enter_folder_name(message: aiogram.types.Message):
         return None
 
     current_folder_id = await get_current_folder_id(message.from_user.id)
-    parent_folder_id = get_parent_folder_id(current_folder_id)
-    sub_folders_names = await get_sub_folder_names(user_id, parent_folder_id)
+    if is_edit:
+        current_folder_id = get_parent_folder_id(current_folder_id)
+    sub_folders_names = await get_sub_folder_names(user_id, current_folder_id)
     new_folder_name = clean_folder_name(new_folder_name)
 
     if new_folder_name.lower() in map(str.lower, sub_folders_names):
         question_messages.append(
             await bot.send_message(
                 message.chat.id,
-                "❗Папка с таким названием здесь уже существует\."
-                "\n\n_Придумайте другое название:_",
+                text="❗Папка с таким названием здесь уже существует\." \
+                     "\n\n_Придумайте другое название:_",
                 parse_mode=ParseMode.MARKDOWN_V2
             )
         )
@@ -362,7 +370,7 @@ async def get_enter_folder_name(message: aiogram.types.Message):
 
 
 @router.message(states.Folder.NewName)
-async def new_folder(message: aiogram.types.Message, state: FSMContext):
+async def new_folder(message: Message, state: FSMContext):
     new_folder_name = await get_enter_folder_name(message)
     if not new_folder_name:
         return
@@ -387,7 +395,7 @@ async def new_folder(message: aiogram.types.Message, state: FSMContext):
 
 @router.message(states.Folder.EditName)
 async def edit_folder(message: aiogram.types.Message, state: FSMContext):
-    folder_new_name = await get_enter_folder_name(message)
+    folder_new_name = await get_enter_folder_name(message, is_edit=True)
     if not folder_new_name:
         return
 
@@ -441,47 +449,47 @@ async def create_new_folder(message: Message, state: FSMContext):
     )
 
 
-@router.message(F.text == "✏️ Переименовать папку")
-async def edit_folder_handler(message: aiogram.types.Message, state: FSMContext):
-    current_folder_id = await get_current_folder_id(message.from_user.id)
-    if current_folder_id == ROOT_FOLDER_ID:
-        await asyncio.sleep(0.2)
-        await MessageBox.show(message.from_user.id, "❗ Нельзя переименовать корневую папку")
-        # await send_ok_info_message(message.from_user.id, "Нельзя переименовать корневую папку 🚫")
-        await bot.delete_message(message.chat.id, message.message_id)
-        return
-
-    await edit_this_folder(message, current_folder_id, state)
-    await bot.delete_message(message.chat.id, message.message_id)
-
-
-async def on_delete_folder(message: aiogram.types.Message):
-    user_id = message.from_user.id
-    folder_id = await get_current_folder_id(user_id)
-    folder_name = await get_folder_name(user_id, folder_id)
-
-    inline_markup = get_inline_markup_for_accept_cancel(
-        "✔️Да, удалить",
-        "✖️Не удалять",
-        f"delete_folder_request_{folder_id}")
-
-    await bot.send_message(message.chat.id,
-                           f"Хотите удалить папку {smile_folder} '{folder_name}' и все ее содержимое?",
-                           reply_markup=inline_markup)
+# @router.message(F.text == "✏️ Переименовать папку")
+# async def edit_folder_handler(message: aiogram.types.Message, state: FSMContext):
+#     current_folder_id = await get_current_folder_id(message.from_user.id)
+#     if current_folder_id == ROOT_FOLDER_ID:
+#         await asyncio.sleep(0.2)
+#         await MessageBox.show(message.from_user.id, "❗ Нельзя переименовать корневую папку")
+#         # await send_ok_info_message(message.from_user.id, "Нельзя переименовать корневую папку 🚫")
+#         await bot.delete_message(message.chat.id, message.message_id)
+#         return
+#
+#     await edit_this_folder(message, current_folder_id, state)
+#     await bot.delete_message(message.chat.id, message.message_id)
 
 
-@router.message(F.text == "🗑 Удалить папку")
-async def delete_handler(message: aiogram.types.Message):
-    current_folder_id = await get_current_folder_id(message.from_user.id)
-    if current_folder_id == ROOT_FOLDER_ID:
-        await asyncio.sleep(0.2)
-        await MessageBox.show(message.from_user.id, "❗ Нельзя удалить корневую папку")
-        # await send_ok_info_message(message.from_user.id, "Нельзя удалить корневую папку 🚫")
-        await bot.delete_message(message.chat.id, message.message_id)
-        return
+# async def on_delete_folder(message: aiogram.types.Message):
+#     user_id = message.from_user.id
+#     folder_id = await get_current_folder_id(user_id)
+#     folder_name = await get_folder_name(user_id, folder_id)
+#
+#     inline_markup = get_inline_markup_for_accept_cancel(
+#         "✔️Да, удалить",
+#         "✖️Не удалять",
+#         f"delete_folder_request_{folder_id}")
+#
+#     await bot.send_message(message.chat.id,
+#                            f"Хотите удалить папку {smile_folder} '{folder_name}' и все ее содержимое?",
+#                            reply_markup=inline_markup)
 
-    await on_delete_folder(message)
-    await bot.delete_message(message.chat.id, message.message_id)
+
+# @router.message(F.text == "🗑 Удалить папку")
+# async def delete_handler(message: aiogram.types.Message):
+#     current_folder_id = await get_current_folder_id(message.from_user.id)
+#     if current_folder_id == ROOT_FOLDER_ID:
+#         await asyncio.sleep(0.2)
+#         await MessageBox.show(message.from_user.id, "❗ Нельзя удалить корневую папку")
+#         # await send_ok_info_message(message.from_user.id, "Нельзя удалить корневую папку 🚫")
+#         await bot.delete_message(message.chat.id, message.message_id)
+#         return
+#
+#     await on_delete_folder(message)
+#     await bot.delete_message(message.chat.id, message.message_id)
 
 
 @router.callback_query(F.data.contains("go_to_page_folders"))
@@ -574,35 +582,38 @@ async def folder_control_menu_handler(message: aiogram.types.Message):
     user_id = message.from_user.id
     current_folder_id = await get_current_folder_id(user_id)
     folders_message_text = await get_folders_message_text(user_id, current_folder_id)
-    folders_message_text = f'<i>Меню управления текущей папкой:</i>\n\n{folders_message_text}'
+    folders_message_text = f'<i>Меню управления папкой:</i>\n\n{folders_message_text}'
     inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
-    await bot.send_message(chat_id=user_id, text=folders_message_text, reply_markup=inline_markup)
+    data = await get_data(user_id)
+    data['folder_control_menu_message'] =\
+        await bot.send_message(chat_id=user_id, text=folders_message_text, reply_markup=inline_markup)
+    await set_data(user_id, data)
     await bot.delete_message(message.chat.id, message.message_id)
 
 
-@router.message(F.text == "️📊 Статистика")
-async def statistic_folder_handler(message: aiogram.types.Message):
-    user_id = message.from_user.id
-    current_folder_id = await get_current_folder_id(user_id)
-    folder_name = await get_folder_name(user_id, current_folder_id)
-    dict_folder_statistic = await get_folder_statistic(user_id, current_folder_id)
-    folders_count = dict_folder_statistic['folders_count']
-    items_count = dict_folder_statistic['items_count']
-    deep_folders_count = dict_folder_statistic['deep_folders_count']
-    deep_items_count = dict_folder_statistic['deep_items_count']
-    statistic_text = (f"<u>Количество папок</u> {smile_folder}: <b>{folders_count}</b>\n"
-                      f"<u>Количество записей</u> {smile_item}: <b>{items_count}</b>\n\n"
-                      f"<b>С учетом вложенных папок:</b>\n"
-                      f"<u>Всего папок</u> {smile_folder}: <b>{deep_folders_count}</b>\n"
-                      f"<u>Всего записей</u> {smile_item}: <b>{deep_items_count}</b>")
-
-    general_buttons = general_buttons_statistic_folder[:]
-    markup = create_general_reply_markup(general_buttons)
-    await bot.send_message(message.chat.id, f"📊 <b>Статистика папки</b>\n"
-                                            f"{smile_folder} {folder_name}:\n\n"
-                                            f"{statistic_text}",
-                           reply_markup=markup)
-
-    data = await get_data(user_id)
-    data['current_keyboard'] = markup
-    await set_data(user_id, data)
+# @router.message(F.text == "️📊 Статистика")
+# async def statistic_folder_handler(message: aiogram.types.Message):
+#     user_id = message.from_user.id
+#     current_folder_id = await get_current_folder_id(user_id)
+#     folder_name = await get_folder_name(user_id, current_folder_id)
+#     dict_folder_statistic = await get_folder_statistic(user_id, current_folder_id)
+#     folders_count = dict_folder_statistic['folders_count']
+#     items_count = dict_folder_statistic['items_count']
+#     deep_folders_count = dict_folder_statistic['deep_folders_count']
+#     deep_items_count = dict_folder_statistic['deep_items_count']
+#     statistic_text = (f"<u>Количество папок</u> {smile_folder}: <b>{folders_count}</b>\n"
+#                       f"<u>Количество записей</u> {smile_item}: <b>{items_count}</b>\n\n"
+#                       f"<b>С учетом вложенных папок:</b>\n"
+#                       f"<u>Всего папок</u> {smile_folder}: <b>{deep_folders_count}</b>\n"
+#                       f"<u>Всего записей</u> {smile_item}: <b>{deep_items_count}</b>")
+#
+#     general_buttons = general_buttons_statistic_folder[:]
+#     markup = create_general_reply_markup(general_buttons)
+#     await bot.send_message(message.chat.id, f"📊 <b>Статистика папки</b>\n"
+#                                             f"{smile_folder} {folder_name}:\n\n"
+#                                             f"{statistic_text}",
+#                            reply_markup=markup)
+#
+#     data = await get_data(user_id)
+#     data['current_keyboard'] = markup
+#     await set_data(user_id, data)

@@ -251,23 +251,23 @@ async def on_create_new_item(state: FSMContext, item: Item, message: Message = N
         await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=True)
 
 
-@router.message(F.text == "️🧹 Удалить все записи в папке")
-async def delete_all_items_handler(message: Message):
-    current_folder_id = await get_current_folder_id(message.from_user.id)
-    count_items = len(await get_folder_items(message.from_user.id, current_folder_id))
-    if not count_items:
-        sent_message = await bot.send_message(message.chat.id, "В этой папке нет записей.")
-        await asyncio.sleep(1)
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-        await bot.delete_message(chat_id=sent_message.chat.id, message_id=sent_message.message_id)
-    else:
-        inline_markup = get_inline_markup_for_accept_cancel(
-            text_accept="✔️Да, удалить", text_cancel="✖️Не удалять",
-            callback_data=f"delete_all_items_request")
-        await bot.send_message(message.chat.id,
-                               f"Действительно хотите удалить все записи ({count_items}) в этой папке?",
-                               reply_markup=inline_markup)
-        await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+# @router.message(F.text == "️🧹 Удалить все записи в папке")
+# async def delete_all_items_handler(message: Message):
+#     current_folder_id = await get_current_folder_id(message.from_user.id)
+#     count_items = len(await get_folder_items(message.from_user.id, current_folder_id))
+#     if not count_items:
+#         sent_message = await bot.send_message(message.chat.id, "В этой папке нет записей.")
+#         await asyncio.sleep(1)
+#         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+#         await bot.delete_message(chat_id=sent_message.chat.id, message_id=sent_message.message_id)
+#     else:
+#         inline_markup = get_inline_markup_for_accept_cancel(
+#             text_accept="✔️Да, удалить", text_cancel="✖️Не удалять",
+#             callback_data=f"delete_all_items_request")
+#         await bot.send_message(message.chat.id,
+#                                f"Действительно хотите удалить все записи ({count_items}) в этой папке?",
+#                                reply_markup=inline_markup)
+#         await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
 
 @router.callback_query(F.data.contains("delete_all_items_request"))
@@ -292,6 +292,14 @@ async def delete_all_items_request(call: CallbackQuery):
             # await call.answer(f"Запись удалена") #всплывающее сообщение сверху
             result_message = await bot.send_message(call.message.chat.id,
                                                     f"Все записи в папке удалены ☑️")
+            data = await get_data(user_id)
+            bot_message = data.get('bot_message', None)
+            if bot_message:
+                try:
+                    await bot.delete_message(user_id, bot_message.message_id)
+                except:
+                    pass
+                data['bot_message'] = None
         else:
             await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
             # Отправляем ответ в виде всплывающего уведомления
@@ -481,24 +489,6 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
     await show_folders(user_id, folder_id, need_to_resend=True)
     await asyncio.sleep(0.2)
     await show_item(user_id, movement_item_id)
-
-
-@router.message(F.text == "❎ Завершить режим поиска 🔍️")
-async def search_item_handler(message: aiogram.types.Message):
-    user_id = message.from_user.id
-    data = await get_data(user_id)
-    data['dict_search_data'] = None
-    await set_data(user_id, data)
-
-    environment: Environment = await get_environment(user_id)
-    if environment is Environment.FOLDERS:
-        await show_folders(user_id)
-    elif environment is Environment.ITEM_CONTENT:
-        item_id = data.get('item_id')
-        if item_id:
-            current_folder = get_folder_id(item_id)
-            await set_current_folder_id(user_id, current_folder)
-            await show_item(user_id, item_id)
 
 
 @router.callback_query(SendItemCallback.filter())

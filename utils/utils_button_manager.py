@@ -7,9 +7,11 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
-    RequestDeleteFilesCallback, MessageBoxCallback
+    RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderHandler, SearchInFolderHandler, \
+    PinFolderHandler, PinKeyboardNumberHandler, PinKeyboardButtonHandler
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
+from utils.utils_constants import numbers
 
 cancel_button = KeyboardButton(text="️🚫 Отменить")
 
@@ -395,43 +397,71 @@ def get_delete_files_inline_markup(item_id: str, is_all=False):
 
 
 def get_folder_control_inline_markup(user_id, folder_id):
+    sizes = []
     builder = InlineKeyboardBuilder()
     builder.button(
         text='🔑 PIN-код',
-        callback_data='1'
-        #callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+        callback_data=PinFolderHandler(folder_id=folder_id).pack()
     )
     builder.button(
         text='👥 Настроить доступ',
         callback_data='2'
         # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
     )
+    sizes.append(2)
     builder.button(
         text='📊 Статистика',
-        callback_data='3'
-        # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+        callback_data=StatisticFolderHandler(folder_id=folder_id).pack()
     )
     builder.button(
         text='🧹Удалить все записи',
-        callback_data='4'
-        # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+        callback_data=EditFolderCallback(folder_id=folder_id, action='delete_all_items').pack()
     )
+    sizes.append(2)
     if folder_id != ROOT_FOLDER_ID:
         builder.button(
             text='✏️ Переименовать',
-            callback_data='5'
-            # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+            callback_data=EditFolderCallback(folder_id=folder_id, action='rename').pack()
         )
         builder.button(
             text='🗑 Удалить папку',
-            callback_data='6'
-            # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+            callback_data=EditFolderCallback(folder_id=folder_id, action='delete').pack()
         )
+        sizes.append(2)
+    builder.button(
+        text='🔍 Поиск в папке и вложенных папках',
+        callback_data=SearchInFolderHandler(folder_id=folder_id).pack()
+    )
+    sizes.append(1)
     builder.button(
         text='✖️ Закрыть меню',
         callback_data=MessageBoxCallback(result='close').pack()
     )
-    builder.adjust(2)
+    sizes.append(1)
+    builder.adjust(*sizes)
+    return builder.as_markup()
+
+
+def get_folder_pin_inline_markup(user_id, folder_id):
+    builder = InlineKeyboardBuilder()
+    for n in range(1, 10):
+        builder.button(
+            text=numbers[str(n)],
+            callback_data=PinKeyboardNumberHandler(number=n).pack()
+        )
+    builder.button(
+        text='❎',
+        callback_data=PinKeyboardButtonHandler(action='close').pack()
+    )
+    builder.button(
+        text=numbers['0'],
+        callback_data=PinKeyboardNumberHandler(number=0).pack()
+    )
+    builder.button(
+        text='⬅️',
+        callback_data=PinKeyboardButtonHandler(action='backspace').pack()
+    )
+    builder.adjust(3)
     return builder.as_markup()
 
 

@@ -13,6 +13,7 @@ from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import get_text_pages_buttons, get_repost_button_in_markup, item_edit_buttons, \
     delete_page_inline_button, get_edit_page_buttons
+from utils.utils_constants import numbers
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import markdown_without_code
 
@@ -20,8 +21,6 @@ router = Router()
 dp.include_router(router)
 
 select_smile = '✅'
-numbers = {'0': '0️⃣', '1': '1️⃣', '2': '2️⃣', '3': '3️⃣', '4': '4️⃣', '5': '5️⃣', '6': '6️⃣', '7': '7️⃣', '8': '8️⃣',
-           '9': '9️⃣'}
 
 
 @router.callback_query(TextPagesCallback.filter())

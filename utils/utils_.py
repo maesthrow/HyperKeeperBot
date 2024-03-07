@@ -60,6 +60,12 @@ async def get_folder_name(user_id, folder_id=ROOT_FOLDER_ID):
     return folder_data.get("name", "")
 
 
+async def get_folder_pin(user_id, folder_id=ROOT_FOLDER_ID):
+    """Возвращает PIN-код для папки по её идентификатору."""
+    folder_data = await get_folder_data(user_id, folder_id)
+    return folder_data.get("pin", "")
+
+
 async def get_folder_path_names(user_id, folder_id=ROOT_FOLDER_ID):
     """Возвращает имена папок по пути к папке."""
     folders_collection = await get_folders_collection(user_id)
@@ -206,8 +212,8 @@ async def get_inline_markup_items_in_folder(
     for item_id in current_items:
         item = await get_simple_item(user_id, item_id)
 
-        if search_text:
-            item.select_search_text(search_text, '[', ']')
+        # if search_text:
+        #     item.select_search_text(search_text, '[', ']')
 
         item_button_text = item.get_inline_title()
         if item:

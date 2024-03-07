@@ -102,3 +102,28 @@ class MessageBoxCallback(CallbackData, prefix='message_box'):
 class BackToStandardFolderView(CallbackData, prefix='back_to_standard_folder_view'):
     page_folder: int
     page_item: int
+
+
+class EditFolderCallback(CallbackData, prefix='edit_folder'):
+    folder_id: str
+    action: str
+
+
+class StatisticFolderHandler(CallbackData, prefix='statistic_folder'):
+    folder_id: str
+
+
+class SearchInFolderHandler(CallbackData, prefix='search_in_folder'):
+    folder_id: str
+
+
+class PinFolderHandler(CallbackData, prefix='pin_folder'):
+    folder_id: str
+
+
+class PinKeyboardNumberHandler(CallbackData, prefix='pin_keyboard_number'):
+    number: int
+
+
+class PinKeyboardButtonHandler(CallbackData, prefix='pin_keyboard_button'):
+    action: str

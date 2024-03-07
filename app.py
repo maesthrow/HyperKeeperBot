@@ -24,6 +24,7 @@ async def main():
 
 if __name__ == '__main__':
     import handlers.handlers_
+    import handlers.handlers_search_end
     import handlers.handlers_item_entities
     import handlers.handlers_item_edit_inline_buttons
     import handlers.handlers_item_add_mode
@@ -31,6 +32,7 @@ if __name__ == '__main__':
     import handlers.handlers_inline_query_search
     import handlers.handlers_item_text_pages
     import handlers.handlers_edit_item_files
+    import handlers.handlers_folder_control
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

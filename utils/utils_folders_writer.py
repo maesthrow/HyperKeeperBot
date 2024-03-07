@@ -26,7 +26,7 @@ async def add_new_folder(user_id, new_folder_name, parent_folder_id):
     new_folder_id = f"{parent_folder_id}/{str(int(parent_folder_ids[-1].split('-')[0]) + 1)}-{max_child_number + 1}"
 
     # Создаем данные для новой папки
-    new_folder_data = {"name": new_folder_name, "folders": {}, "items": {}}
+    new_folder_data = {"name": new_folder_name, "pin": None, "folders": {}, "items": {}}
 
     # Добавляем новую папку в родительскую папку
     target_folders[new_folder_id] = new_folder_data
@@ -70,6 +70,15 @@ async def delete_folder(user_id, folder_id):
 
 async def rename_folder(user_id, folder_id, folder_new_name):
     """Переименовывает указанную папку."""
+    return await set_folder_data(user_id, folder_id, 'name', folder_new_name)
+
+
+async def set_pin_folder(user_id, folder_id, folder_new_pin):
+    """Устанавливает новый PIN-код для указанной папку."""
+    return await set_folder_data(user_id, folder_id, 'pin', folder_new_pin)
+
+
+async def set_folder_data(user_id, folder_id, field_name, field_value):
     folders_collection = await get_folders_collection(user_id)
 
     # Разбиваем идентификатор папки на части
@@ -90,11 +99,11 @@ async def rename_folder(user_id, folder_id, folder_new_name):
 
     if folder_to_rename:
         # Обновляем название папки
-        folder_to_rename["name"] = folder_new_name
+        folder_to_rename[field_name] = field_value
 
         # Обновляем данные пользователя
         await set_user_folders_data(user_id, {"folders": folders_collection})
 
-        return True  # Успешно переименовано
+        return True  # Успешно сохранено
     else:
         return False  # Папка не найдена

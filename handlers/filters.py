@@ -35,10 +35,14 @@ class NotAddToFilter(Filter):
         return current_state != Item.AddTo.state
 
 
-class NotEditFileCaptionFilter(Filter):
+class NewItemValidateFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
-        return current_state != Item.EditFileCaption.state
+        return (
+                current_state != Item.EditFileCaption.state
+                and current_state != Item.Search.state
+                and current_state != Item.SearchResults.state
+                )
 
 
 class OnlyAddTextToItemFilter(Filter):

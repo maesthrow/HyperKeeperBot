@@ -3,10 +3,10 @@ import asyncio
 import aiogram
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from aiogram.types import InlineKeyboardButton, CallbackQuery, Message
 
 from handlers import states
-from handlers.handlers_folder import show_folders
+from handlers.handlers_folder_control import search_in_folder
 from load_all import bot, dp
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_folder_path_names
@@ -24,20 +24,26 @@ dp.include_router(router)
 @router.message(F.text.in_({"🔍 Поиск", "🔄 Новый поиск 🔍️"}))
 async def search_item_handler(message: aiogram.types.Message, state: FSMContext):
     user_id = message.from_user.id
-    data = await get_data(user_id)
-    data['dict_search_data'] = None
-    await set_data(user_id, data)
-
-    await bot.send_message(message.chat.id, "🔍", reply_markup=ReplyKeyboardRemove())
-    await asyncio.sleep(0.3)
-    buttons = [[cancel_enter_search_text_button]]
-    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=buttons)
-    await bot.send_message(message.chat.id, "Введите текст для поиска:", reply_markup=inline_markup)
-    await state.set_state(states.Item.Search)
+    await search_in_folder(user_id, state)
 
 
-@router.message(states.Item.Search)
-async def get_search_text(message: aiogram.types.Message, state: FSMContext):
+# @router.message(states.Item.Search, F.text == "❎ Завершить режим поиска 🔍️")
+# async def search_item_handler(message: Message):
+#     user_id = message.from_user.id
+#     data = await get_data(user_id)
+#     data['dict_search_data'] = None
+#     search_message = data['search_message']
+#     try:
+#         await bot.delete_message(user_id, search_message.message_id)
+#     except:
+#         pass
+#     data['search_message'] = None
+#     #await set_data(user_id, data)
+#     await bot.delete_message(user_id, message.message_id)
+
+
+@router.message(states.Item.Search, F.text != "❎ Завершить режим поиска 🔍️")
+async def get_search_text(message: Message, state: FSMContext):
     user_id = message.from_user.id
 
     wait_message = await bot.send_message(user_id, f"⌛️")
@@ -57,12 +63,7 @@ async def get_search_text(message: aiogram.types.Message, state: FSMContext):
         data['dict_search_data'] = dict_search_data
         await set_data(user_id, data)
 
-    # else:
-    #     await asyncio.sleep(0.5)
-    #     await search_item_handler(message)
-    # await show_folders()
-
-    await state.set_state()
+    await state.set_state(states.Item.SearchResults)
 
 
 async def show_search_results(user_id, dict_search_data):
@@ -98,10 +99,9 @@ async def show_search_results(user_id, dict_search_data):
         await bot.send_message(user_id, f"Ничего не найдено 🤷‍♂️")
 
 
-@router.callback_query(states.Item.Search, F.data.contains("cancel_enter_search_text"))
-async def cancel_enter_search_text(call: CallbackQuery, state: FSMContext):
-    # await call.message.answer("⌛️")
-    await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
-    await state.set_state()
-    await show_folders(call.from_user.id)
-    await call.answer()
+# @router.callback_query(states.Item.Search, F.data.contains("cancel_enter_search_text"))
+# async def cancel_enter_search_text(call: CallbackQuery, state: FSMContext):
+#     await bot.delete_message(chat_id=call.message.chat.id, message_id=call.message.message_id)
+#     await state.set_state()
+#     #await show_folders(call.from_user.id)
+#     await call.answer()
