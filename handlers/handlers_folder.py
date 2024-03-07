@@ -25,7 +25,7 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
 from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
                                         general_buttons_statistic_folder, check_button_exists_part_of_text,
-                                        get_folders_with_items_inline_markup, cancel_button)
+                                        get_folders_with_items_inline_markup, cancel_button, new_general_buttons_folder)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_folders import get_folder_statistic, \
     get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
@@ -65,7 +65,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
     else:
-        general_buttons = general_buttons_folder[:]
+        general_buttons = new_general_buttons_folder[:]
 
     markup = create_general_reply_markup(general_buttons)
 

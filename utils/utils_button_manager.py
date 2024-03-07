@@ -32,6 +32,13 @@ general_buttons_folder = [
     [KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")]
 ]
 
+new_general_buttons_folder = [
+    [
+        KeyboardButton(text=f"➕ Новая папка"),
+        KeyboardButton(text=f"🛠 Управление текущей папкой") # 🛠 ⚡️ 👨‍🔧👨‍🔬
+    ]
+]
+
 general_buttons_folder_show_all = [
     [KeyboardButton(text="➕ Новая папка"), KeyboardButton(text="️📊 Статистика")],
 ]

@@ -30,7 +30,7 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
 from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
     skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
-    get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons
+    get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons, new_general_buttons_folder
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_info_by_content_type, dict_to_location, dict_to_contact
@@ -276,7 +276,7 @@ async def show_storage(message: Message, state: FSMContext):
         if movement_item_initial_folder_id != ROOT_FOLDER_ID:
             general_buttons.insert(0, [KeyboardButton(text="🔀 Переместить в текущую папку")])
     else:
-        general_buttons = general_buttons_folder[:]
+        general_buttons = new_general_buttons_folder[:]
 
     markup = create_general_reply_markup(general_buttons)
 
