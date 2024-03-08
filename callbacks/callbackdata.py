@@ -121,6 +121,20 @@ class PinFolderHandler(CallbackData, prefix='pin_folder'):
     folder_id: str
 
 
+class NewPinCodeButtonHandler(CallbackData, prefix='new_pin_code'):
+    folder_id: str
+    pin: str
+    pin_repeat: str
+    visible: bool
+
+
+class EnterPinCodeButtonHandler(CallbackData, prefix='enter_pin_code'):
+    folder_id: str
+    pin: str
+    pin_valid: str
+    visible: bool
+
+
 class PinKeyboardNumberHandler(CallbackData, prefix='pin_keyboard_number'):
     number: int
     folder_id: str

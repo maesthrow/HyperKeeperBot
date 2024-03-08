@@ -13,7 +13,7 @@ from models.item_model import Item
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import get_text_pages_buttons, get_repost_button_in_markup, item_edit_buttons, \
     delete_page_inline_button, get_edit_page_buttons
-from utils.utils_constants import numbers
+from utils.utils_constants import numbers_ico
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import markdown_without_code
 
@@ -87,7 +87,7 @@ async def text_all_pages(author_user_id: int, item: Item, page_number: int, acti
                                         page=page_number).pack()
     )
     for page in range(len(item.text)):
-        display_page = ''.join([numbers[n] for n in str(page + 1)])
+        display_page = ''.join([numbers_ico[n] for n in str(page + 1)])
         text = f'{display_page} {item.get_inline_page_text(page)}'
         text = f'{select_smile} {text}' if page == page_number else text
         builder.button(
