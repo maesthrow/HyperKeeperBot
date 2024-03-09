@@ -43,7 +43,7 @@ async def get_user_folders_deep_count(user_id, folder_id=ROOT_FOLDER_ID):
     return deep_count
 
 
-async def get_folder(user_id, folder_id):
+async def get_folder(user_id, folder_id=ROOT_FOLDER_ID):
     folder_data = await get_folder_data(user_id, folder_id)
 
     if "access" in folder_data:

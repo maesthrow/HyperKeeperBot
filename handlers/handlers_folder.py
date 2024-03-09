@@ -213,13 +213,15 @@ async def to_folder(call: CallbackQuery, callback_data: FolderCallback):
     folder_id = callback_data.folder_id
 
     folder: Folder = await get_folder(user_id, folder_id)
-    if folder.get_pin():
-        inline_markup = get_folder_pin_inline_markup(user_id, folder_id)
+    pin = folder.get_pin()
+    if pin:
+        inline_markup = get_folder_pin_inline_markup(user_id, folder_id, pin)
         await bot.send_message(
             chat_id=user_id,
             text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder.name}:',
             reply_markup=inline_markup
         )
+        #await show_folders(user_id=user_id, current_folder_id=folder_id)
     else:
         await show_folders(user_id=user_id, current_folder_id=folder_id)
     try:

@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import re
 
 from aiogram import Router
@@ -9,10 +10,12 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import EditFolderCallback, StatisticFolderHandler, MessageBoxCallback, \
     SearchInFolderHandler, PinFolderHandler, PinKeyboardNumberHandler, PinKeyboardButtonHandler, \
-    NewPinCodeButtonHandler, PinCodeButtonHandler, EnterPinCodeButtonHandler
+    NewPinCodeButtonHandler, EnterPinCodeButtonHandler
 from handlers import states
+from handlers.handlers_folder import show_folders
 from load_all import dp, bot
 from models.folder_model import Folder
+from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_folder_name, smile_folder, get_inline_markup_for_accept_cancel, smile_item, get_folder_pin
 from utils.utils_button_manager import cancel_button, create_general_reply_markup, general_buttons_search_items, \
@@ -26,6 +29,8 @@ from utils.utils_items_reader import get_folder_items
 router = Router()
 dp.include_router(router)
 
+numbers = numbers_ico.values()
+pattern = r'|'.join(map(re.escape, numbers))
 
 @router.callback_query(EditFolderCallback.filter())
 async def edit_folder_handler(call: CallbackQuery, state: FSMContext):
@@ -167,14 +172,16 @@ async def pin_folder_handler(call: CallbackQuery, state: FSMContext):
     call_data = PinFolderHandler.unpack(call.data)
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(user_id, folder_id)
-    inline_markup = get_folder_pin_inline_markup(user_id, folder_id)
-    if not folder.get_pin():
+    pin = folder.get_pin()
+    if not pin:
+        inline_markup = get_folder_pin_inline_markup(user_id, folder_id)
         await bot.send_message(
             chat_id=user_id,
             text=f'Придумайте PIN-код для папки\n{smile_folder} {folder.name}:',  # \n\n➖ ➖ ➖ ➖',
             reply_markup=inline_markup
         )
     else:
+        inline_markup = get_folder_pin_inline_markup(user_id, folder_id, pin=pin)
         await bot.send_message(
             chat_id=user_id,
             text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder.name}:',  # \n\n➖ ➖ ➖ ➖',
@@ -192,6 +199,8 @@ async def number_pin_folder_handler(call: CallbackQuery, state: FSMContext):
     pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]
     if NewPinCodeButtonHandler.__prefix__ in pin_code_button.callback_data:
         await number_new_pin_folder_handler(call, inline_markup, pin_code_button)
+    else:
+        await number_enter_pin_folder_handler(call, inline_markup, pin_code_button)
 
     await call.answer()
 
@@ -201,7 +210,9 @@ async def number_new_pin_folder_handler(call, inline_markup, pin_code_button):
     pattern = r'|'.join(map(re.escape, numbers))
 
     user_id = call.from_user.id
+
     pin_code_data = NewPinCodeButtonHandler.unpack(pin_code_button.callback_data)
+    print(f'pin_code_data {pin_code_data}')
     pin = pin_code_data.pin
     pin_repeat = pin_code_data.pin_repeat
     folder_id = pin_code_data.folder_id
@@ -246,12 +257,15 @@ async def number_new_pin_folder_handler(call, inline_markup, pin_code_button):
     elif len(pin) == 4 and len(pin_repeat) == 4 and pin == pin_repeat:
         message_text = '✅ PIN-код установлен.'
         if pin_code_data.visible:
-            #pin_code_button.text = re.sub(pattern, '🟢', pin_code_button.text)
+            pin_code_button.text = re.sub(pattern, '🟢', pin_code_button.text)
             pass
         else:
             pin_code_button.text = pin_code_button.text.replace('🔘', '🟢')
         await set_pin_folder(user_id, folder_id, pin)
         await asyncio.sleep(0.5)
+        if pin_code_data.visible:
+            for number in pin:
+                pin_code_button.text = pin_code_button.text.replace('🟢', numbers_ico[number], 1)
         inline_markup = get_ok_inline_markup(pin_code_button)
         await bot.edit_message_text(
             text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
@@ -271,6 +285,78 @@ async def number_new_pin_folder_handler(call, inline_markup, pin_code_button):
         await bot.edit_message_text(
             text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
         )
+
+
+async def number_enter_pin_folder_handler(call, inline_markup, pin_code_button):
+    user_id = call.from_user.id
+
+    pin_code_data = EnterPinCodeButtonHandler.unpack(pin_code_button.callback_data)
+    print(f'pin_code_data {pin_code_data}')
+    pin = pin_code_data.pin
+    pin_repeat = pin_code_data.pin_repeat
+    folder_id = pin_code_data.folder_id
+
+    call_data = PinKeyboardNumberHandler.unpack(call.data)
+    number = call_data.number
+    if len(pin_repeat) < 4:
+        pin_repeat += str(number)
+
+        pin_code_button.callback_data = EnterPinCodeButtonHandler(
+            folder_id=folder_id, pin=pin, pin_repeat=pin_repeat, visible=pin_code_data.visible
+        ).pack()
+        if pin_code_data.visible:
+            pin_code_button.text = pin_code_button.text.replace('❔', numbers_ico[str(number)], 1)
+        else:
+            pin_code_button.text = pin_code_button.text.replace('➖', '🔘', 1)
+        await bot.edit_message_reply_markup(
+            chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+        )
+
+    if len(pin_repeat) == 4 and pin == pin_repeat:
+        message_text = f'✅ PIN-код подтвержден.{INVISIBLE_CHAR * 10}'
+        if pin_code_data.visible:
+            await show_enter_pin_result(call, user_id, inline_markup, pin_code_button, pin, message_text, '🟢')
+        else:
+            pin_code_button.text = pin_code_button.text.replace('🔘', '🟢')
+            await asyncio.sleep(0.4)
+            # inline_markup = get_ok_inline_markup(pin_code_button)
+            await bot.edit_message_text(
+                text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+            )
+        await show_folders(user_id=user_id, current_folder_id=folder_id)
+        await bot.delete_message(user_id, message_id=call.message.message_id)
+
+    elif len(pin_repeat) == 4 and pin != pin_repeat:
+        message_text = f'❌ PIN-код не совпадает.{INVISIBLE_CHAR * 20}\nПопробуйте еще раз:'
+        if pin_code_data.visible:
+            await show_enter_pin_result(call, user_id, inline_markup, pin_code_button, pin, message_text, '🔴')
+        else:
+            pin_code_button.text = pin_code_button.text.replace('🔘', '🔴')
+            await asyncio.sleep(0.4)
+            await bot.edit_message_reply_markup(
+                chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+            )
+        await asyncio.sleep(0.1)
+        inline_markup = get_folder_pin_inline_markup(user_id, folder_id, pin)
+        await bot.edit_message_reply_markup(
+            chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+        )
+
+
+async def show_enter_pin_result(call, user_id, inline_markup, pin_code_button, pin, message_text, icon):
+    pin_code_button.text = re.sub(pattern, icon, pin_code_button.text)
+    await bot.edit_message_reply_markup(
+        chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+    )
+    await asyncio.sleep(0.6)
+    pin_button_text = pin_code_button.text
+    for number in pin:
+        pin_button_text = re.sub(icon, numbers_ico[number], pin_button_text, 1)
+    pin_code_button.text = pin_button_text
+    inline_markup.inline_keyboard[0][0] = pin_code_button
+    await bot.edit_message_reply_markup(
+        chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
+    )
 
 
 @router.callback_query(PinKeyboardButtonHandler.filter())
@@ -313,12 +399,17 @@ async def button_pin_folder_handler(call: CallbackQuery):
 
 
 @router.callback_query(NewPinCodeButtonHandler.filter())
+@router.callback_query(EnterPinCodeButtonHandler.filter())
 async def number_pin_code_button_handler(call: CallbackQuery):
     inline_markup = call.message.reply_markup
     pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]
     pin_button_text = pin_code_button.text
 
-    call_data = NewPinCodeButtonHandler.unpack(call.data)
+    is_new_pin = NewPinCodeButtonHandler.__prefix__ in pin_code_button.callback_data
+    if is_new_pin:
+        call_data = NewPinCodeButtonHandler.unpack(call.data)
+    else:
+        call_data = EnterPinCodeButtonHandler.unpack(call.data)
     user_id = call.from_user.id
     pin = call_data.pin_repeat if call_data.pin_repeat else call_data.pin
     visible = call_data.visible
@@ -346,12 +437,20 @@ async def number_pin_code_button_handler(call: CallbackQuery):
         pin_button_text = pin_button_text.replace('❔', '➖')
         pin_button_text = pin_button_text.replace('🧐', '🫣')
     pin_code_button.text = pin_button_text
-    pin_code_button.callback_data = NewPinCodeButtonHandler(
-        folder_id=call_data.folder_id,
-        pin=call_data.pin,
-        pin_repeat=call_data.pin_repeat,
-        visible=visible
-    ).pack()
+    if is_new_pin:
+        pin_code_button.callback_data = NewPinCodeButtonHandler(
+            folder_id=call_data.folder_id,
+            pin=call_data.pin,
+            pin_repeat=call_data.pin_repeat,
+            visible=visible
+        ).pack()
+    else:
+        pin_code_button.callback_data = EnterPinCodeButtonHandler(
+            folder_id=call_data.folder_id,
+            pin=call_data.pin,
+            pin_repeat=call_data.pin_repeat,
+            visible=visible
+        ).pack()
     inline_markup.inline_keyboard[0] = [pin_code_button]
     await bot.edit_message_reply_markup(
         chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup

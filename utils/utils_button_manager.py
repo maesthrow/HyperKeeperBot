@@ -8,7 +8,8 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderHandler, SearchInFolderHandler, \
-    PinFolderHandler, PinKeyboardNumberHandler, PinKeyboardButtonHandler, NewPinCodeButtonHandler
+    PinFolderHandler, PinKeyboardNumberHandler, PinKeyboardButtonHandler, NewPinCodeButtonHandler, \
+    EnterPinCodeButtonHandler
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_constants import numbers_ico
@@ -442,11 +443,19 @@ def get_folder_control_inline_markup(user_id, folder_id):
     return builder.as_markup()
 
 
-def get_folder_pin_inline_markup(user_id, folder_id):
+def get_folder_pin_inline_markup(user_id, folder_id=None, pin: str = None):
+    if not folder_id:
+        folder_id = ROOT_FOLDER_ID
+
+    if pin:
+        pin_button_data = EnterPinCodeButtonHandler(folder_id=folder_id, pin=pin, pin_repeat='', visible=False).pack()
+    else:
+        pin_button_data = NewPinCodeButtonHandler(folder_id=folder_id, pin='', pin_repeat='', visible=False).pack()
+
     builder = InlineKeyboardBuilder()
     builder.button(
         text=str(INVISIBLE_CHAR*7) + '➖ ➖ ➖ ➖   🫣', # 👁️
-        callback_data=NewPinCodeButtonHandler(folder_id=folder_id, pin='', pin_repeat='', visible=False).pack()
+        callback_data=pin_button_data
     )
     for n in range(1, 10):
         builder.button(
