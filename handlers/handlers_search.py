@@ -42,7 +42,7 @@ async def search_item_handler(message: aiogram.types.Message, state: FSMContext)
 #     await bot.delete_message(user_id, message.message_id)
 
 
-@router.message(states.Item.Search, F.text != "❎ Завершить режим поиска 🔍️")
+@router.message(states.ItemState.Search, F.text != "❎ Завершить режим поиска 🔍️")
 async def get_search_text(message: Message, state: FSMContext):
     user_id = message.from_user.id
 
@@ -63,7 +63,7 @@ async def get_search_text(message: Message, state: FSMContext):
         data['dict_search_data'] = dict_search_data
         await set_data(user_id, data)
 
-    await state.set_state(states.Item.SearchResults)
+    await state.set_state(states.ItemState.SearchResults)
 
 
 async def show_search_results(user_id, dict_search_data):

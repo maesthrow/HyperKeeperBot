@@ -96,7 +96,7 @@ async def edit_item_title_handler(call: CallbackQuery, state: FSMContext):
     data['edit_item_messages'] = edit_item_messages
     await set_data(user_id, data)
 
-    await state.set_state(states.Item.EditTitle)
+    await state.set_state(states.ItemState.EditTitle)
     await call.answer()
 
 
@@ -137,7 +137,7 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
     data['edit_item_messages'] = edit_item_messages
     await set_data(user_id, data)
     await state.update_data(item_text_page=page)
-    await state.set_state(states.Item.EditText)
+    await state.set_state(states.ItemState.EditText)
     await call.answer()
 
 

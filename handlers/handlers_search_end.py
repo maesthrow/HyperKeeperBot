@@ -16,8 +16,8 @@ router = Router()
 dp.include_router(router)
 
 
-@router.message(states.Item.Search, F.text == "❎ Завершить режим поиска 🔍️")
-@router.message(states.Item.SearchResults, F.text == "❎ Завершить режим поиска 🔍️")
+@router.message(states.ItemState.Search, F.text == "❎ Завершить режим поиска 🔍️")
+@router.message(states.ItemState.SearchResults, F.text == "❎ Завершить режим поиска 🔍️")
 async def search_item_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)

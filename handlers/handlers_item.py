@@ -154,9 +154,9 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(user_id, folder_id, need_to_resend=True)
 
 
-@router.message(states.Item.NewStepTitle, F.text == cancel_save_new_item_button.text)
-@router.message(states.Item.NewStepAdd, F.text == cancel_save_new_item_button.text)
-@router.message(states.Item.ChooseTypeAddTextToNewItem, F.text == cancel_save_new_item_button.text)
+@router.message(states.ItemState.NewStepTitle, F.text == cancel_save_new_item_button.text)
+@router.message(states.ItemState.NewStepAdd, F.text == cancel_save_new_item_button.text)
+@router.message(states.ItemState.ChooseTypeAddTextToNewItem, F.text == cancel_save_new_item_button.text)
 async def cancel_add_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
@@ -169,9 +169,9 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
     await show_folders(message.chat.id)
 
 
-@router.message(states.Item.NewStepAdd, F.text == cancel_add_mode_button.text)
-@router.message(states.Item.ChooseTypeAddTextToNewItem, F.text == cancel_add_mode_button.text)
-@router.message(states.Item.ChooseTypeAddText, F.text == cancel_add_mode_button.text)
+@router.message(states.ItemState.NewStepAdd, F.text == cancel_add_mode_button.text)
+@router.message(states.ItemState.ChooseTypeAddTextToNewItem, F.text == cancel_add_mode_button.text)
+@router.message(states.ItemState.ChooseTypeAddText, F.text == cancel_add_mode_button.text)
 async def cancel_add_mode_on_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
     item: Item = data.get('item', None)
@@ -189,17 +189,17 @@ async def cancel_add_mode_on_new_item(message: Message, state: FSMContext):
     )
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
-    await state.set_state(states.Item.NewStepTitle)
+    await state.set_state(states.ItemState.NewStepTitle)
 
 
-@router.message(states.Item.NewStepTitle, F.text == without_title_button.text)
+@router.message(states.ItemState.NewStepTitle, F.text == without_title_button.text)
 async def skip_enter_item_title_handler(message: Message, state: FSMContext):
     data = await state.get_data()
     item: Item = data.get('item')
     await on_create_new_item(state, item, message=message)
 
 
-@router.message(states.Item.NewStepTitle, F.text == add_to_item_button.text)
+@router.message(states.ItemState.NewStepTitle, F.text == add_to_item_button.text)
 async def add_to_new_item_handler(message: Message, state: FSMContext):
     markup = create_general_reply_markup(general_add_to_new_item_mode_buttons)
     await bot.send_message(
@@ -208,10 +208,10 @@ async def add_to_new_item_handler(message: Message, state: FSMContext):
         reply_markup=markup
     )
     await state.update_data(file_messages=[], text_messages=[])
-    await state.set_state(states.Item.NewStepAdd)
+    await state.set_state(states.ItemState.NewStepAdd)
 
 
-@router.message(states.Item.NewStepTitle, NotInButtonsFilter(general_new_item_buttons))
+@router.message(states.ItemState.NewStepTitle, NotInButtonsFilter(general_new_item_buttons))
 async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
     item = data.get('item')
@@ -317,8 +317,8 @@ async def delete_all_items_request(call: CallbackQuery):
     await call.answer()
 
 
-@router.message(states.Item.EditTitle, NotInButtonsFilter(clean_title_buttons + [complete_edit_item_button]))
-@router.message(states.Item.EditText, NotInButtonsFilter(clean_text_buttons + [complete_edit_item_button]))
+@router.message(states.ItemState.EditTitle, NotInButtonsFilter(clean_title_buttons + [complete_edit_item_button]))
+@router.message(states.ItemState.EditText, NotInButtonsFilter(clean_text_buttons + [complete_edit_item_button]))
 async def edit_item_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
@@ -328,8 +328,8 @@ async def edit_item_handler(message: Message, state: FSMContext):
     await do_edit_item(user_id, item_id, state, edit_text=format_message_text)
 
 
-@router.message(states.Item.EditTitle, InButtonsFilter(clean_title_buttons))
-@router.message(states.Item.EditText, InButtonsFilter(clean_text_buttons))
+@router.message(states.ItemState.EditTitle, InButtonsFilter(clean_title_buttons))
+@router.message(states.ItemState.EditText, InButtonsFilter(clean_text_buttons))
 async def add_none_title_or_text_item_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
@@ -346,10 +346,10 @@ async def do_edit_item(user_id, item_id, state, edit_text):
     await show_item(user_id, item_id, page=text_page)
 
 
-@router.message(states.Item.EditTitle, F.text == complete_edit_item_button.text)
-@router.message(states.Item.EditText, F.text == complete_edit_item_button.text)
-@router.message(states.Item.EditFiles, F.text == complete_edit_item_button.text)
-@router.message(states.Item.EditFileCaption, F.text == complete_edit_item_button.text)
+@router.message(states.ItemState.EditTitle, F.text == complete_edit_item_button.text)
+@router.message(states.ItemState.EditText, F.text == complete_edit_item_button.text)
+@router.message(states.ItemState.EditFiles, F.text == complete_edit_item_button.text)
+@router.message(states.ItemState.EditFileCaption, F.text == complete_edit_item_button.text)
 async def cancel_edit_item(message: Message, state: FSMContext):
     user_id = message.from_user.id
     await on_cancel_edit_item(user_id, state)
@@ -370,8 +370,8 @@ async def on_cancel_edit_item(user_id, state: FSMContext):
     await show_item(user_id, item_id)
 
 
-@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][0].text)
-@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[0][1].text)
+@router.message(states.ItemState.EditFiles, F.text == general_buttons_edit_item_files[0][0].text)
+@router.message(states.ItemState.EditFiles, F.text == general_buttons_edit_item_files[0][1].text)
 async def mark_all_edit_files_handler(message: Message, state: FSMContext):
     mark = message.text == general_buttons_edit_item_files[0][0].text
     user_id = message.from_user.id
@@ -387,7 +387,7 @@ async def mark_all_edit_files_handler(message: Message, state: FSMContext):
     await bot.delete_message(user_id, message.message_id)
 
 
-@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[1][0].text)
+@router.message(states.ItemState.EditFiles, F.text == general_buttons_edit_item_files[1][0].text)
 async def delete_marked_edit_files_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
@@ -413,7 +413,7 @@ async def delete_marked_edit_files_handler(message: Message, state: FSMContext):
     await bot.delete_message(chat_id=user_id, message_id=message.message_id)
 
 
-@router.message(states.Item.EditFiles, F.text == general_buttons_edit_item_files[1][1].text)
+@router.message(states.ItemState.EditFiles, F.text == general_buttons_edit_item_files[1][1].text)
 async def delete_all_marked_edit_files_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)

@@ -59,7 +59,7 @@ async def add_to_item_handler(call: CallbackQuery, state: FSMContext):
         text="Отправьте в сообщении то, чем хотите дополнить запись:",
         reply_markup=markup
     )
-    await state.set_state(states.Item.AddTo)
+    await state.set_state(states.ItemState.AddTo)
     await state.update_data(bot_message=call.message)
     await call.answer()
 
@@ -75,13 +75,13 @@ async def add_text_to_item_handler(messages: List[Message], state: FSMContext, i
 
     await state.update_data(text_messages=messages)
     if is_new_item:
-        await state.set_state(states.Item.ChooseTypeAddTextToNewItem)
+        await state.set_state(states.ItemState.ChooseTypeAddTextToNewItem)
     else:
-        await state.set_state(states.Item.ChooseTypeAddText)
+        await state.set_state(states.ItemState.ChooseTypeAddText)
 
 
-@router.message(states.Item.ChooseTypeAddTextToNewItem)
-@router.message(states.Item.ChooseTypeAddText)
+@router.message(states.ItemState.ChooseTypeAddTextToNewItem)
+@router.message(states.ItemState.ChooseTypeAddText)
 async def message_on_choose_type_handler(message: Message, state: FSMContext):
     user_id = message.from_user.id
     await bot.delete_message(user_id, message.message_id)

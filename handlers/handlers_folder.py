@@ -15,8 +15,9 @@ from callbacks.callbackdata import FolderCallback
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 from handlers import states
 from handlers.message_manager import send_ok_info_message
-from handlers.states import Folder
+from handlers.states import FolderState
 from load_all import bot, dp
+from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
@@ -26,11 +27,13 @@ from utils.utils_button_manager import (general_buttons_folder, create_general_r
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
                                         general_buttons_statistic_folder, check_button_exists_part_of_text,
                                         get_folders_with_items_inline_markup, cancel_button, new_general_buttons_folder,
-                                        current_folder_control_button, get_folder_control_inline_markup)
+                                        current_folder_control_button, get_folder_control_inline_markup,
+                                        get_folder_pin_inline_markup)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_folders import get_folder_statistic, \
     get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
 from utils.utils_folders_db import util_delete_folder, util_add_new_folder, util_rename_folder
+from utils.utils_folders_reader import get_folder
 from utils.utils_items import show_all_items
 
 # from aiogram.utils.exceptions import MessageNotModified
@@ -208,7 +211,17 @@ async def is_only_folders_mode_keyboard(user_id):
 async def to_folder(call: CallbackQuery, callback_data: FolderCallback):
     user_id = call.from_user.id
     folder_id = callback_data.folder_id
-    await show_folders(user_id=user_id, current_folder_id=folder_id)
+
+    folder: Folder = await get_folder(user_id, folder_id)
+    if folder.get_pin():
+        inline_markup = get_folder_pin_inline_markup(user_id, folder_id)
+        await bot.send_message(
+            chat_id=user_id,
+            text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder.name}:',
+            reply_markup=inline_markup
+        )
+    else:
+        await show_folders(user_id=user_id, current_folder_id=folder_id)
     try:
         await call.answer()
     except:
@@ -309,8 +322,8 @@ async def delete_folder_request(call: CallbackQuery):
 #     await state.set_state(states.Folder.EditName)
 
 
-@router.message(states.Folder.NewName, F.text == cancel_button.text)
-@router.message(states.Folder.EditName, F.text == cancel_button.text)
+@router.message(states.FolderState.NewName, F.text == cancel_button.text)
+@router.message(states.FolderState.EditName, F.text == cancel_button.text)
 async def cancel_handler(message: aiogram.types.Message, state: FSMContext):
     user_id = message.from_user.id
     data = await get_data(user_id)
@@ -369,7 +382,7 @@ async def get_enter_folder_name(message: Message, is_edit=False):
     return new_folder_name
 
 
-@router.message(states.Folder.NewName)
+@router.message(states.FolderState.NewName)
 async def new_folder(message: Message, state: FSMContext):
     new_folder_name = await get_enter_folder_name(message)
     if not new_folder_name:
@@ -393,7 +406,7 @@ async def new_folder(message: Message, state: FSMContext):
     # await bot.delete_message(chat_id=message.chat.id, message_id=sent_message.message_id)
 
 
-@router.message(states.Folder.EditName)
+@router.message(states.FolderState.EditName)
 async def edit_folder(message: aiogram.types.Message, state: FSMContext):
     folder_new_name = await get_enter_folder_name(message, is_edit=True)
     if not folder_new_name:
@@ -442,7 +455,7 @@ async def create_new_folder(message: Message, state: FSMContext):
             reply_markup=markup)
     )
     await state.update_data(question_messages=question_messages)
-    await state.set_state(states.Folder.NewName)
+    await state.set_state(states.FolderState.NewName)
     await bot.delete_message(
         chat_id=message.chat.id,
         message_id=message.message_id,

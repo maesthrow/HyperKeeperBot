@@ -6,7 +6,7 @@ from aiogram.fsm.state import State
 from aiogram.types import KeyboardButton, Message
 
 from handlers import states
-from handlers.states import Item
+from handlers.states import ItemState
 
 
 class InButtonsFilter(Filter):
@@ -32,32 +32,32 @@ class NotInButtonsFilter(InButtonsFilter):
 class NotAddToFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
-        return current_state != Item.AddTo.state
+        return current_state != ItemState.AddTo.state
 
 
 class NewItemValidateFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
         return (
-                current_state != Item.EditFileCaption.state
-                and current_state != Item.Search.state
-                and current_state != Item.SearchResults.state
+                current_state != ItemState.EditFileCaption.state
+                and current_state != ItemState.Search.state
+                and current_state != ItemState.SearchResults.state
                 )
 
 
 class OnlyAddTextToItemFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
-        return current_state != Item.ChooseTypeAddTextToNewItem.state and current_state == Item.ChooseTypeAddText.state
+        return current_state != ItemState.ChooseTypeAddTextToNewItem.state and current_state == ItemState.ChooseTypeAddText.state
 
 
 class ItemAddModeFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
-        return current_state in (states.Item.AddTo, states.Item.ChooseTypeAddText)
+        return current_state in (states.ItemState.AddTo, states.ItemState.ChooseTypeAddText)
 
 
 class ItemAllAddModesFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
-        return current_state in (states.Item.NewStepAdd, states.Item.AddTo)
+        return current_state in (states.ItemState.NewStepAdd, states.ItemState.AddTo)

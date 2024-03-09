@@ -1,4 +1,5 @@
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
+from models.folder_model import Folder
 from utils.utils_data import get_folders_collection
 
 
@@ -40,3 +41,24 @@ async def get_user_folders_deep_count(user_id, folder_id=ROOT_FOLDER_ID):
     for sub_folder_id in folders_in_folder:
         deep_count += await get_user_folders_deep_count(user_id, sub_folder_id)
     return deep_count
+
+
+async def get_folder(user_id, folder_id):
+    folder_data = await get_folder_data(user_id, folder_id)
+
+    if "access" in folder_data:
+        access = folder_data["access"]
+    else:
+        access = None
+
+    if folder_data:
+        folder = Folder(
+            folder_id=folder_id,
+            name=folder_data['name'],
+            access=access,
+            folders=folder_data['folders'],
+            items=folder_data['items']
+        )
+        return folder
+
+    return None

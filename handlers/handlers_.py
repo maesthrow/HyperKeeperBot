@@ -383,13 +383,13 @@ async def text_to_new_item_handler(messages: List[Message], state: FSMContext):
 
     _state = await state.get_state()
 
-    if not item and _state != states.Item.AddTo:
+    if not item and _state != states.ItemState.AddTo:
         response_text = "Сейчас сохраним новую запись 👌"
         item = Item(id="", text=[])
         await save_text_to_new_item_and_set_title(state=state, item=item, messages=messages,
                                                   response_text=response_text)
     else:
-        is_new_item = _state == states.Item.NewStepAdd
+        is_new_item = _state == states.ItemState.NewStepAdd
         page = -1
         if not item:
             item = data.get('current_item')
@@ -404,7 +404,7 @@ async def text_to_new_item_handler(messages: List[Message], state: FSMContext):
         await add_text_to_item_handler(messages, state, is_new_item=is_new_item, item=item, page=page)
 
 
-@router.callback_query(states.Item.ChooseTypeAddTextToNewItem, ChooseTypeAddText.filter())
+@router.callback_query(states.ItemState.ChooseTypeAddTextToNewItem, ChooseTypeAddText.filter())
 async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
     callback_data: ChooseTypeAddText = ChooseTypeAddText.unpack(call.data)
     is_new_page = callback_data.type == 'new_page'
@@ -442,7 +442,7 @@ async def save_text_to_new_item_and_set_title(
     )
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
-    await state.set_state(states.Item.NewStepTitle)
+    await state.set_state(states.ItemState.NewStepTitle)
 
 
 @router.message(F.via_bot == None, F.content_type.in_(
@@ -455,7 +455,7 @@ async def media_files_handler(message: Message, state: FSMContext):
     if message.content_type == 'audio':
         print(f"message.audio = {message.audio}")
     _state = await state.get_state()
-    func = add_files_to_message_handler if _state == states.Item.AddTo else files_to_message_handler
+    func = add_files_to_message_handler if _state == states.ItemState.AddTo else files_to_message_handler
 
     data = await state.get_data()
     file_messages = data.get('file_messages', [])
@@ -498,7 +498,7 @@ async def files_to_message_handler(messages: List[Message], state: FSMContext):
     #     new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
-    await state.set_state(states.Item.NewStepTitle)
+    await state.set_state(states.ItemState.NewStepTitle)
     print('await state.set_state(states.Item.NewStepTitle)')
 
 

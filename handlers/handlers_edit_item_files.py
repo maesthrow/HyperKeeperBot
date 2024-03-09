@@ -45,7 +45,7 @@ async def edit_item_files_handler(call: CallbackQuery, state: FSMContext):
         chat_id=user_id, text='_*Редактирование файлов:*_', parse_mode=ParseMode.MARKDOWN_V2, reply_markup=markup
     )
     await show_all_files_edit_mode(user_id, item)
-    await state.set_state(states.Item.EditFiles)
+    await state.set_state(states.ItemState.EditFiles)
     await call.answer()
 
 
@@ -366,7 +366,7 @@ async def edit_file_caption_handler(call: CallbackQuery, state: FSMContext):
 
     # data = await get_data(user_id)
 
-    await state.set_state(states.Item.EditFileCaption)
+    await state.set_state(states.ItemState.EditFileCaption)
     await state.update_data(
         edit_file_message=call.message,
         edit_file_caption_messages=edit_file_caption_messages,
@@ -377,7 +377,7 @@ async def edit_file_caption_handler(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@router.message(states.Item.EditFileCaption)
+@router.message(states.ItemState.EditFileCaption)
 async def edit_file_caption(message: Message, state: FSMContext):
     user_id = message.from_user.id
     data = await state.get_data()
@@ -444,6 +444,6 @@ async def edit_file_caption(message: Message, state: FSMContext):
                 return
 
     info_message = await bot.send_message(message.from_user.id, message_text, reply_markup=markup)
-    await state.set_state(states.Item.EditFiles)
+    await state.set_state(states.ItemState.EditFiles)
 
 

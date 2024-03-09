@@ -1,13 +1,13 @@
 from aiogram.filters.state import StatesGroup, State
 
 
-class Folder(StatesGroup):
+class FolderState(StatesGroup):
     NewName = State()
     EditName = State()
     Delete = State()
 
 
-class Item(StatesGroup):
+class ItemState(StatesGroup):
     NewStepTitle = State()
     NewStepFolder = State()
     NewStepAdd = State()

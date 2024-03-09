@@ -11,7 +11,7 @@ from load_all import bot
 from utils.data_manager import get_data
 from utils.utils_button_manager import check_button_exists, file_mark_on, file_mark_off
 from utils.utils_data import get_folders_collection, get_from_user_collection
-from utils.utils_folders_reader import get_folder_data, get_folders_in_folder
+from utils.utils_folders_reader import get_folder_data, get_folders_in_folder, get_folder
 from utils.utils_items_reader import get_folder_items, get_simple_item
 
 # folder_callback = CallbackFolder()
@@ -62,8 +62,8 @@ async def get_folder_name(user_id, folder_id=ROOT_FOLDER_ID):
 
 async def get_folder_pin(user_id, folder_id=ROOT_FOLDER_ID):
     """Возвращает PIN-код для папки по её идентификатору."""
-    folder_data = await get_folder_data(user_id, folder_id)
-    return folder_data.get("pin", "")
+    folder = await get_folder(user_id, folder_id)
+    return folder.get_pin()
 
 
 async def get_folder_path_names(user_id, folder_id=ROOT_FOLDER_ID):
