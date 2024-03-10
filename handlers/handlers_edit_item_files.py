@@ -16,11 +16,11 @@ from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
 from utils.utils_button_manager import get_edit_item_files_keyboard, create_general_reply_markup, \
-    get_edit_file_inline_markup, file_mark_off, file_mark_on, file_has_caption, get_delete_file_inline_markup, \
+    get_edit_file_inline_markup, file_mark_off, file_mark_on, get_delete_file_inline_markup, \
     general_buttons_edit_item_files, get_edit_file_caption_keyboard, leave_current_caption_button, \
     remove_current_caption_button
 from utils.utils_file_finder import FileFinder, get_file_id_by_short_file_id, get_file_info_by_short_file_id
-from utils.utils_files import dict_to_document, dict_to_location, dict_to_contact
+from utils.utils_files import dict_to_document, dict_to_location, dict_to_contact, file_has_caption
 from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import escape_markdown, markdown_without_code, preformat_text

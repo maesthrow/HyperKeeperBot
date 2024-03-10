@@ -153,3 +153,9 @@ class PinControlCallback(CallbackData, prefix='pin_control'):
 
 class AccessFolderCallback(CallbackData, prefix='access_folder'):
     folder_id: str
+
+
+class AccessControlCallback(CallbackData, prefix='access_control'):
+    folder_id: str
+    action: str
+

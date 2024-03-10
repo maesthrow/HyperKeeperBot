@@ -25,6 +25,7 @@ dp.include_router(router)
 
 @router.inline_query(
     lambda query: not query.query.startswith('browse_')
+                  and not query.query.startswith('access_')
                   and not query.query.startswith('folders/')
                   and not query.query.startswith('items/')
                   and not query.query.startswith('files/')

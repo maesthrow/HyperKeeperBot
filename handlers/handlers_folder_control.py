@@ -20,7 +20,7 @@ from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
 from utils.utils_ import get_folder_name, smile_folder, get_inline_markup_for_accept_cancel, smile_item, get_folder_pin
 from utils.utils_button_manager import cancel_button, create_general_reply_markup, general_buttons_search_items, \
-    get_folder_pin_inline_markup, get_pin_control_inline_markup
+    get_folder_pin_inline_markup, get_pin_control_inline_markup, get_access_control_inline_markup
 from utils.utils_constants import numbers_ico
 from utils.utils_folders import get_folder_statistic
 from utils.utils_folders_reader import get_folder
@@ -513,5 +513,8 @@ async def access_folder_handler(call: CallbackQuery):
                     f'\n\n{smile_folder} {folder.name}'
                     f'\n\n_Пользователи, которым вы предоставили доступ:_'
                     f'\n\n{users_info}')
-    await bot.send_message(chat_id=user_id, text=message_text, parse_mode=ParseMode.MARKDOWN_V2)
+    inline_markup = get_access_control_inline_markup(user_id, folder_id, folder.has_users())
+    await bot.send_message(
+        chat_id=user_id, text=message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+    )
     await call.answer()

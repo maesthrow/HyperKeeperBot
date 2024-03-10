@@ -9,10 +9,11 @@ from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback,
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
-    EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback
+    EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_constants import numbers_ico
+from utils.utils_files import file_has_caption
 
 cancel_button = KeyboardButton(text="️🚫 Отменить")
 
@@ -500,5 +501,25 @@ def get_pin_control_inline_markup(folder_id: str) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def file_has_caption(content_type: ContentType):
-    return content_type in ('document', 'photo', 'audio', 'voice', 'video')
+def get_access_control_inline_markup(user_id, folder_id: str, has_users: bool) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='➕ Добавить пользователя',
+        #callback_data=AccessControlCallback(action='add_user', folder_id=folder_id).pack()
+        switch_inline_query=f'access_{user_id}_{folder_id}'
+    )
+    if has_users:
+        builder.button(
+            text='👤 Выбрать пользователя',
+            callback_data=AccessControlCallback(action='select_user', folder_id=folder_id).pack()
+        )
+        builder.button(
+            text='🚫 Приостановить доступ для всех',
+            callback_data=AccessControlCallback(action='add_user', folder_id=folder_id).pack()
+        )
+    builder.button(
+        text='✖️ Закрыть',
+        callback_data=MessageBoxCallback(result='close').pack()
+    )
+    builder.adjust(1)
+    return builder.as_markup()

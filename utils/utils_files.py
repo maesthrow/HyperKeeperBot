@@ -1,5 +1,6 @@
 import hashlib
 
+from aiogram.enums import ContentType
 from aiogram.types import Message, Location, Contact, Document, Sticker, Audio
 
 from utils.utils_parse_mode_converter import preformat_text
@@ -131,3 +132,7 @@ def sticker_to_dict(sticker: Sticker):
 
 def dict_to_sticker(sticker_dict: dict):
     return Sticker(**sticker_dict)
+
+
+def file_has_caption(content_type: ContentType):
+    return content_type in ('document', 'photo', 'audio', 'voice', 'video')

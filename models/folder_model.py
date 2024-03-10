@@ -1,4 +1,5 @@
 from load_all import bot
+from utils.utils_access import get_user_info
 
 
 class Folder:
@@ -36,11 +37,17 @@ class Folder:
     def remove_pin(self):
         self.set_pin('')
 
+    def has_users(self):
+        return len(self.get_access_users()) > 0
+
     def get_access_users(self) -> dict:
-        return self.access.get('users', {})
+        users = {}
+        if self.access:
+            users = self.access.get('users', {})
+        return users
 
     async def get_users_info(self):
-        users_info = ''
+        users_access_info = ''
         users = self.get_access_users()
         if users:
             for tg_user_id, access_user in users.items():
@@ -51,14 +58,6 @@ class Folder:
                 if int(access_for_user[1]):
                     access_info.append('запись')
                 access_str = ', '.join(access_info)
-                chat = await bot.get_chat(chat_id=tg_user_id)
-                user_info = []
-                if chat.username:
-                    user_info.append(f'@{chat.username}')
-                user_info.append(chat.full_name)
-                # if chat.first_name:
-                #     user_info.append(chat.first_name)
-                # if chat.last_name:
-                #     user_info.append(chat.last_name)
-                users_info = f'{' '.join(user_info)} - {access_str}'
-        return users_info
+                user_info = await get_user_info(tg_user_id)
+                users_access_info = f'{user_info} - {access_str}'
+        return users_access_info
