@@ -9,7 +9,7 @@ from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback,
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
-    EnterPinCodeButtonCallback, PinControlCallback
+    EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_constants import numbers_ico
@@ -406,8 +406,7 @@ def get_folder_control_inline_markup(user_id, folder_id):
     )
     builder.button(
         text='👥 Настроить доступ',
-        callback_data='2'
-        # callback_data=RequestDeleteFilesCallback(item_id=item_id, res='y', is_all=is_all).pack()
+        callback_data=AccessFolderCallback(folder_id=folder_id).pack()
     )
     sizes.append(2)
     builder.button(
@@ -474,6 +473,11 @@ def get_folder_pin_inline_markup(user_id, folder_id=None, pin: str = None):
         text='«',
         callback_data=PinKeyboardButtonCallback(action='backspace', folder_id=folder_id).pack()
     )
+    if pin:
+        builder.button(
+            text='🤯 Забыли PIN-код?',
+            callback_data=PinKeyboardButtonCallback(action='forgot', folder_id=folder_id).pack()
+        )
     builder.adjust(1, 3, 3, 3, 3)
     return builder.as_markup()
 
@@ -485,12 +489,12 @@ def get_pin_control_inline_markup(folder_id: str) -> InlineKeyboardMarkup:
         callback_data=PinControlCallback(action='change', folder_id=folder_id).pack()
     )
     builder.button(
-        text='🗑️ Удалить PIN-код',
-        callback_data=PinControlCallback(action='delete', folder_id=folder_id).pack()
+        text='🧹 Удалить PIN-код',
+        callback_data=PinControlCallback(action='remove', folder_id=folder_id).pack()
     )
     builder.button(
         text='✖️ Закрыть',
-        callback_data=PinControlCallback(action='close', folder_id=folder_id).pack()
+        callback_data=MessageBoxCallback(result='close').pack()
     )
     builder.adjust(2, 1)
     return builder.as_markup()

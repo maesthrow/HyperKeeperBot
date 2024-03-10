@@ -113,7 +113,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         if not need_to_resend and folders_message:
             # Изменение существующего сообщения
             folders_message = await folders_message.edit_text(
-                text=folders_message_text,
+                text=f'<b>{folders_message_text}</b>',
                 reply_markup=folders_inline_markup,
             )
         else:
@@ -136,7 +136,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
 async def get_folders_message_text(user_id, current_folder_id, current_folder_path_names=None):
     if not current_folder_path_names:
         current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
-    folders_message_text = f"🗂️ <b>{current_folder_path_names}</b>"
+    folders_message_text = f"🗂️ {current_folder_path_names}"
     return folders_message_text
 
 
@@ -218,10 +218,11 @@ async def to_folder(call: CallbackQuery, callback_data: FolderCallback):
         inline_markup = get_folder_pin_inline_markup(user_id, folder_id, pin)
         await bot.send_message(
             chat_id=user_id,
-            text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder.name}:',
+            text=f'_Введите текущий PIN\-код для папки:_\n\n{smile_folder} {folder.name}',
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup
         )
-        #await show_folders(user_id=user_id, current_folder_id=folder_id)
+        # await show_folders(user_id=user_id, current_folder_id=folder_id)
     else:
         await show_folders(user_id=user_id, current_folder_id=folder_id)
     try:
@@ -274,7 +275,7 @@ async def delete_folder_request(call: CallbackQuery):
                 except:
                     pass
 
-            #await asyncio.sleep(0.5)
+            # await asyncio.sleep(0.5)
             parent_folder_id = get_parent_folder_id(folder_id)
             await to_folder(call=call, callback_data=FolderCallback(folder_id=parent_folder_id))
             await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
@@ -597,14 +598,15 @@ async def folder_control_menu_handler(message: aiogram.types.Message):
     user_id = message.from_user.id
     current_folder_id = await get_current_folder_id(user_id)
     folders_message_text = await get_folders_message_text(user_id, current_folder_id)
-    folders_message_text = f'<i>Меню управления папкой:</i>\n\n{folders_message_text}'
+    folders_message_text = f'🛠 *Меню управления папкой*\n\n{folders_message_text}'
     inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
     data = await get_data(user_id)
-    data['folder_control_menu_message'] =\
-        await bot.send_message(chat_id=user_id, text=folders_message_text, reply_markup=inline_markup)
+    data['folder_control_menu_message'] = \
+        await bot.send_message(
+            chat_id=user_id, text=folders_message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+        )
     await set_data(user_id, data)
     await bot.delete_message(message.chat.id, message.message_id)
-
 
 # @router.message(F.text == "️📊 Статистика")
 # async def statistic_folder_handler(message: aiogram.types.Message):

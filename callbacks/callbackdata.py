@@ -149,3 +149,7 @@ class PinKeyboardButtonCallback(CallbackData, prefix='pin_keyboard_button'):
 class PinControlCallback(CallbackData, prefix='pin_control'):
     action: str
     folder_id: str
+
+
+class AccessFolderCallback(CallbackData, prefix='access_folder'):
+    folder_id: str

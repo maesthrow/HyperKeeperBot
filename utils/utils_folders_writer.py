@@ -86,10 +86,15 @@ async def set_pin_folder(user_id, folder_id, folder_new_pin):
     """Устанавливает новый PIN-код для указанной папку."""
     folder: Folder = await get_folder(user_id, folder_id)
     if folder:
-        if folder.access:
-            folder.access['pin'] = folder_new_pin
-        else:
-            folder.access = {'pin': folder_new_pin}
+        folder.set_pin(folder_new_pin)
+    return await edit_folder(user_id, folder)
+
+
+async def remove_pin_folder(user_id, folder_id):
+    """Удаляет PIN-код для указанной папку."""
+    folder: Folder = await get_folder(user_id, folder_id)
+    if folder:
+        folder.remove_pin()
     return await edit_folder(user_id, folder)
 
 

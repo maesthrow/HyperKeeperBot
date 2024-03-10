@@ -265,7 +265,8 @@ async def storage(message: Message, state: FSMContext):
             inline_markup = get_folder_pin_inline_markup(user_id, pin=pin)
             await bot.send_message(
                 chat_id=user_id,
-                text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder.name}:',
+                text=f'_Введите текущий PIN\-код для папки:_\n\n{smile_folder} {folder.name}',
+                parse_mode=ParseMode.MARKDOWN_V2,
                 reply_markup=inline_markup
             )
         else:
