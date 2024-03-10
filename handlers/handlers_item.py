@@ -161,12 +161,14 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
     data = await state.get_data()
     add_item_messages = data.get('add_item_messages')
     if add_item_messages:
-        for message in add_item_messages:
-            await bot.delete_message(message.chat.id, message.message_id)
+        for add_message in add_item_messages:
+            await bot.delete_message(add_message.chat.id, add_message.message_id)
             await asyncio.sleep(0.1)
 
-    await state.set_state(state=None)
-    await show_folders(message.chat.id)
+    await bot.delete_message(message.chat.id, message.message_id)
+    await state.set_state()
+    await state.update_data(add_item_messages=[], text_messages=[], item=None)
+    await show_folders(message.from_user.id)
 
 
 @router.message(states.ItemState.NewStepAdd, F.text == cancel_add_mode_button.text)

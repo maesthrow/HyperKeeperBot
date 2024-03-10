@@ -1,7 +1,7 @@
-import concurrent.futures
 import asyncio
+import concurrent.futures
 import functools
-import re
+import os
 from typing import List
 
 import aiogram
@@ -9,12 +9,15 @@ from aiogram import Router, F
 from aiogram.enums import ContentType, ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, any_state
 from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, Location, \
-    Contact, InlineKeyboardButton
+    Contact
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from pydub import AudioSegment
+# from pydub import AudioSegment
+from wit import Wit
 
 from callbacks.callbackdata import ChooseTypeAddText, TextPagesCallback, MessageBoxCallback
+from config import WIT_AI_TOKEN
 from handlers import states
 from handlers.filters import NewItemValidateFilter
 from handlers.handlers_folder import show_all_folders, show_folders
@@ -22,28 +25,26 @@ from handlers.handlers_item import movement_item_handler, show_item
 from handlers.handlers_item_add_mode import add_files_to_message_handler, add_text_to_item_handler
 from load_all import dp, bot
 from models.folder_model import Folder
-from models.item_model import Item
+from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import add_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names, \
-    invisible_char, smile_item, smile_folder, smile_file
+    smile_item, smile_folder, smile_file
 from utils.utils_bot import from_url_data
-from utils.utils_button_manager import create_general_reply_markup, general_buttons_folder, \
-    skip_enter_item_title_button, cancel_add_new_item_button, general_buttons_movement_item, \
+from utils.utils_button_manager import create_general_reply_markup, general_buttons_movement_item, \
     get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons, new_general_buttons_folder, \
-    get_folder_pin_inline_markup
+    get_folder_pin_inline_markup, get_voice_save_inline_markup
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_file_finder import FileFinder
 from utils.utils_files import get_file_info_by_content_type, dict_to_location, dict_to_contact
 from utils.utils_folders_reader import get_folder
 from utils.utils_items import show_all_items
-from utils.utils_items_reader import get_folder_id, get_item
-from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, escape_markdown
-from utils.utils_sender_message_loop import send_storage, send_storage_folders, send_storage_with_items
+from utils.utils_items_reader import get_folder_id
+from utils.utils_parse_mode_converter import preformat_text, escape_markdown
+from utils.utils_sender_message_loop import send_storage_folders, send_storage_with_items
 from utils.utils_show_item_entities import show_item_page_as_text_only, show_item_full_mode
-
-# from aiogram_media_group import media_group_handler, MediaGroupFilter
+from utils.utils_wit_ai_voice import get_voice_text
 
 router = Router()
 dp.include_router(router)
@@ -458,6 +459,24 @@ async def save_text_to_new_item_and_set_title(
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
     await state.set_state(states.ItemState.NewStepTitle)
+
+
+@router.message(F.via_bot == None, F.content_type == 'voice')
+async def voice_handler(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    wait_message = await bot.send_message(
+        chat_id=user_id,
+        text='🎧 Слушаю ваше голосовое...'
+    )
+    voice_text = await get_voice_text(message.voice)
+    voice_text = escape_markdown(voice_text)
+    inline_markup = get_voice_save_inline_markup()
+    await bot.delete_message(user_id, wait_message.message_id)
+    await message.reply(
+        text=f'{INVISIBLE_CHAR}\n`{voice_text}.`\n\n\n_Как вы хотите сохранить голосовое сообщение?_',
+        parse_mode=ParseMode.MARKDOWN_V2,
+        reply_markup=inline_markup)
+    await state.update_data(voice_message=message)
 
 
 @router.message(F.via_bot == None, F.content_type.in_(

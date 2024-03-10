@@ -9,7 +9,7 @@ from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback,
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
-    EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback
+    EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback, VoiceSaveTypeCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_constants import numbers_ico
@@ -341,6 +341,24 @@ def get_save_button_in_markup(inline_markup: InlineKeyboardMarkup):
             btn: InlineKeyboardButton = button
             if SaveItemCallback.__prefix__ in btn.callback_data:
                 return btn
+
+
+def get_voice_save_inline_markup():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='📃 Текст',
+        callback_data=VoiceSaveTypeCallback(type='text').pack()
+    )
+    builder.button(
+        text='🗣️ Голос',
+        callback_data=VoiceSaveTypeCallback(type='voice').pack()
+    )
+    builder.button(
+        text='✖️ Не сохранять',
+        callback_data=MessageBoxCallback(result='close').pack()
+    )
+    builder.adjust(2, 1)
+    return builder.as_markup()
 
 
 file_mark_on = '☑️'  # '🔴' # '✔️' # '✅' # '☑️'

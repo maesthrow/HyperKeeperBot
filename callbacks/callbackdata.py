@@ -95,6 +95,10 @@ class RequestDeleteFilesCallback(CallbackData, prefix="req_del_files"):
     is_all: bool
 
 
+class VoiceSaveTypeCallback(CallbackData, prefix='voice_save_type'):
+    type: str
+
+
 class MessageBoxCallback(CallbackData, prefix='message_box'):
     result: str
 
