@@ -7,16 +7,16 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
-    RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderHandler, SearchInFolderHandler, \
-    PinFolderHandler, PinKeyboardNumberHandler, PinKeyboardButtonHandler, NewPinCodeButtonHandler, \
-    EnterPinCodeButtonHandler
+    RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
+    PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
+    EnterPinCodeButtonCallback, PinControlCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_constants import numbers_ico
 
 cancel_button = KeyboardButton(text="️🚫 Отменить")
 
-complete_edit_item_button = KeyboardButton(text="✔️ Завершить редактирование") # ❎
+complete_edit_item_button = KeyboardButton(text="✔️ Завершить редактирование")  # ❎
 clean_title_buttons = [
     KeyboardButton(text="🪧 Сделать пустой заголовок"),
     KeyboardButton(text="💾 Сохранить без заголовка"),
@@ -37,7 +37,7 @@ general_buttons_folder = [
     [KeyboardButton(text="✏️ Переименовать папку"), KeyboardButton(text="🗑 Удалить папку")]
 ]
 
-current_folder_control_button = KeyboardButton(text=f"🛠 Управление текущей папкой") # 🛠 ⚡️ 👨‍🔧👨‍🔬
+current_folder_control_button = KeyboardButton(text=f"🛠 Управление текущей папкой")  # 🛠 ⚡️ 👨‍🔧👨‍🔬
 new_general_buttons_folder = [
     [
         KeyboardButton(text=f"➕ Новая папка"),
@@ -342,8 +342,8 @@ def get_save_button_in_markup(inline_markup: InlineKeyboardMarkup):
                 return btn
 
 
-file_mark_on = '☑️' #'🔴' # '✔️' # '✅' # '☑️'
-file_mark_off = '◻️' #'🔘' # '🔲' #'Выбрать'
+file_mark_on = '☑️'  # '🔴' # '✔️' # '✅' # '☑️'
+file_mark_off = '◻️'  # '🔘' # '🔲' #'Выбрать'
 
 
 def get_edit_file_inline_markup(item_id: str, content_type: ContentType, file_id, mark_is_on=False):
@@ -402,7 +402,7 @@ def get_folder_control_inline_markup(user_id, folder_id):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='🔑 PIN-код',
-        callback_data=PinFolderHandler(folder_id=folder_id).pack()
+        callback_data=PinFolderCallback(folder_id=folder_id).pack()
     )
     builder.button(
         text='👥 Настроить доступ',
@@ -412,7 +412,7 @@ def get_folder_control_inline_markup(user_id, folder_id):
     sizes.append(2)
     builder.button(
         text='📊 Статистика',
-        callback_data=StatisticFolderHandler(folder_id=folder_id).pack()
+        callback_data=StatisticFolderCallback(folder_id=folder_id).pack()
     )
     builder.button(
         text='🧹Удалить все записи',
@@ -431,7 +431,7 @@ def get_folder_control_inline_markup(user_id, folder_id):
         sizes.append(2)
     builder.button(
         text='🔍 Поиск в папке и вложенных папках',
-        callback_data=SearchInFolderHandler(folder_id=folder_id).pack()
+        callback_data=SearchInFolderCallback(folder_id=folder_id).pack()
     )
     sizes.append(1)
     builder.button(
@@ -448,33 +448,51 @@ def get_folder_pin_inline_markup(user_id, folder_id=None, pin: str = None):
         folder_id = ROOT_FOLDER_ID
 
     if pin:
-        pin_button_data = EnterPinCodeButtonHandler(folder_id=folder_id, pin=pin, pin_repeat='', visible=False).pack()
+        pin_button_data = EnterPinCodeButtonCallback(folder_id=folder_id, pin=pin, pin_repeat='', visible=False).pack()
     else:
-        pin_button_data = NewPinCodeButtonHandler(folder_id=folder_id, pin='', pin_repeat='', visible=False).pack()
+        pin_button_data = NewPinCodeButtonCallback(folder_id=folder_id, pin='', pin_repeat='', visible=False).pack()
 
     builder = InlineKeyboardBuilder()
     builder.button(
-        text=str(INVISIBLE_CHAR*7) + '➖ ➖ ➖ ➖   🫣', # 👁️
+        text=str(INVISIBLE_CHAR * 7) + '➖ ➖ ➖ ➖   🫣',  # 👁️
         callback_data=pin_button_data
     )
     for n in range(1, 10):
         builder.button(
             text=str(n),
-            callback_data=PinKeyboardNumberHandler(number=n, folder_id=folder_id).pack()
+            callback_data=PinKeyboardNumberCallback(number=n, folder_id=folder_id).pack()
         )
     builder.button(
         text='×',
-        callback_data=PinKeyboardButtonHandler(action='close', folder_id=folder_id).pack()
+        callback_data=PinKeyboardButtonCallback(action='close', folder_id=folder_id).pack()
     )
     builder.button(
         text='0',
-        callback_data=PinKeyboardNumberHandler(number=0, folder_id=folder_id).pack()
+        callback_data=PinKeyboardNumberCallback(number=0, folder_id=folder_id).pack()
     )
     builder.button(
         text='«',
-        callback_data=PinKeyboardButtonHandler(action='backspace', folder_id=folder_id).pack()
+        callback_data=PinKeyboardButtonCallback(action='backspace', folder_id=folder_id).pack()
     )
     builder.adjust(1, 3, 3, 3, 3)
+    return builder.as_markup()
+
+
+def get_pin_control_inline_markup(folder_id: str) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='🔄 Сменить PIN-код',
+        callback_data=PinControlCallback(action='change', folder_id=folder_id).pack()
+    )
+    builder.button(
+        text='🗑️ Удалить PIN-код',
+        callback_data=PinControlCallback(action='delete', folder_id=folder_id).pack()
+    )
+    builder.button(
+        text='✖️ Закрыть',
+        callback_data=PinControlCallback(action='close', folder_id=folder_id).pack()
+    )
+    builder.adjust(2, 1)
     return builder.as_markup()
 
 

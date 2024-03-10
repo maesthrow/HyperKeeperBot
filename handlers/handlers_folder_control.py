@@ -8,9 +8,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from callbacks.callbackdata import EditFolderCallback, StatisticFolderHandler, MessageBoxCallback, \
-    SearchInFolderHandler, PinFolderHandler, PinKeyboardNumberHandler, PinKeyboardButtonHandler, \
-    NewPinCodeButtonHandler, EnterPinCodeButtonHandler
+from callbacks.callbackdata import EditFolderCallback, StatisticFolderCallback, MessageBoxCallback, \
+    SearchInFolderCallback, PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, \
+    NewPinCodeButtonCallback, EnterPinCodeButtonCallback
 from handlers import states
 from handlers.handlers_folder import show_folders
 from load_all import dp, bot
@@ -19,7 +19,7 @@ from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_folder_name, smile_folder, get_inline_markup_for_accept_cancel, smile_item, get_folder_pin
 from utils.utils_button_manager import cancel_button, create_general_reply_markup, general_buttons_search_items, \
-    get_folder_pin_inline_markup
+    get_folder_pin_inline_markup, get_pin_control_inline_markup
 from utils.utils_constants import numbers_ico
 from utils.utils_folders import get_folder_statistic
 from utils.utils_folders_reader import get_folder
@@ -99,10 +99,10 @@ async def delete_all_items_handler(user_id, folder_id, folder_name):
                                reply_markup=inline_markup)
 
 
-@router.callback_query(StatisticFolderHandler.filter())
+@router.callback_query(StatisticFolderCallback.filter())
 async def statistic_handler(call: CallbackQuery):
     user_id = call.from_user.id
-    call_data = StatisticFolderHandler.unpack(call.data)
+    call_data = StatisticFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
     folder_name = await get_folder_name(user_id, folder_id)
     dict_folder_statistic = await get_folder_statistic(user_id, folder_id)
@@ -145,10 +145,10 @@ def get_ok_inline_markup(insert_button=None):
     return inline_markup
 
 
-@router.callback_query(SearchInFolderHandler.filter())
+@router.callback_query(SearchInFolderCallback.filter())
 async def search_in_folder_handler(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
-    call_data = SearchInFolderHandler.unpack(call.data)
+    call_data = SearchInFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
     await search_in_folder(user_id, state)
     await call.answer()
@@ -166,38 +166,52 @@ async def search_in_folder(user_id, state):
     await state.update_data(search_message=search_message)
 
 
-@router.callback_query(PinFolderHandler.filter())
+@router.callback_query(PinFolderCallback.filter())
 async def pin_folder_handler(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
-    call_data = PinFolderHandler.unpack(call.data)
+    call_data = PinFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(user_id, folder_id)
     pin = folder.get_pin()
-    if not pin:
+    if pin:
+        inline_markup = get_pin_control_inline_markup(folder_id)
+        await bot.send_message(
+                 chat_id=user_id,
+                 text=f'Управление PIN-кодом папки {folder.name}:',
+                 reply_markup=inline_markup
+             )
+    else:
         inline_markup = get_folder_pin_inline_markup(user_id, folder_id)
         await bot.send_message(
             chat_id=user_id,
-            text=f'Придумайте PIN-код для папки\n{smile_folder} {folder.name}:',  # \n\n➖ ➖ ➖ ➖',
+            text=f'Придумайте PIN-код для папки\n{smile_folder} {folder.name}:',
             reply_markup=inline_markup
         )
-    else:
-        inline_markup = get_folder_pin_inline_markup(user_id, folder_id, pin=pin)
-        await bot.send_message(
-            chat_id=user_id,
-            text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder.name}:',  # \n\n➖ ➖ ➖ ➖',
-            reply_markup=inline_markup
-        )
+    # if not pin:
+    #     inline_markup = get_folder_pin_inline_markup(user_id, folder_id)
+    #     await bot.send_message(
+    #         chat_id=user_id,
+    #         text=f'Придумайте PIN-код для папки\n{smile_folder} {folder.name}:',  # \n\n➖ ➖ ➖ ➖',
+    #         reply_markup=inline_markup
+    #     )
+    # else:
+    #     inline_markup = get_folder_pin_inline_markup(user_id, folder_id, pin=pin)
+    #     await bot.send_message(
+    #         chat_id=user_id,
+    #         text=f'Введите текущий PIN-код для папки\n{smile_folder} {folder.name}:',  # \n\n➖ ➖ ➖ ➖',
+    #         reply_markup=inline_markup
+    #     )
     data = await get_data(user_id)
     data['enter_pin'] = ''
     await set_data(user_id, data)
     await call.answer()
 
 
-@router.callback_query(PinKeyboardNumberHandler.filter())
+@router.callback_query(PinKeyboardNumberCallback.filter())
 async def number_pin_folder_handler(call: CallbackQuery, state: FSMContext):
     inline_markup = call.message.reply_markup
     pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]
-    if NewPinCodeButtonHandler.__prefix__ in pin_code_button.callback_data:
+    if NewPinCodeButtonCallback.__prefix__ in pin_code_button.callback_data:
         await number_new_pin_folder_handler(call, inline_markup, pin_code_button)
     else:
         await number_enter_pin_folder_handler(call, inline_markup, pin_code_button)
@@ -206,18 +220,15 @@ async def number_pin_folder_handler(call: CallbackQuery, state: FSMContext):
 
 
 async def number_new_pin_folder_handler(call, inline_markup, pin_code_button):
-    numbers = numbers_ico.values()
-    pattern = r'|'.join(map(re.escape, numbers))
-
     user_id = call.from_user.id
 
-    pin_code_data = NewPinCodeButtonHandler.unpack(pin_code_button.callback_data)
+    pin_code_data = NewPinCodeButtonCallback.unpack(pin_code_button.callback_data)
     print(f'pin_code_data {pin_code_data}')
     pin = pin_code_data.pin
     pin_repeat = pin_code_data.pin_repeat
     folder_id = pin_code_data.folder_id
 
-    call_data = PinKeyboardNumberHandler.unpack(call.data)
+    call_data = PinKeyboardNumberCallback.unpack(call.data)
     number = call_data.number
     if len(pin) < 4 or len(pin_repeat) < 4:
         if len(pin) < 4:
@@ -225,7 +236,7 @@ async def number_new_pin_folder_handler(call, inline_markup, pin_code_button):
         else:
             pin_repeat += str(number)
 
-        pin_code_button.callback_data = NewPinCodeButtonHandler(
+        pin_code_button.callback_data = NewPinCodeButtonCallback(
             folder_id=folder_id, pin=pin, pin_repeat=pin_repeat, visible=pin_code_data.visible
         ).pack()
         if pin_code_data.visible:
@@ -290,18 +301,18 @@ async def number_new_pin_folder_handler(call, inline_markup, pin_code_button):
 async def number_enter_pin_folder_handler(call, inline_markup, pin_code_button):
     user_id = call.from_user.id
 
-    pin_code_data = EnterPinCodeButtonHandler.unpack(pin_code_button.callback_data)
+    pin_code_data = EnterPinCodeButtonCallback.unpack(pin_code_button.callback_data)
     print(f'pin_code_data {pin_code_data}')
     pin = pin_code_data.pin
     pin_repeat = pin_code_data.pin_repeat
     folder_id = pin_code_data.folder_id
 
-    call_data = PinKeyboardNumberHandler.unpack(call.data)
+    call_data = PinKeyboardNumberCallback.unpack(call.data)
     number = call_data.number
     if len(pin_repeat) < 4:
         pin_repeat += str(number)
 
-        pin_code_button.callback_data = EnterPinCodeButtonHandler(
+        pin_code_button.callback_data = EnterPinCodeButtonCallback(
             folder_id=folder_id, pin=pin, pin_repeat=pin_repeat, visible=pin_code_data.visible
         ).pack()
         if pin_code_data.visible:
@@ -359,20 +370,20 @@ async def show_enter_pin_result(call, user_id, inline_markup, pin_code_button, p
     )
 
 
-@router.callback_query(PinKeyboardButtonHandler.filter())
+@router.callback_query(PinKeyboardButtonCallback.filter())
 async def button_pin_folder_handler(call: CallbackQuery):
     user_id = call.from_user.id
-    call_data = PinKeyboardButtonHandler.unpack(call.data)
+    call_data = PinKeyboardButtonCallback.unpack(call.data)
     action = call_data.action
     if action == 'close':
         await bot.delete_message(user_id, call.message.message_id)
     elif action == 'backspace':
         inline_markup = call.message.reply_markup
         pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]
-        if NewPinCodeButtonHandler.__prefix__ in pin_code_button.callback_data:
-            pin_code_data = NewPinCodeButtonHandler.unpack(pin_code_button.callback_data)
+        if NewPinCodeButtonCallback.__prefix__ in pin_code_button.callback_data:
+            pin_code_data = NewPinCodeButtonCallback.unpack(pin_code_button.callback_data)
         else:
-            pin_code_data = EnterPinCodeButtonHandler.unpack(pin_code_button.callback_data)
+            pin_code_data = EnterPinCodeButtonCallback.unpack(pin_code_button.callback_data)
 
         if pin_code_data.pin_repeat and len(pin_code_data.pin_repeat) < 4:
             pin_code_data.pin_repeat = pin_code_data.pin_repeat[:-1]
@@ -398,18 +409,18 @@ async def button_pin_folder_handler(call: CallbackQuery):
     await call.answer()
 
 
-@router.callback_query(NewPinCodeButtonHandler.filter())
-@router.callback_query(EnterPinCodeButtonHandler.filter())
+@router.callback_query(NewPinCodeButtonCallback.filter())
+@router.callback_query(EnterPinCodeButtonCallback.filter())
 async def number_pin_code_button_handler(call: CallbackQuery):
     inline_markup = call.message.reply_markup
     pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]
     pin_button_text = pin_code_button.text
 
-    is_new_pin = NewPinCodeButtonHandler.__prefix__ in pin_code_button.callback_data
+    is_new_pin = NewPinCodeButtonCallback.__prefix__ in pin_code_button.callback_data
     if is_new_pin:
-        call_data = NewPinCodeButtonHandler.unpack(call.data)
+        call_data = NewPinCodeButtonCallback.unpack(call.data)
     else:
-        call_data = EnterPinCodeButtonHandler.unpack(call.data)
+        call_data = EnterPinCodeButtonCallback.unpack(call.data)
     user_id = call.from_user.id
     pin = call_data.pin_repeat if call_data.pin_repeat else call_data.pin
     visible = call_data.visible
@@ -438,14 +449,14 @@ async def number_pin_code_button_handler(call: CallbackQuery):
         pin_button_text = pin_button_text.replace('🧐', '🫣')
     pin_code_button.text = pin_button_text
     if is_new_pin:
-        pin_code_button.callback_data = NewPinCodeButtonHandler(
+        pin_code_button.callback_data = NewPinCodeButtonCallback(
             folder_id=call_data.folder_id,
             pin=call_data.pin,
             pin_repeat=call_data.pin_repeat,
             visible=visible
         ).pack()
     else:
-        pin_code_button.callback_data = EnterPinCodeButtonHandler(
+        pin_code_button.callback_data = EnterPinCodeButtonCallback(
             folder_id=call_data.folder_id,
             pin=call_data.pin,
             pin_repeat=call_data.pin_repeat,

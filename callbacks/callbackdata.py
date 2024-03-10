@@ -109,38 +109,43 @@ class EditFolderCallback(CallbackData, prefix='edit_folder'):
     action: str
 
 
-class StatisticFolderHandler(CallbackData, prefix='statistic_folder'):
+class StatisticFolderCallback(CallbackData, prefix='statistic_folder'):
     folder_id: str
 
 
-class SearchInFolderHandler(CallbackData, prefix='search_in_folder'):
+class SearchInFolderCallback(CallbackData, prefix='search_in_folder'):
     folder_id: str
 
 
-class PinFolderHandler(CallbackData, prefix='pin_folder'):
+class PinFolderCallback(CallbackData, prefix='pin_folder'):
     folder_id: str
 
 
-class PinCodeButtonHandler(CallbackData, prefix='pin_code_button'):
+class PinCodeButtonCallback(CallbackData, prefix='pin_code_button'):
     folder_id: str
     pin: str
     pin_repeat: str
     visible: bool
 
 
-class NewPinCodeButtonHandler(PinCodeButtonHandler, prefix='new_pin_code'):
+class NewPinCodeButtonCallback(PinCodeButtonCallback, prefix='new_pin_code'):
     pass
 
 
-class EnterPinCodeButtonHandler(PinCodeButtonHandler, prefix='enter_pin_code'):
+class EnterPinCodeButtonCallback(PinCodeButtonCallback, prefix='enter_pin_code'):
     pass
 
 
-class PinKeyboardNumberHandler(CallbackData, prefix='pin_keyboard_number'):
+class PinKeyboardNumberCallback(CallbackData, prefix='pin_keyboard_number'):
     number: int
     folder_id: str
 
 
-class PinKeyboardButtonHandler(CallbackData, prefix='pin_keyboard_button'):
+class PinKeyboardButtonCallback(CallbackData, prefix='pin_keyboard_button'):
+    action: str
+    folder_id: str
+
+
+class PinControlCallback(CallbackData, prefix='pin_control'):
     action: str
     folder_id: str
