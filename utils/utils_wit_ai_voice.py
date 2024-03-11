@@ -11,6 +11,16 @@ from load_all import bot
 wit_client = Wit(WIT_AI_TOKEN)
 
 
+notifies = (
+    '🎧 Слушаю ваше голосовое...',
+    '🤓 Формирую нули и единицы...',
+    '👨‍💻 Печатаю текст...',
+    '✍️ Расставляю запятые...',
+    '👌 Еще совсем немного...',
+    '🎨 Последние штрихи...',
+    '✨ Почти готово...',
+)
+
 # async def get_voice_text(voice: Voice | str):
 #     if isinstance(voice, Voice):
 #         file_id = voice.file_id
@@ -76,6 +86,7 @@ async def get_voice_text(voice: Voice | str, message: Message = None):
     # Проверяем длительность аудио и разбиваем, если необходимо
     max_duration = 19 * 1000  # Максимальная длительность в миллисекундах
     if len(audio) > max_duration:
+        message_text = message.text
         parts = len(audio) // max_duration + 1
         for i in range(parts):
             start = i * max_duration
@@ -92,7 +103,19 @@ async def get_voice_text(voice: Voice | str, message: Message = None):
                     print(f"No response for part {i + 1}")
             # Удаление временных файлов
             os.remove(f"part_{i}.mp3")
-            await asyncio.sleep(1)
+            if i < len(notifies) - 1:
+                message_text = notifies[i + 1]
+            else:
+                if message_text.find('...') != -1:
+                    message_text = notifies[-1][:-1]
+                else:
+                    message_text += '.'
+            await bot.edit_message_text(
+                chat_id=message.chat.id,
+                message_id=message.message_id,
+                text=message_text
+            )
+            #await asyncio.sleep(1)
     else:
         # Конвертируем и отправляем весь файл целиком
         audio.export(temp_mp3_path, format="mp3")

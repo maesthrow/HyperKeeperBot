@@ -364,7 +364,7 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-@router.message(NewItemValidateFilter(), F.via_bot == None, F.content_type == 'text')  # NotAddToFilter(),
+@router.message(NewItemValidateFilter(), F.via_bot == None, F.content_type == 'text')
 async def any_message(message: Message, state: FSMContext):
     await text_to_message_handler(message, state)
 

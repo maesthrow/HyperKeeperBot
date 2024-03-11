@@ -14,7 +14,7 @@ from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import get_voice_save_inline_markup, get_voice_read_fail_inline_markup
 from utils.utils_parse_mode_converter import escape_markdown
-from utils.utils_wit_ai_voice import get_voice_text
+from utils.utils_wit_ai_voice import get_voice_text, notifies
 
 router = Router()
 dp.include_router(router)
@@ -24,10 +24,10 @@ async def read_voice(message: Message):
     user_id = message.from_user.id
     wait_message = await bot.send_message(
         chat_id=user_id,
-        text='🎧 Слушаю ваше голосовое...'
+        text=notifies[0]
     )
     try:
-        voice_text = await get_voice_text(message.voice, message)
+        voice_text = await get_voice_text(message.voice, wait_message)
         data = await get_data(user_id)
         data['voice_text'] = voice_text
         markdown_voice_text = escape_markdown(voice_text)
