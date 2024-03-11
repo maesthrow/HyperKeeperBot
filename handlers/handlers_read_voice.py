@@ -8,7 +8,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, CallbackQuery
 from callbacks.callbackdata import ReadVoiceRetryCallback, VoiceSaveTypeCallback
 from handlers import states
 from handlers.handlers_item_add_mode import add_files_to_message_handler
-from handlers.handlers_save_item_files import files_to_message_handler, text_to_message_handler
+from handlers.handlers_save_item_content import files_to_message_handler, text_to_message_handler
 from load_all import bot, dp
 from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data

@@ -6,6 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, CallbackQuery, Message
 
 from handlers import states
+from handlers.handlers_folder import show_folders
 from handlers.handlers_folder_control import search_in_folder
 from load_all import bot, dp
 from utils.data_manager import get_data, set_data
@@ -27,19 +28,23 @@ async def search_item_handler(message: aiogram.types.Message, state: FSMContext)
     await search_in_folder(user_id, state)
 
 
-# @router.message(states.Item.Search, F.text == "❎ Завершить режим поиска 🔍️")
-# async def search_item_handler(message: Message):
-#     user_id = message.from_user.id
-#     data = await get_data(user_id)
-#     data['dict_search_data'] = None
-#     search_message = data['search_message']
-#     try:
-#         await bot.delete_message(user_id, search_message.message_id)
-#     except:
-#         pass
-#     data['search_message'] = None
-#     #await set_data(user_id, data)
-#     await bot.delete_message(user_id, message.message_id)
+@router.message(states.ItemState.Search, F.text == "❎ Завершить режим поиска 🔍️")
+@router.message(states.ItemState.SearchResults, F.text == "❎ Завершить режим поиска 🔍️")
+async def search_item_handler(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    data = await get_data(user_id)
+    #data['dict_search_data'] = None
+    search_message = data['search_message']
+    try:
+        await bot.delete_message(user_id, search_message.message_id)
+    except:
+        pass
+    #data['search_message'] = None
+    await state.update_data(dict_search_data=None, search_message=None)
+    await state.set_state(None)
+    #await set_data(user_id, data)
+    await show_folders(user_id, need_to_resend=True)
+    await bot.delete_message(user_id, message.message_id)
 
 
 @router.message(states.ItemState.Search, F.text != "❎ Завершить режим поиска 🔍️")

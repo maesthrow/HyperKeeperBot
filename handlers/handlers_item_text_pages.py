@@ -86,7 +86,7 @@ async def text_all_pages(author_user_id: int, item: Item, page_number: int, acti
         callback_data=TextPagesCallback(author_user_id=author_user_id, item_id=item.id, action=back_action,
                                         page=page_number).pack()
     )
-    for page in range(len(item.text)):
+    for page in range(item.pages_count()):
         display_page = ''.join([numbers_ico[n] for n in str(page + 1)])
         text = f'{display_page} {item.get_inline_page_text(page)}'
         text = f'{select_smile} {text}' if page == page_number else text

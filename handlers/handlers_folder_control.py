@@ -34,6 +34,7 @@ dp.include_router(router)
 numbers = numbers_ico.values()
 pattern = r'|'.join(map(re.escape, numbers))
 
+
 @router.callback_query(EditFolderCallback.filter())
 async def edit_folder_handler(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id

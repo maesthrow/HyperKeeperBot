@@ -225,7 +225,7 @@ async def create_text_results(item: Item, media_results: list, inline_markup, ta
     this_inline_markup = copy.deepcopy(inline_markup)
 
     if text_page == -1:
-        for page in range(len(item.text)):
+        for page in range(item.pages_count()):
             if not item.get_text(page):
                 continue
             await create_text_result_for_page(item, media_results, this_inline_markup, tag, page)

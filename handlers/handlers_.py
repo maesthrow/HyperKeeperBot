@@ -19,7 +19,7 @@ from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item import movement_item_message_handler, show_item
 from handlers.handlers_item_add_mode import add_files_to_message_handler, add_text_to_item_handler
 from handlers.handlers_read_voice import read_voice
-from handlers.handlers_save_item_files import files_to_message_handler, is_message_allowed_new_item, \
+from handlers.handlers_save_item_content import files_to_message_handler, is_message_allowed_new_item, \
     save_text_to_new_item_and_set_title, text_to_message_handler
 from load_all import dp, bot
 from models.folder_model import Folder
