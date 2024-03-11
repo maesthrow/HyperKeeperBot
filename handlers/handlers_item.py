@@ -62,7 +62,7 @@ async def show_item_button(callback_query: CallbackQuery):
     movement_item_id = data.get('movement_item_id')
     if movement_item_id:
         current_folder_id = await get_current_folder_id(user_id)
-        await movement_item_handler(callback_query.message, current_folder_id)
+        await movement_item_message_handler(callback_query.message, current_folder_id)
         await callback_query.answer()
         return
 
@@ -430,7 +430,7 @@ async def delete_all_marked_edit_files_handler(message: Message, state: FSMConte
 
 
 @router.message(F.text == "️🔀 Переместить")
-async def movement_item_handler(message: aiogram.types.Message, folder_id=None):
+async def movement_item_message_handler(message: aiogram.types.Message, folder_id=None):
     user_id = message.from_user.id
     data = await get_data(user_id)
     item_id = data.get('item_id')

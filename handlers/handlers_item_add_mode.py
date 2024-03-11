@@ -129,6 +129,8 @@ async def on_add_text_to_item_handler(call: CallbackQuery, state: FSMContext):
 
 async def add_files_to_message_handler(messages: List[Message], state: FSMContext):
     # add_item_messages = messages
+    if not messages:
+        return
 
     user_id = messages[0].from_user.id
     data = await get_data(user_id)
@@ -143,7 +145,10 @@ async def add_files_to_message_handler(messages: List[Message], state: FSMContex
     # if new_item.text == "":
     #     new_item.text = new_item.date_created.strftime("%Y-%m-%d %H:%M")
 
-    message_success_text = "Добавил новые файлы в запись ✅"
+    if len(messages) == 1:
+        message_success_text = "Добавил новый файл в запись ✅"
+    else:
+        message_success_text = "Добавил новые файлы в запись ✅"
     message_failure_text = "Что то пошло не так при добавлении файлов ❌"
 
     result = await util_edit_item(user_id, item_id, item)

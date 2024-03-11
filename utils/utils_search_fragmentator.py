@@ -5,7 +5,8 @@ class SearchFragmentator:
     @staticmethod
     def get_search_item_fragment_and_page(item: Item, text_search: str):
         for page in range(item.pages_count()):
-            page_text = item.get_text_full_markdown(page)
+            #page_text = item.get_text_full_markdown(page)
+            page_text = item.get_text(page)
             index = page_text.lower().find(text_search.lower())
             if index != -1:
                 if index == 0 or (len(page_text) < 50 and index < 36):
@@ -22,6 +23,10 @@ class SearchFragmentator:
                     elif index > 0 and fragment.startswith('\n'):
                         fragment = f'...{fragment.replace('\n', '', 1)}'
                     return fragment, page
+            else:
+                if (item.title and
+                        text_search.lower() in item.title.lower()):
+                    return item.get_text(), 0
         return None
 
     @staticmethod

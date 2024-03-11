@@ -1,7 +1,7 @@
 import asyncio
 import os
 
-from aiogram.types import Voice
+from aiogram.types import Voice, Message
 from pydub import AudioSegment
 from wit import Wit
 
@@ -50,7 +50,7 @@ wit_client = Wit(WIT_AI_TOKEN)
 #     return voice_text
 
 
-async def get_voice_text(voice: Voice | str):
+async def get_voice_text(voice: Voice | str, message: Message = None):
     if isinstance(voice, Voice):
         file_id = voice.file_id
     else:
@@ -104,5 +104,9 @@ async def get_voice_text(voice: Voice | str):
         # Удаление временных файлов
         os.remove(temp_ogg_path)
         os.remove(temp_mp3_path)
+
+    voice_text = voice_text.strip()
+    if voice_text[-1] not in '.?!':
+        voice_text += '.'
 
     return voice_text.strip()  # Убираем возможные лишние пробелы в начале и конце текста
