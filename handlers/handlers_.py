@@ -256,7 +256,7 @@ async def storage(message: Message, state: FSMContext):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         user_id = message.from_user.id
         folder: Folder = await get_folder(user_id)
-        pin = folder.get_pin()
+        pin = folder.get_pin() if folder else None
         if pin:
             inline_markup = get_folder_pin_inline_markup(user_id, pin=pin)
             await bot.send_message(
@@ -324,7 +324,7 @@ async def show_storage(message: Message, state: FSMContext):
         max_attempts=1
     )
     # await asyncio.sleep(0.3)
-    print(len(folders_message.reply_markup.inline_keyboard))
+    #print(len(folders_message.reply_markup.inline_keyboard))
     data['folders_message'] = folders_message
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
