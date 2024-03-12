@@ -70,8 +70,8 @@ async def run_read_voice(call: CallbackQuery):
     if voice_message:
         await call.answer()
         await asyncio.gather(
-            bot.delete_message(user_id, call.message.message_id),
             read_voice(voice_message),
+            bot.delete_message(user_id, call.message.message_id),
         )
     else:
         await call.answer('Не удалось запустить распознавание текста 🙁')
