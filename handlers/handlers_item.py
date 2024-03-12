@@ -168,7 +168,7 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
     await bot.delete_message(message.chat.id, message.message_id)
     await state.set_state()
     await state.update_data(add_item_messages=[], text_messages=[], item=None)
-    await show_folders(message.from_user.id)
+    await show_folders(message.from_user.id, need_to_resend=True)
 
 
 @router.message(states.ItemState.NewStepAdd, F.text == cancel_add_mode_button.text)

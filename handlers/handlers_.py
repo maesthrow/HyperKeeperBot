@@ -394,8 +394,8 @@ async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
 ))
 async def media_files_handler(message: Message, state: FSMContext):
     if message.content_type == 'voice':
-        await read_voice(message)
         await state.update_data(voice_message=message)
+        await read_voice(message)
         return
 
     _state = await state.get_state()

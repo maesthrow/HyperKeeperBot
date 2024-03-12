@@ -27,7 +27,9 @@ async def read_voice(message: Message):
         text=notifies[0]
     )
     try:
+        print('test1')
         voice_text = await get_voice_text(message.voice, wait_message)
+        print('test2')
         data = await get_data(user_id)
         data['voice_text'] = voice_text
         markdown_voice_text = escape_markdown(voice_text)
@@ -75,12 +77,15 @@ async def save_type_voice(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     data = await get_data(user_id)
     voice_text = data.get('voice_text', '')
-    text_message = await bot.edit_message_text(
-        chat_id=user_id,
-        message_id=call.message.message_id,
-        parse_mode=ParseMode.MARKDOWN_V2,
-        text=f'`{voice_text}`'
-    )
+    text_message = call.message
+    if voice_text:
+        text_message = await bot.edit_message_text(
+            chat_id=user_id,
+            message_id=call.message.message_id,
+            parse_mode=ParseMode.MARKDOWN_V2,
+            text=f'`{voice_text}`'
+        )
+
     call_data = VoiceSaveTypeCallback.unpack(call.data)
     save_type = call_data.type
     func = add_files_to_message_handler if state == states.ItemState.AddTo else files_to_message_handler
@@ -92,4 +97,5 @@ async def save_type_voice(call: CallbackQuery, state: FSMContext):
         await func([voice_message], state)
 
     await call.answer()
-    #await bot.delete_message(user_id, call.message.message_id)
+    if not voice_text:
+        await bot.delete_message(user_id, call.message.message_id)

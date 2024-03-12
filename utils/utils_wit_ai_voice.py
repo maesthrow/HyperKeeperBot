@@ -1,15 +1,8 @@
-import asyncio
 import os
 
 from aiogram.types import Voice, Message
 from pydub import AudioSegment
-from wit import Wit
-
-from config import WIT_AI_TOKEN
-from load_all import bot
-
-wit_client = Wit(WIT_AI_TOKEN)
-
+from load_all import bot, wit_client
 
 notifies = (
     '🎧 Слушаю ваше голосовое...',
