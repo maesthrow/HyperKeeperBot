@@ -162,8 +162,10 @@ async def cancel_add_new_item(message: Message, state: FSMContext):
     add_item_messages = data.get('add_item_messages')
     if add_item_messages:
         for add_message in add_item_messages:
-            await bot.delete_message(add_message.chat.id, add_message.message_id)
-            await asyncio.sleep(0.1)
+            add_message: Message = add_message
+            if add_message.from_user.id == bot.id:
+                await bot.delete_message(add_message.chat.id, add_message.message_id)
+                await asyncio.sleep(0.1)
 
     await bot.delete_message(message.chat.id, message.message_id)
     await state.set_state()

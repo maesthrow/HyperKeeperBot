@@ -74,22 +74,18 @@ async def edit_item_title_handler(call: CallbackQuery, state: FSMContext):
     edit_item_messages = []
 
     if item.title:
-        edit_item_messages.append(
-            await bot.send_message(call.message.chat.id,
-                                   f"Нажмите на текст ниже, чтобы скопировать текущий заголовок:"
-                                   f"\n\n`{item.title}`",
-                                   parse_mode=ParseMode.MARKDOWN_V2)
-        )
-
-    await asyncio.sleep(0.4)
+        message_text = f"_Нажмите на текущий текст заголовка, чтобы скопировать:_ ↙️"\
+                                   f"\n\n`{item.title}`"
+    else:
+        message_text = ''
 
     buttons = get_edit_item_title_keyboard(item.title)
     markup = create_general_reply_markup(buttons)
-
+    message_text += "\n\n_*Напишите новый текст заголовка:*_"
     edit_item_messages.append(
-        await bot.send_message(call.message.chat.id,
-                               f"Придумайте новый заголовок:",
-                               reply_markup=markup)
+        await bot.send_message(
+            call.message.chat.id, text=message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=markup
+        )
     )
 
     data = await get_data(user_id)
@@ -127,6 +123,7 @@ async def edit_item_text_handler(call: CallbackQuery, state: FSMContext):
     edit_item_messages.append(
         await bot.send_message(chat_id=user_id,
                                text=get_instruction_new_edit_text(item),
+                               parse_mode=ParseMode.MARKDOWN_V2,
                                reply_markup=markup)
     )
 
@@ -256,4 +253,4 @@ def get_instruction_copy_edit_text(item: Item, page_number: int):
 
 def get_instruction_new_edit_text(item: Item):
     addiction = f' для выбранной страницы' if len(item.text) > 1 else ''
-    return f"Напишите новый текст{addiction} или выберите действие:"
+    return f"_Напишите новый текст{addiction} или выберите действие:_"

@@ -2,7 +2,10 @@ import os
 
 from aiogram.types import Voice, Message
 from pydub import AudioSegment
-from load_all import bot, wit_client
+from wit import Wit
+
+from config import WIT_AI_TOKEN
+from load_all import bot
 
 notifies = (
     '🎧 Слушаю ваше голосовое...',
@@ -54,6 +57,8 @@ notifies = (
 
 
 async def get_voice_text(voice: Voice | str, message: Message = None):
+    wit_client = Wit(WIT_AI_TOKEN)
+
     if isinstance(voice, Voice):
         file_id = voice.file_id
     else:
@@ -113,6 +118,7 @@ async def get_voice_text(voice: Voice | str, message: Message = None):
         # Конвертируем и отправляем весь файл целиком
         audio.export(temp_mp3_path, format="mp3")
         with open(temp_mp3_path, "rb") as audio_file:
+            print('pre response')
             response = wit_client.speech(audio_file, headers={"Content-Type": "audio/mpeg"})
             # Обработка ответа
             if response is not None:

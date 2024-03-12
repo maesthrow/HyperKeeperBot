@@ -1,7 +1,6 @@
 import asyncio
 import concurrent.futures
 import functools
-from typing import List
 
 import aiogram
 from aiogram import Router, F
@@ -12,15 +11,15 @@ from aiogram.types import InlineKeyboardMarkup, CallbackQuery, KeyboardButton, M
     Contact
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from callbacks.callbackdata import ChooseTypeAddText, TextPagesCallback, MessageBoxCallback
+from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
 from handlers import states
 from handlers.filters import NewItemValidateFilter
 from handlers.handlers_folder import show_all_folders, show_folders
-from handlers.handlers_item import movement_item_message_handler, show_item
-from handlers.handlers_item_add_mode import add_files_to_message_handler, add_text_to_item_handler
-from handlers.handlers_read_voice import read_voice
-from handlers.handlers_save_item_content import files_to_message_handler, is_message_allowed_new_item, \
-    save_text_to_new_item_and_set_title, text_to_message_handler
+from handlers.handlers_item import show_item
+from handlers.handlers_item_add_mode import add_files_to_message_handler
+from handlers.handlers_read_voice import read_voice_offer
+from handlers.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
+    text_to_message_handler
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import Item
@@ -31,15 +30,14 @@ from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_fo
     smile_item, smile_folder, smile_file
 from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_movement_item, \
-    get_folders_with_items_inline_markup, save_file_buttons, general_new_item_buttons, new_general_buttons_folder, \
+    get_folders_with_items_inline_markup, save_file_buttons, new_general_buttons_folder, \
     get_folder_pin_inline_markup
 from utils.utils_data import set_current_folder_id, get_current_folder_id
 from utils.utils_file_finder import FileFinder
-from utils.utils_files import get_file_info_by_content_type, dict_to_location, dict_to_contact
+from utils.utils_files import dict_to_location, dict_to_contact
 from utils.utils_folders_reader import get_folder
 from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id
-from utils.utils_parse_mode_converter import preformat_text
 from utils.utils_sender_message_loop import send_storage_folders, send_storage_with_items
 from utils.utils_show_item_entities import show_item_page_as_text_only, show_item_full_mode
 
@@ -393,13 +391,14 @@ async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
-    if message.content_type == 'voice':
+    IS_PREMIUM = True
+    if IS_PREMIUM and message.content_type == 'voice':
         await state.update_data(voice_message=message)
-        await read_voice(message)
+        await read_voice_offer(message)
         return
 
-    _state = await state.get_state()
-    func = add_files_to_message_handler if _state == states.ItemState.AddTo else files_to_message_handler
+    state_value = await state.get_state()
+    func = add_files_to_message_handler if state_value == states.ItemState.AddTo else files_to_message_handler
 
     data = await state.get_data()
     file_messages = data.get('file_messages', [])

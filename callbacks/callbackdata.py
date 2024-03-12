@@ -99,7 +99,7 @@ class VoiceSaveTypeCallback(CallbackData, prefix='voice_save_type'):
     type: str
 
 
-class ReadVoiceRetryCallback(CallbackData, prefix='voice_read_retry'):
+class ReadVoiceRunCallback(CallbackData, prefix='voice_read_retry'):
     pass
 
 

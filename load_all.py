@@ -17,8 +17,6 @@ storage = MemoryStorage()
 bot = Bot(token=str(BOT_TOKEN), parse_mode="HTML")
 dp = Dispatcher(bot=bot, storage=storage)
 
-wit_client = Wit(WIT_AI_TOKEN)
-
 # current_item = {}
 
 async def setup_bot():

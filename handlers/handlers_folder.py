@@ -332,7 +332,7 @@ async def cancel_handler(message: aiogram.types.Message, state: FSMContext):
     data = await get_data(user_id)
     question_messages = data['question_messages']
 
-    await show_folders(message.from_user.id)
+    await show_folders(message.from_user.id, need_to_resend=True)
     if question_messages:
         for question_message in question_messages:
             await bot.delete_message(question_message.chat.id, question_message.message_id)
@@ -376,7 +376,7 @@ async def get_enter_folder_name(message: Message, is_edit=False):
             await bot.send_message(
                 message.chat.id,
                 text="❗Папка с таким названием здесь уже существует\." \
-                     "\n\n_Придумайте другое название:_",
+                     "\n\n_*Придумайте другое название:*_",
                 parse_mode=ParseMode.MARKDOWN_V2
             )
         )

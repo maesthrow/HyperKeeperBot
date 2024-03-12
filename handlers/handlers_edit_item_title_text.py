@@ -19,7 +19,7 @@ async def edit_item(user_id, state: FSMContext, edit_text=None):
     item: Item = await get_item(user_id, item_id)
     current_state = await state.get_state()
     if current_state == states.ItemState.EditTitle.state:
-        item.title = edit_text.strip()
+        item.title = edit_text.strip() if edit_text else ''
         message_success_text = "Новый заголовок сохранен ✅"
         message_failure_text = "Что то пошло не так при сохранении заголовка ❌"
     else:

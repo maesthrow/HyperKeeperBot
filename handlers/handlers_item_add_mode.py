@@ -66,8 +66,9 @@ async def add_to_item_handler(call: CallbackQuery, state: FSMContext):
 
 # @router.message(F.content_type == 'text')
 async def add_text_to_item_handler(messages: List[Message], state: FSMContext, is_new_item: bool, item: Item,
-                                   page: int):
-    user_id = messages[0].from_user.id
+                                   page: int, user_id=None):
+    if not user_id:
+        user_id = messages[0].from_user.id
 
     inline_markup = get_choose_type_add_text_keyboard(item, page)
     await bot.send_message(user_id, 'На какую страницу добавить новый текст?', reply_markup=inline_markup)

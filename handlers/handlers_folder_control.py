@@ -66,7 +66,7 @@ async def edit_folder_name_handler(user_id, folder_id, folder_name, state: FSMCo
             text=f"*Переименовать папку* {smile_folder}"
                  f"\n\nМожете скопировать текущее название:"
                  f"\n'`{folder_name}`'"
-                 f"\n\n_Напишите новое название папки:_",
+                 f"\n\n_*Напишите новое название папки:*_",
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=markup
         )

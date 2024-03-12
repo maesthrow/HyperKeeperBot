@@ -10,7 +10,7 @@ from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback,
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
     EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback, VoiceSaveTypeCallback, \
-    ReadVoiceRetryCallback
+    ReadVoiceRunCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_constants import numbers_ico
@@ -347,12 +347,12 @@ def get_save_button_in_markup(inline_markup: InlineKeyboardMarkup):
 def get_voice_save_inline_markup():
     builder = InlineKeyboardBuilder()
     builder.button(
-        text='📃 Текст',
-        callback_data=VoiceSaveTypeCallback(type='text').pack()
-    )
-    builder.button(
         text='🗣️ Голос',
         callback_data=VoiceSaveTypeCallback(type='voice').pack()
+    )
+    builder.button(
+        text='📃 Текст',
+        callback_data=VoiceSaveTypeCallback(type='text').pack()
     )
     builder.button(
         text='✖️ Не сохранять',
@@ -362,18 +362,20 @@ def get_voice_save_inline_markup():
     return builder.as_markup()
 
 
-def get_voice_read_fail_inline_markup():
+def get_voice_read_inline_markup(is_retry=False):
+    read_voice_text = '📃 Распознать текст' if not is_retry else '🔄 Распознать еще раз'  # ⌨️📃
+    cancel_text = '✖️ Отменить' if not is_retry else '✖️ Не сохранять'
     builder = InlineKeyboardBuilder()
-    builder.button(
-        text='🔄 Распознать еще раз',
-        callback_data=ReadVoiceRetryCallback().pack()
-    )
     builder.button(
         text='🗣️ Сохранить голос',
         callback_data=VoiceSaveTypeCallback(type='voice').pack()
     )
     builder.button(
-        text='✖️ Не сохранять',
+        text=read_voice_text,
+        callback_data=ReadVoiceRunCallback().pack()
+    )
+    builder.button(
+        text=cancel_text,
         callback_data=MessageBoxCallback(result='close').pack()
     )
     builder.adjust(2, 1)
