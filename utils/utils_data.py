@@ -1,6 +1,16 @@
-from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection
-from mongo_db.mongo_collection_users import get_user_collection, set_user_collection
+from aiogram.types import User
+
+from mongo_db.mongo_collection_accesses import add_user_accesses
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection, add_user_folders
+from mongo_db.mongo_collection_users import get_user_collection, set_user_collection, add_user
 from utils.data_manager import get_data, set_data
+
+
+async def add_user_collections(tg_user: User):
+    """Добавляет пользователя и все его коллекции в базу данных, если их еще нет"""
+    await add_user(tg_user)
+    await add_user_folders(tg_user)
+    await add_user_accesses(tg_user)
 
 
 async def set_current_folder_id(user_id, folder_id=ROOT_FOLDER_ID):

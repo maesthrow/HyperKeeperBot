@@ -344,32 +344,48 @@ def get_save_button_in_markup(inline_markup: InlineKeyboardMarkup):
                 return btn
 
 
-def get_voice_save_inline_markup():
+def get_voice_save_inline_markup(content_type: ContentType):
     builder = InlineKeyboardBuilder()
-    builder.button(
-        text='🗣️ Голос',
-        callback_data=VoiceSaveTypeCallback(type='voice').pack()
-    )
+    if content_type == ContentType.VOICE:
+        builder.button(
+            text='🗣️ Голос',
+            callback_data=VoiceSaveTypeCallback(type='voice').pack()
+        )
+    elif content_type == ContentType.VIDEO_NOTE:
+        builder.button(
+            text='📹 Видео',
+            callback_data=VoiceSaveTypeCallback(type='video_note').pack()
+        )
     builder.button(
         text='📃 Текст',
         callback_data=VoiceSaveTypeCallback(type='text').pack()
     )
     builder.button(
+        text='🔄 Повторить',
+        callback_data=ReadVoiceRunCallback().pack()
+    )
+    builder.button(
         text='✖️ Не сохранять',
         callback_data=MessageBoxCallback(result='close').pack()
     )
-    builder.adjust(2, 1)
+    builder.adjust(2, 2)
     return builder.as_markup()
 
 
-def get_voice_read_inline_markup(is_retry=False):
-    read_voice_text = '📃 Распознать текст' if not is_retry else '🔄 Распознать еще раз'  # ⌨️📃
+def get_voice_read_inline_markup(content_type: ContentType, is_retry=False):
+    read_voice_text = '📃 Распознать текст' if not is_retry else '🔄 Повторить'  # ⌨️📃
     cancel_text = '✖️ Отменить' if not is_retry else '✖️ Не сохранять'
     builder = InlineKeyboardBuilder()
-    builder.button(
-        text='🗣️ Сохранить голос',
-        callback_data=VoiceSaveTypeCallback(type='voice').pack()
-    )
+    if content_type == ContentType.VOICE:
+        builder.button(
+            text='🗣️ Сохранить голос',
+            callback_data=VoiceSaveTypeCallback(type='voice').pack()
+        )
+    elif content_type == ContentType.VIDEO_NOTE:
+        builder.button(
+            text='📹 Сохранить видео',
+            callback_data=VoiceSaveTypeCallback(type='video_note').pack()
+        )
     builder.button(
         text=read_voice_text,
         callback_data=ReadVoiceRunCallback().pack()

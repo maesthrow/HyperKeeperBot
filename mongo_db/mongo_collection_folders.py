@@ -1,18 +1,20 @@
+from aiogram.types import User
+
 from mongo_db.mongo import db
 
 
 ROOT_FOLDER_ID = "0"
 
 
-async def add_user_folders(tg_user):
-    """Добавляет пользователя в базу данных, если его не существует."""
+async def add_user_folders(tg_user: User):
+    """Добавляет коллекцию папок folders пользователя в базу данных, если ее не существует."""
     user_folders_collection = db["folders"]  # Получаем коллекцию "folders" из базы данных
 
-    # Проверяем, существует ли пользователь в коллекции
-    user_document = user_folders_collection.find_one({"_id": tg_user.id})
+    # Проверяем, существует ли коллекция folders для данного пользователя в базе данных
+    user_folders_document = user_folders_collection.find_one({"_id": tg_user.id})
 
-    if not user_document:
-        # Создаем структуру данных для нового пользователя
+    if not user_folders_document:
+        # Создаем структуру коллекции папок folders для пользователя
         user_data = {
             "_id": tg_user.id,
             "folders": {
@@ -43,11 +45,11 @@ async def add_user_folders(tg_user):
             }
         }
         try:
-            print("Запись хранилища в базу данных:")
+            print(f"Создание хранилища для пользователя {tg_user.id} {tg_user.full_name} в базе данных:")
             user_folders_collection.insert_one(user_data)
             print("Успешно")
         except Exception as e:
-            print("Ошибка при добавлении хранилища пользователя в базу данных:", e)
+            print(f"Ошибка при создании хранилища для пользователя {tg_user.id} {tg_user.full_name} в базе данных:", e)
 
 
 async def get_user_folders_data(tg_user_id):

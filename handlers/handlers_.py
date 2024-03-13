@@ -1,6 +1,7 @@
 import asyncio
 import concurrent.futures
 import functools
+from typing import List
 
 import aiogram
 from aiogram import Router, F
@@ -23,8 +24,7 @@ from handlers.handlers_save_item_content import files_to_message_handler, save_t
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import Item
-from mongo_db.mongo_collection_folders import add_user_folders, ROOT_FOLDER_ID
-from mongo_db.mongo_collection_users import add_user
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, get_folder_path_names, \
     smile_item, smile_folder, smile_file
@@ -32,7 +32,7 @@ from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_movement_item, \
     get_folders_with_items_inline_markup, save_file_buttons, new_general_buttons_folder, \
     get_folder_pin_inline_markup
-from utils.utils_data import set_current_folder_id, get_current_folder_id
+from utils.utils_data import set_current_folder_id, get_current_folder_id, add_user_collections
 from utils.utils_file_finder import FileFinder
 from utils.utils_files import dict_to_location, dict_to_contact
 from utils.utils_folders_reader import get_folder
@@ -48,28 +48,30 @@ dp.include_router(router)
 @router.message(CommandStart())
 async def start(message: Message, state: FSMContext):
     tg_user = message.from_user
-    print(f'start: tg_user {tg_user}')
     url_data = from_url_data(message.text).split()
-    if len(url_data) > 1:
+    await start_init(tg_user, message, state, url_data)
+
+
+async def start_init(tg_user, message, state, url_data: List[str]):
+    if len(url_data) == 1:
+        await start_handler(state, tg_user)
+    else:
         if len(url_data[1].split('_')) == 2:
             await start_url_data_folder_handler(message, tg_user)
         elif 2 < len(url_data[1].split('_')) <= 4:
             await start_url_data_item_handler(message, tg_user)
         elif len(url_data[1].split('_')) > 4:
             await start_url_data_file_handler(message, state, tg_user)
-    else:
-        await start_handler(message, state, tg_user)
 
 
-async def start_handler(message: Message, state: FSMContext, tg_user):
+async def start_handler(state: FSMContext, tg_user):
     await state.clear()
 
-    await add_user(tg_user)
-    await add_user_folders(tg_user)
+    # Добавляем пользователя и все его коллекции в базу данных, если их еще нет
+    await add_user_collections(tg_user)
 
-    me = await bot.me()
-    bot_username = me.username
-    # await asyncio.sleep(1)
+    # me = await bot.me()
+    # bot_username = me.username
     text = (f"👋 Привет, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
             f"которое доступно с помощью команды /storage\n\n"
             f"Управляйте вашими данными 🗃️, создавайте папки 🗂️ и записи 📄, сохраняйте медиафайлы 📸, "
@@ -392,7 +394,8 @@ async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
 ))
 async def media_files_handler(message: Message, state: FSMContext):
     IS_PREMIUM = True
-    if IS_PREMIUM and message.content_type == 'voice':
+    if (IS_PREMIUM and
+            (message.content_type == 'voice' or message.content_type == 'video_note')):
         await state.update_data(voice_message=message)
         await read_voice_offer(message)
         return

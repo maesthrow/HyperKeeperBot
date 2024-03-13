@@ -99,6 +99,10 @@ class VoiceSaveTypeCallback(CallbackData, prefix='voice_save_type'):
     type: str
 
 
+class VideoNoteSaveTypeCallback(CallbackData, prefix='video_note_save_type'):
+    type: str
+
+
 class ReadVoiceRunCallback(CallbackData, prefix='voice_read_retry'):
     pass
 
