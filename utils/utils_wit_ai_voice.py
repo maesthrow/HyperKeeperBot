@@ -22,18 +22,19 @@ notifies = (
     '✨ Почти готово...',
 )
 
+TEMP_FOLDER = "temp_media/"
 
 def get_start_read_notify(content_type: ContentType):
     return start_read_notify.get(content_type, '🎧')
 
 
 async def get_voice_text(voice: Voice, message: Message = None):
-    voice_text = await get_media_text(voice, "voice_message.ogg", message)
+    voice_text = await get_media_text(voice, f"{TEMP_FOLDER}voice_message.ogg", message)
     return voice_text
 
 
 async def get_video_note_text(video_note: VideoNote, message: Message = None):
-    video_note_text = await get_media_text(video_note, "video_note_message.mp4", message)
+    video_note_text = await get_media_text(video_note, f"{TEMP_FOLDER}video_note_message.mp4", message)
     return video_note_text
 
 
@@ -83,8 +84,8 @@ async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, mess
             end = (i + 1) * max_duration if (i + 1) * max_duration < len(audio) else len(audio)
             part = audio[start:end]
             try:
-                part.export(f"part_{i}.mp3", format="mp3")
-                with open(f"part_{i}.mp3", "rb") as part_file:
+                part.export(f"{TEMP_FOLDER}part_{i}.mp3", format="mp3")
+                with open(f"{TEMP_FOLDER}part_{i}.mp3", "rb") as part_file:
                     response = wit_client.speech(part_file, headers={"Content-Type": "audio/mpeg"})
                     # Обработка ответа для каждой части
                     if response is not None:
@@ -92,8 +93,10 @@ async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, mess
                         voice_text += part_text + " "
                     else:
                         print(f"No response for part {i + 1}")
-                remove_temp_file(f"part_{i}.mp3")
+                remove_temp_file(f"{TEMP_FOLDER}part_{i}.mp3")
             except:
+                part_file.close()
+                remove_temp_file(f"{TEMP_FOLDER}part_{i}.mp3")
                 if i == parts_count - 1:
                     break
 
@@ -110,21 +113,24 @@ async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, mess
                 text=message_text
             )
             await bot.send_chat_action(message.chat.id, "typing")
-            # await asyncio.sleep(1)
+
+        remove_temp_file(temp_source_path)
     else:
         # Конвертируем и отправляем весь файл целиком
         audio.export(temp_mp3_path, format="mp3")
         with open(temp_mp3_path, "rb") as audio_file:
             if audio_file:
                 print('pre response')
-                response = wit_client.speech(audio_file, headers={"Content-Type": "audio/mpeg"})
+                try:
+                    response = wit_client.speech(audio_file, headers={"Content-Type": "audio/mpeg"})
+                finally:
+                    audio_file.close()  # Закрыть файл перед удалением
+                    remove_temp_file(temp_mp3_path)
+                    remove_temp_file(temp_source_path)
                 print('post response')
                 # Обработка ответа
                 if response is not None:
                     voice_text += response.get("text", "")
-        remove_temp_file(temp_mp3_path)
-
-    remove_temp_file(temp_source_path)
 
     if voice_text:
         voice_text = voice_text.strip()
