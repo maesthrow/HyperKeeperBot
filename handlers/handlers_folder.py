@@ -296,35 +296,6 @@ async def delete_folder_request(call: CallbackQuery):
     await call.answer()
 
 
-# async def edit_this_folder(message: aiogram.types.Message, folder_id, state: FSMContext):
-#     user_id = message.from_user.id
-#     folder_name = await get_folder_name(user_id, folder_id)
-#
-#     data = await get_data(user_id)
-#     data['folder_id'] = folder_id
-#     await set_data(user_id, data)
-#
-#     general_buttons = [[cancel_button]]
-#     markup = create_general_reply_markup(general_buttons)
-#
-#     question_messages = data.get('question_messages', [])
-#     question_messages.append(
-#         await bot.send_message(
-#             chat_id=message.chat.id,
-#             text=f"*Переименовать папку* {smile_folder}"
-#                  f"\n\nМожете скопировать текущее название:"
-#                  f"\n'`{folder_name}`'"
-#                  f"\n\n_Напишите новое название папки:_",
-#             parse_mode=ParseMode.MARKDOWN_V2,
-#             reply_markup=markup
-#         )
-#     )
-#     # await bot.send_message(message.chat.id,
-#     #                        "Напишите новое название папки:", reply_markup=ReplyKeyboardRemove())
-#     await state.update_data(question_messages=question_messages)
-#     await state.set_state(states.Folder.EditName)
-
-
 @router.message(states.FolderState.NewName, F.text == cancel_button.text)
 @router.message(states.FolderState.EditName, F.text == cancel_button.text)
 async def cancel_handler(message: aiogram.types.Message, state: FSMContext):

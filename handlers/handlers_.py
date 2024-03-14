@@ -326,7 +326,6 @@ async def show_storage(message: Message, state: FSMContext):
         max_attempts=1
     )
     # await asyncio.sleep(0.3)
-    #print(len(folders_message.reply_markup.inline_keyboard))
     data['folders_message'] = folders_message
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
