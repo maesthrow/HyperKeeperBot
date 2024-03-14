@@ -7,6 +7,8 @@ from load_all import dp, bot
 from models.folder_model import Folder
 from utils.utils_ import smile_folder
 from utils.utils_access import get_user_info
+from utils.utils_bot import get_bot_link
+from utils.utils_button_manager import get_access_provide_inline_markup
 from utils.utils_folders_reader import get_folder
 
 router = Router()
@@ -35,39 +37,42 @@ async def get_access_results(from_user_id, folder_id):
     folder: Folder = await get_folder(from_user_id, folder_id)
     user_info = await get_user_info(from_user_id)
 
+    bot_link = await get_bot_link()
+    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, bot_link)
+
     message_content = InputTextMessageContent(
         message_text=f'Вам предоставлен доступ к просмотру папки:\n{smile_folder} {folder.name}'
                      f'\n\nОт пользователя:\n{user_info}'
     )
     #url = 'https://www.pngfind.com/pngs/m/418-4184626_unlock-your-phone-for-free-unlock-cell-phone.png'
-    url = 'https://thumbs.dreamstime.com/b/%D0%BF%D1%80%D0%B5%D0%B4%D0%BE%D1%81%D1%82%D0%B0%D0%B2%D0%BB%D0%B5%D0%BD-%D0%B4%D0%BE%D1%81%D1%82%D1%83%D0%BF-%D0%B8%D0%BD%D1%84%D0%BE%D1%80%D0%BC%D0%B0%D1%86%D0%B8%D0%BE%D0%BD%D0%BD%D0%BE%D0%B5-%D1%81%D0%BE%D0%BE%D0%B1%D1%89%D0%B5%D0%BD%D0%B8%D0%B5-%D0%BD%D0%B0-%D1%8D%D0%BA%D1%80%D0%B0%D0%BD%D0%B5-172455026.jpg'
+    url = 'https://clickfraud.ru/wp-content/uploads/2023/09/alex-chumak-zguburggmdy-unsplash-scaled-1-1024x612.jpg'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}read'.encode()).hexdigest()
     access_read_folder_result = InlineQueryResultArticle(
         id=result_id,
-        title=f'Доступ к просмотру папки',
-        description=f'{smile_folder} {folder.name}',
+        description=f'Доступ к просмотру папки 👓',
+        title=f'{smile_folder} {folder.name}',
         input_message_content=message_content,
-        thumbnail_url=url
-        #reply_markup=inline_markup,
+        thumbnail_url=url,
+        reply_markup=inline_markup,
         #thumbnail_url=search_icon_url,
     )
     access_results.append(access_read_folder_result)
 
     message_content = InputTextMessageContent(
-        message_text=f'Вам предоставлен доступ к просмотру и изменению папки:\n{smile_folder} {folder.name}'
+        message_text=f'Вам предоставлен доступ к просмотру и изменению содержимого папки:\n{smile_folder} {folder.name}'
                      f'\n\nОт пользователя:\n{user_info}'
     )
-    url = 'https://img3.stockfresh.com/files/s/sdecoret/m/76/6339547_stock-photo-green-binary-code.jpg'
+    url = 'https://besthqwallpapers.com/Uploads/24-7-2020/138345/thumb2-digital-technology-background-with-zeros-and-ones-digital-blue-background-binary-code-background-digital-data-binary-code-texture.jpg'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}write'.encode()).hexdigest()
-    access_read_folder_result = InlineQueryResultArticle(
+    access_write_folder_result = InlineQueryResultArticle(
         id=result_id,
-        title=f'Доступ к просмотру и изменению папки',
-        description=f'{smile_folder} {folder.name}',
+        description=f'Доступ к изменению содержимого папки 🖊️',
+        title=f'{smile_folder} {folder.name}',
         input_message_content=message_content,
-        thumbnail_url=url
-        # reply_markup=inline_markup,
+        thumbnail_url=url,
+        reply_markup=inline_markup,
         # thumbnail_url=search_icon_url,
     )
-    access_results.append(access_read_folder_result)
+    access_results.append(access_write_folder_result)
 
     return access_results

@@ -171,3 +171,15 @@ class AccessControlCallback(CallbackData, prefix='access_control'):
     folder_id: str
     action: str
 
+
+class AccessRequestCallback(CallbackData, prefix='access_request'):
+    author_user_id: str
+    folder_id: str
+    type: str
+
+
+class AccessConfirmCallback(CallbackData, prefix='access_confirm'):
+    folder_id: str
+    res: bool
+
+

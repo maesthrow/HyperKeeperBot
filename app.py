@@ -34,6 +34,7 @@ if __name__ == '__main__':
     import handlers.handlers_item_text_pages
     import handlers.handlers_edit_item_files
     import handlers.handlers_folder_control
+    import handlers.handlers_access
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

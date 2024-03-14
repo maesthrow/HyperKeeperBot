@@ -1,24 +1,22 @@
 import asyncio
-import copy
 import re
 
 from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import EditFolderCallback, StatisticFolderCallback, MessageBoxCallback, \
     SearchInFolderCallback, PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, \
     NewPinCodeButtonCallback, EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback
 from handlers import states
-from handlers.handlers_folder import show_folders, get_folders_message_text
+from handlers.handlers_folder import show_folders
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
-from utils.utils_ import get_folder_name, smile_folder, get_inline_markup_for_accept_cancel, smile_item, get_folder_pin
+from utils.utils_ import get_folder_name, smile_folder, get_inline_markup_for_accept_cancel, smile_item
 from utils.utils_button_manager import cancel_button, create_general_reply_markup, general_buttons_search_items, \
     get_folder_pin_inline_markup, get_pin_control_inline_markup, get_access_control_inline_markup
 from utils.utils_constants import numbers_ico
@@ -508,9 +506,9 @@ async def access_folder_handler(call: CallbackQuery):
     call_data = AccessFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(user_id, folder_id)
-    users_info = escape_markdown(await folder.get_users_info())
-    users_info = 'Ничего не найдено\.' if not users_info else users_info
-    message_text = (f'👥 *Управление доступом к папке*'
+    users_info = await folder.get_users_info() or 'Ничего не найдено.'
+    users_info = escape_markdown(users_info)
+    message_text = (f'🔐 *Управление доступом к папке*'
                     f'\n\n{smile_folder} {folder.name}'
                     f'\n\n_Пользователи, которым вы предоставили доступ:_'
                     f'\n\n{users_info}')

@@ -1,19 +1,18 @@
 import copy
-from typing import List
 
 from aiogram.enums import ContentType
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from callbacks.callbackdata import ShowItemFilesCallback, HideItemFilesCallback, TextPagesCallback, SaveItemCallback, \
+from callbacks.callbackdata import TextPagesCallback, SaveItemCallback, \
     EditFileCaptionCallback, MarkFileCallback, DeleteFileCallback, RequestDeleteFileCallback, \
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
     EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback, VoiceSaveTypeCallback, \
-    ReadVoiceRunCallback
+    ReadVoiceRunCallback, AccessRequestCallback, AccessConfirmCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
-from utils.utils_constants import numbers_ico
+from utils.utils_bot import to_url_data
 from utils.utils_files import file_has_caption
 
 cancel_button = KeyboardButton(text="️🚫 Отменить")
@@ -461,7 +460,7 @@ def get_folder_control_inline_markup(user_id, folder_id):
         callback_data=PinFolderCallback(folder_id=folder_id).pack()
     )
     builder.button(
-        text='👥 Настроить доступ',
+        text='🔐 Настроить доступ',
         callback_data=AccessFolderCallback(folder_id=folder_id).pack()
     )
     sizes.append(2)
@@ -577,4 +576,43 @@ def get_access_control_inline_markup(user_id, folder_id: str, has_users: bool) -
         callback_data=MessageBoxCallback(result='close').pack()
     )
     builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_access_provide_inline_markup(from_user_id, folder_id: str, bot_link) -> InlineKeyboardMarkup:
+    folder_info = to_url_data(f'access-provide_{from_user_id}_{folder_id}')
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=f'✅ Принять 🚀️',
+        url=f'{bot_link}?start={folder_info}',
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_access_request_inline_markup(from_user_id, folder_id) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=f'Запросить доступ на просмотр папки 👓',
+        callback_data=AccessRequestCallback(author_user_id=str(from_user_id), folder_id=folder_id, type='read').pack()
+    )
+    builder.button(
+        text=f'Запросить доступ на изменение cодержимого🖊️️',
+        callback_data=AccessRequestCallback(author_user_id=str(from_user_id), folder_id=folder_id, type='write').pack()
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+def get_access_confirm_inline_markup(accessing_user_id: str, folder_id: str):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='✔️ Подтвердить',
+        callback_data=AccessConfirmCallback(acc_user_id=accessing_user_id, folder_id=folder_id, res=True).pack()
+    )
+    builder.button(
+        text='✖️ Отклонить',
+        callback_data=AccessConfirmCallback(acc_user_id=accessing_user_id, folder_id=folder_id, res=False).pack()
+    )
+    builder.adjust(2)
     return builder.as_markup()

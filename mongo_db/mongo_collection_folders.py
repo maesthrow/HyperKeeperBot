@@ -1,7 +1,7 @@
 from aiogram.types import User
 
 from mongo_db.mongo import db
-
+from utils.utils_user import get_user_full_str
 
 ROOT_FOLDER_ID = "0"
 
@@ -44,12 +44,13 @@ async def add_user_folders(tg_user: User):
                 }
             }
         }
+        user_full_str = get_user_full_str(tg_user)
         try:
-            print(f"Создание хранилища для пользователя {tg_user.id} {tg_user.full_name} в базе данных:")
+            print(f"Создание хранилища (folders) для пользователя {user_full_str} в базе данных:")
             user_folders_collection.insert_one(user_data)
             print("Успешно")
         except Exception as e:
-            print(f"Ошибка при создании хранилища для пользователя {tg_user.id} {tg_user.full_name} в базе данных:", e)
+            print(f"Ошибка при создании хранилища для пользователя {user_full_str} в базе данных:", e)
 
 
 async def get_user_folders_data(tg_user_id):

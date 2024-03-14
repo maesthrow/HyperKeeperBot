@@ -1,6 +1,7 @@
 from aiogram.types import User
 
 from mongo_db.mongo import db
+from utils.utils_user import get_user_full_str
 
 
 async def add_user(tg_user: User):
@@ -23,12 +24,13 @@ async def add_user(tg_user: User):
                 "language": "russian"
             },
         }
+        user_full_str = get_user_full_str(tg_user)
         try:
-            print(f"Запись пользователя {tg_user.id} {tg_user.full_name} в базу данных:")
+            print(f"Запись пользователя {user_full_str} в базу данных:")
             user_collection.insert_one(user_data)
             print("Успешно")
         except Exception as e:
-            print(f"Ошибка при добавлении пользователя {tg_user.id} {tg_user.full_name} в базу данных:", e)
+            print(f"Ошибка при добавлении пользователя {user_full_str} в базу данных:", e)
 
 
 async def get_user_data(tg_user_id):
