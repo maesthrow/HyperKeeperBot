@@ -17,6 +17,7 @@ from utils.utils_file_finder import FileFinder
 from utils.utils_folders_reader import get_folders_in_folder
 from utils.utils_inline_query import get_inline_query_result
 from utils.utils_items_reader import get_folder_items, get_item
+from utils.utils_parse_mode_converter import clear_code_braces
 from utils.utils_search_fragmentator import SearchFragmentator
 
 router = Router()
@@ -147,6 +148,7 @@ async def get_search_results_items(user_id, query_data):
                 search_fragment, page = required
             else:
                 search_fragment, page = None, 0
+            search_fragment = clear_code_braces(search_fragment)
             item_body = item.get_body_markdown(page)
         else:
             continue
@@ -170,9 +172,6 @@ async def get_search_results_items(user_id, query_data):
         )
         search_results.append(search_item_result)
     return search_results
-
-
-
 
 
 async def get_search_results_files(user_id, query_data):

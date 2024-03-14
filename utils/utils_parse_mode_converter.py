@@ -38,6 +38,12 @@ def escape_markdown(text) -> str:
     return escaped_text
 
 
+def clear_code_braces(text) -> str:
+    if text:
+        return text.replace("```", "")
+    return text
+
+
 def full_escape_markdown(text) -> str:
     if not text:
         return text

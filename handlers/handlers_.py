@@ -181,15 +181,15 @@ async def start_url_data_file_handler(message, state, tg_user):
         inline_markup = InlineKeyboardMarkup(inline_keyboard=save_file_buttons)
 
         if file_type == 'document':
-            await bot.send_document(chat_id=tg_user.id, document=file_id, caption=caption, reply_markup=inline_markup)
+            await bot.send_document(chat_id=tg_user.id, document=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup)
         elif file_type == 'photo':
-            await bot.send_photo(chat_id=tg_user.id, photo=file_id, caption=caption, reply_markup=inline_markup)
+            await bot.send_photo(chat_id=tg_user.id, photo=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup)
         elif file_type == 'audio':
-            await bot.send_audio(chat_id=tg_user.id, audio=file_id, caption=caption, reply_markup=inline_markup)
+            await bot.send_audio(chat_id=tg_user.id, audio=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup)
         elif file_type == 'voice':
-            await bot.send_voice(chat_id=tg_user.id, voice=file_id, caption=caption, reply_markup=inline_markup)
+            await bot.send_voice(chat_id=tg_user.id, voice=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup)
         elif file_type == 'video':
-            await bot.send_video(chat_id=tg_user.id, video=file_id, caption=caption, reply_markup=inline_markup)
+            await bot.send_video(chat_id=tg_user.id, video=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup)
         elif file_type == 'video_note':
             await bot.send_video_note(chat_id=tg_user.id, video_note=file_id, reply_markup=inline_markup)
         elif file_type == 'sticker':
