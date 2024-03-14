@@ -10,7 +10,7 @@ from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
 from utils.utils_ import smile_folder
-from utils.utils_access import get_user_info
+from utils.utils_access import get_user_info, get_access_str_by_type
 from utils.utils_bot import from_url_data
 from utils.utils_button_manager import get_access_request_inline_markup, save_file_buttons, \
     get_access_confirm_inline_markup
@@ -34,6 +34,7 @@ async def start_url_data_access_provide_handler(message, tg_user):
         url_data_split = url_data.split('_')
         author_user_id = int(url_data_split[1])
         folder_id = url_data_split[2]
+        access_type = url_data_split[3]
 
         if author_user_id == tg_user.id:
             await show_folders(user_id=tg_user.id, current_folder_id=folder_id, need_to_resend=True)
@@ -44,11 +45,12 @@ async def start_url_data_access_provide_handler(message, tg_user):
             folder: Folder = await get_folder(author_user_id, folder_id)
             user_info = await get_user_info(str(tg_user.id))
             author_user_info = await get_user_info(str(author_user_id))
-            inline_markup = get_access_confirm_inline_markup(str(tg_user.id), folder_id)
+            inline_markup = get_access_confirm_inline_markup(str(tg_user.id), folder_id, access_type[0])
             if folder:
+                access_str = get_access_str_by_type(access_type)
                 message_text = (
                     f"\n\nПользователь {user_info} "
-                    f"пытается получить доступ к вашей папке:"
+                    f"запрашивает доступ {access_str} вашей папки:"
                     f"\n{smile_folder} {folder.name}"
                 )
                 message_text = escape_markdown(message_text)
@@ -63,10 +65,10 @@ async def start_url_data_access_provide_handler(message, tg_user):
 
                 message_text = (
                     f"\n\nПользователю {author_user_info} "
-                    f"отправлен запрос на подтверждение доступа к его папке:"
+                    f"отправлен запрос на подтверждение доступа {access_str} его папки:"
                     f"\n{smile_folder} {folder.name}"
                     f"\n\nВы получите доступ сразу после его подтверждения ✅"
-                    f"\nЯ обязательно пришлю вам уведомление ☺️"
+                    f"\nЯ обязательно пришлю вам уведомление🔔️"
                 )
                 await MessageBox.show(tg_user.id, message_text)
 

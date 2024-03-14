@@ -579,8 +579,8 @@ def get_access_control_inline_markup(user_id, folder_id: str, has_users: bool) -
     return builder.as_markup()
 
 
-def get_access_provide_inline_markup(from_user_id, folder_id: str, bot_link) -> InlineKeyboardMarkup:
-    folder_info = to_url_data(f'access-provide_{from_user_id}_{folder_id}')
+def get_access_provide_inline_markup(from_user_id, folder_id: str, access_type: str, bot_link) -> InlineKeyboardMarkup:
+    folder_info = to_url_data(f'access-provide_{from_user_id}_{folder_id}_{access_type}')
     builder = InlineKeyboardBuilder()
     builder.button(
         text=f'✅ Принять 🚀️',
@@ -604,15 +604,28 @@ def get_access_request_inline_markup(from_user_id, folder_id) -> InlineKeyboardM
     return builder.as_markup()
 
 
-def get_access_confirm_inline_markup(accessing_user_id: str, folder_id: str):
+def get_access_confirm_inline_markup(accessing_user_id: str, folder_id: str, type: str):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='✔️ Подтвердить',
-        callback_data=AccessConfirmCallback(acc_user_id=accessing_user_id, folder_id=folder_id, res=True).pack()
+        callback_data=AccessConfirmCallback(
+            acc_user_id=accessing_user_id, folder_id=folder_id, type=type, res=True
+        ).pack()
     )
     builder.button(
         text='✖️ Отклонить',
-        callback_data=AccessConfirmCallback(acc_user_id=accessing_user_id, folder_id=folder_id, res=False).pack()
+        callback_data=AccessConfirmCallback(
+            acc_user_id=accessing_user_id, folder_id=folder_id, type=type, res=False
+        ).pack()
     )
     builder.adjust(2)
+    return builder.as_markup()
+
+
+def get_simple_inline_markup(button_text: str) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=button_text,
+        callback_data=MessageBoxCallback(result='ok').pack()
+    )
     return builder.as_markup()

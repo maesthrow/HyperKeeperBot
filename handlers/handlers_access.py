@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery
@@ -6,6 +8,8 @@ from callbacks.callbackdata import AccessConfirmCallback
 from load_all import dp, bot
 from models.folder_model import Folder
 from utils.utils_ import smile_folder
+from utils.utils_access import get_user_info, get_access_str_by_type
+from utils.utils_button_manager import get_simple_inline_markup
 from utils.utils_folders_reader import get_folder
 from utils.utils_parse_mode_converter import escape_markdown
 
@@ -15,18 +19,64 @@ dp.include_router(router)
 
 @router.callback_query(AccessConfirmCallback.filter())
 async def access_folder_handler(call: CallbackQuery):
-    # user_id = call.from_user.id
-    # call_data = AccessConfirmCallback.unpack(call.data)
-    # folder_id = call_data.folder_id
-    # folder: Folder = await get_folder(user_id, folder_id)
-    # users_info = await folder.get_users_info() or 'Ничего не найдено.'
-    # users_info = escape_markdown(users_info)
-    # message_text = (f'🔐 *Управление доступом к папке*'
-    #                 f'\n\n{smile_folder} {folder.name}'
-    #                 f'\n\n_Пользователи, которым вы предоставили доступ:_'
-    #                 f'\n\n{users_info}')
-    # inline_markup = get_access_control_inline_markup(user_id, folder_id, folder.has_users())
-    # await bot.send_message(
-    #     chat_id=user_id, text=message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+    user_id = call.from_user.id
+    user_info = await get_user_info(str(user_id))
+    call_data = AccessConfirmCallback.unpack(call.data)
+    accessing_user_id = call_data.acc_user_id
+    accessing_user_info = await get_user_info(str(accessing_user_id))
+    folder_id = call_data.folder_id
+    folder: Folder = await get_folder(user_id, folder_id)
+    access_type = call_data.type
+    access_str = get_access_str_by_type(access_type)
+    result = call_data.res
+    if result:
+        message_text = (
+            f'✅ Пользователю {accessing_user_info} предоставлен доступ {access_str} вашей папки:'
+            f'\n{smile_folder} {folder.name}'
+            f'\n\nВы можете отменить это действие в любой момент в настройках доступа папки 🔐'
+        )
+        accessing_user_message_text = (
+            f"✅ Пользователь {user_info} подтвердил ваш доступ {access_str} его папки:"
+            f"\n{smile_folder} {folder.name}"
+            f"\n\nТеперь она доступна в разделе главного <b>Меню</b>:"
+            f"\n🔐 <i>доступы от других пользователей</i>"
+        )
+    else:
+        message_text = (
+            f'❌ Вы отклонили запрос пользователя {accessing_user_info} на доступ {access_str} вашей папки:'
+            f'\n{smile_folder} {folder.name}'
+        )
+        accessing_user_message_text = (
+            f"❌ Пользователь {user_info} отклонил ваш запрос на доступ {access_str} его папки:"
+            f"\n{smile_folder} {folder.name}"
+            f"\n\nДля повторного запроса вы должны получить новое предложение от этого пользователя 👤"
+        )
+
+    inline_markup = get_simple_inline_markup('✔️ OK')
+    await asyncio.gather(
+        bot.edit_message_text(
+            chat_id=user_id,
+            message_id=call.message.message_id,
+            text=message_text,
+            reply_markup=inline_markup
+        ),
+        bot.send_message(
+            chat_id=accessing_user_id,
+            text=accessing_user_message_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=inline_markup
+        )
+    )
+    # await bot.edit_message_text(
+    #     chat_id=user_id,
+    #     message_id=call.message.message_id,
+    #     text=message_text,
+    #     reply_markup=inline_markup
     # )
+    # await bot.send_message(
+    #     chat_id=accessing_user_id,
+    #     text=accessing_user_message_text,
+    #     reply_markup=inline_markup
+    # )
+
     await call.answer()

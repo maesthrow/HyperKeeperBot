@@ -179,7 +179,9 @@ class AccessRequestCallback(CallbackData, prefix='access_request'):
 
 
 class AccessConfirmCallback(CallbackData, prefix='access_confirm'):
+    acc_user_id: str
     folder_id: str
+    type: str
     res: bool
 
 

@@ -45,9 +45,18 @@ async def setup_bot_commands():
     bot_commands = [
         BotCommand(command="/start", description="🚀️ начало работы"),
         BotCommand(command="/storage", description="🗂️ открыть хранилище"),
+        BotCommand(command="/access", description="🔐 доступы от других пользователей"),
         BotCommand(command="/search", description="🔍️ live-поиск"),
+        BotCommand(command="/profile", description="👤 мой профиль"),
         BotCommand(command="/settings", description="⚙️ настройки"),
-        #BotCommand(command="/profile", description="👤 мой профиль"),
-        #BotCommand(command="/help", description="справка"),
+        BotCommand(command="/help", description="❔ справка"),
     ]
     await bot.set_my_commands(bot_commands)
+
+# start - 🚀️ начало работы
+# storage - 🗂️ открыть хранилище
+# access - 🔐 доступы от других пользователей
+# search - 🔍️ live-поиск
+# profile - 👤 мой профиль
+# settings - ⚙️ настройки
+# help - ❔ справка
