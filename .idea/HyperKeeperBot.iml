@@ -7,7 +7,14 @@
       <excludeFolder url="file://$MODULE_DIR$/venv/python312" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.12 (HyperKeeperBot) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="TemplatesService">
+    <option name="TEMPLATE_FOLDERS">
+      <list>
+        <option value="$MODULE_DIR$/temp_media" />
+      </list>
+    </option>
   </component>
 </module>
