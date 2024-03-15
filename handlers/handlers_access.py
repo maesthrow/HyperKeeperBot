@@ -26,29 +26,30 @@ async def access_folder_handler(call: CallbackQuery):
     accessing_user_info = await get_user_info(str(accessing_user_id))
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(user_id, folder_id)
+    folder_full_name = await folder.get_full_name()
     access_type = call_data.type
     access_str = get_access_str_by_type(access_type)
     result = call_data.res
     if result:
-        message_text = (
-            f'✅ Пользователю {accessing_user_info} предоставлен доступ {access_str} вашей папки:'
-            f'\n{smile_folder} {folder.name}'
-            f'\n\nВы можете отменить это действие в любой момент в настройках доступа папки 🔐'
-        )
+        message_text = f'✅ Пользователю {accessing_user_info} предоставлен доступ {access_str} вашей папки:'
+        message_text = escape_markdown(message_text)
+        message_text += (f'\n\n*{folder_full_name} {escape_markdown('...')}*'
+                         f'\n\nВы можете отменить это действие в любой момент в настройках доступа папки 🔐')
+
         accessing_user_message_text = (
             f"✅ Пользователь {user_info} подтвердил ваш доступ {access_str} его папки:"
-            f"\n{smile_folder} {folder.name}"
+            f"\n\n<b>{smile_folder} {folder.name}</b>"
             f"\n\nТеперь она доступна в разделе главного <b>Меню</b>:"
             f"\n🔐 <i>доступы от других пользователей</i>"
         )
     else:
-        message_text = (
-            f'❌ Вы отклонили запрос пользователя {accessing_user_info} на доступ {access_str} вашей папки:'
-            f'\n{smile_folder} {folder.name}'
-        )
+        message_text = f'❌ Вы отклонили запрос пользователя {accessing_user_info} на доступ {access_str} вашей папки:'
+        message_text = escape_markdown(message_text)
+        message_text += f'\n\n*{folder_full_name} {escape_markdown('...')}*'
+
         accessing_user_message_text = (
             f"❌ Пользователь {user_info} отклонил ваш запрос на доступ {access_str} его папки:"
-            f"\n{smile_folder} {folder.name}"
+            f"\n\n<b>{smile_folder} {folder.name}</b>"
             f"\n\nДля повторного запроса вы должны получить новое предложение от этого пользователя 👤"
         )
 
@@ -58,6 +59,7 @@ async def access_folder_handler(call: CallbackQuery):
             chat_id=user_id,
             message_id=call.message.message_id,
             text=message_text,
+            parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup
         ),
         bot.send_message(

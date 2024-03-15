@@ -34,3 +34,4 @@ async def get_folder_statistic(user_id, folder_id) -> dict:
     dict_statistic["deep_folders_count"] = deep_folders_count
     dict_statistic["deep_items_count"] = deep_items_count
     return dict_statistic
+

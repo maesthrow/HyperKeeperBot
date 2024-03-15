@@ -47,14 +47,15 @@ async def start_url_data_access_provide_handler(message, tg_user):
             author_user_info = await get_user_info(str(author_user_id))
             inline_markup = get_access_confirm_inline_markup(str(tg_user.id), folder_id, access_type[0])
             if folder:
+                folder_full_name = await folder.get_full_name()
                 access_str = get_access_str_by_type(access_type)
                 message_text = (
                     f"\n\nПользователь {user_info} "
                     f"запрашивает доступ {access_str} вашей папки:"
-                    f"\n{smile_folder} {folder.name}"
                 )
                 message_text = escape_markdown(message_text)
-                message_text += f"\n\n_Подтверждаете предоставление доступа?_ 🔐"
+                message_text += (f"\n\n*{folder_full_name} {escape_markdown('...')}*"
+                                 f"\n\n_Подтверждаете предоставление доступа?_ 🔐")
 
                 await bot.send_message(
                     chat_id=author_user_id,
@@ -66,7 +67,7 @@ async def start_url_data_access_provide_handler(message, tg_user):
                 message_text = (
                     f"\n\nПользователю {author_user_info} "
                     f"отправлен запрос на подтверждение доступа {access_str} его папки:"
-                    f"\n{smile_folder} {folder.name}"
+                    f"\n\n<b>{smile_folder} {folder.name}</b>"
                     f"\n\nВы получите доступ сразу после его подтверждения ✅"
                     f"\nЯ обязательно пришлю вам уведомление🔔️"
                 )

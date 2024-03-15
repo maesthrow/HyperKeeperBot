@@ -4,34 +4,30 @@ import copy
 import aiogram
 from aiogram import Router, F
 from aiogram.enums import ParseMode
-from aiogram.filters import Filter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, Message
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
 
 from callbacks.callbackdata import SendItemCallback, ItemShowCallback, MarkFileCallback, BackToStandardFolderView
-from enums.enums import Environment
 from handlers import states
 from handlers.filters import NotInButtonsFilter, InButtonsFilter
 from handlers.handlers_edit_item_title_text import edit_item
 from handlers.handlers_folder import show_folders
 from handlers.handlers_search import show_search_results
-from handlers.handlers_settings import CURRENT_LABEL, get_inline_markup_with_selected_current_setting
 from load_all import dp, bot
-from models.item_model import Item, INVISIBLE_CHAR
+from models.item_model import Item
 from utils.data_manager import get_data, set_data
-from utils.utils_ import get_inline_markup_for_accept_cancel, get_environment, update_message_reply_markup
+from utils.utils_ import update_message_reply_markup
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, \
     complete_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, \
     general_new_item_buttons, \
-    without_title_button, add_to_item_button, FilesButtons, text_pages_buttons, get_text_pages_buttons, \
-    create_general_reply_markup, general_add_to_new_item_mode_buttons, cancel_add_mode_button, file_mark_on, \
-    general_buttons_edit_item_files, file_mark_off, get_delete_files_inline_markup, leave_current_caption_button, \
-    get_edit_item_files_keyboard
+    without_title_button, add_to_item_button, FilesButtons, get_text_pages_buttons, \
+    create_general_reply_markup, general_add_to_new_item_mode_buttons, cancel_add_mode_button, \
+    general_buttons_edit_item_files, get_delete_files_inline_markup
 from utils.utils_data import get_current_folder_id, set_current_folder_id
-from utils.utils_items_db import util_add_item_to_folder, util_delete_item, util_delete_all_items_in_folder, \
+from utils.utils_items_db import util_add_item_to_folder, util_delete_all_items_in_folder, \
     util_move_item
-from utils.utils_items_reader import get_item, get_folder_id, get_folder_items
-from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, escape_markdown, full_escape_markdown
+from utils.utils_items_reader import get_item, get_folder_id
+from utils.utils_parse_mode_converter import preformat_text
 from utils.utils_show_item_entities import show_item_full_mode
 
 # cancel_edit_item_button = InlineKeyboardButton(text="❌ Отменить", callback_data=f"cancel_edit_item")

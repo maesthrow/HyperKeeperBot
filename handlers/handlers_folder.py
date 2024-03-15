@@ -1,5 +1,5 @@
-import concurrent.futures
 import asyncio
+import concurrent.futures
 import functools
 import re
 from html import escape
@@ -8,32 +8,27 @@ import aiogram
 from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, ReplyKeyboardRemove, \
-    KeyboardButton, Message
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message
+from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 
 from callbacks.callbackdata import FolderCallback
-from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 from handlers import states
-from handlers.message_manager import send_ok_info_message
-from handlers.states import FolderState
 from load_all import bot, dp
 from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
-from utils.message_box import MessageBox
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
-    get_page_info, get_folder_name, get_sub_folder_names, get_folder_path_names, check_current_items_page, \
-    get_inline_markup_for_accept_cancel, smile_folder, smile_item
-from utils.utils_button_manager import (general_buttons_folder, create_general_reply_markup,
+    get_page_info, check_current_items_page, smile_folder
+from utils.utils_button_manager import (create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
-                                        general_buttons_statistic_folder, check_button_exists_part_of_text,
+                                        check_button_exists_part_of_text,
                                         get_folders_with_items_inline_markup, cancel_button, new_general_buttons_folder,
                                         current_folder_control_button, get_folder_control_inline_markup,
                                         get_folder_pin_inline_markup)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
-from utils.utils_folders import get_folder_statistic, \
-    get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
+from utils.utils_folders import get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
 from utils.utils_folders_db import util_delete_folder, util_add_new_folder, util_rename_folder
-from utils.utils_folders_reader import get_folder
+from utils.utils_folders_reader import get_folder, get_folder_name, get_sub_folder_names
+from utils.utils_handlers import get_folder_path_names, get_folders_message_text
 from utils.utils_items import show_all_items
 
 # from aiogram.utils.exceptions import MessageNotModified
@@ -131,13 +126,6 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
     data['page_folders'] = str(new_page_folders)
     data['page_items'] = str(new_page_items)
     await set_data(user_id, data)
-
-
-async def get_folders_message_text(user_id, current_folder_id, current_folder_path_names=None):
-    if not current_folder_path_names:
-        current_folder_path_names = await get_folder_path_names(user_id, current_folder_id)
-    folders_message_text = f"🗂️ {current_folder_path_names}"
-    return folders_message_text
 
 
 async def send_new_folders_message(user_id, current_folder_path_names, folders_inline_markup):

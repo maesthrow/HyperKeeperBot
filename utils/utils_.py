@@ -1,17 +1,15 @@
 import math
 import re
 
-from aiogram.fsm.context import FSMContext
-from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
 
 from callbacks.callbackdata import FolderCallback, ItemShowCallback, MarkFileCallback
 from enums.enums import Environment
-from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 from load_all import bot
 from utils.data_manager import get_data
 from utils.utils_button_manager import check_button_exists, file_mark_on, file_mark_off
-from utils.utils_data import get_folders_collection, get_from_user_collection
-from utils.utils_folders_reader import get_folder_data, get_folders_in_folder, get_folder
+from utils.utils_data import get_from_user_collection
+from utils.utils_folders_reader import get_folders_in_folder
 from utils.utils_items_reader import get_folder_items, get_simple_item
 
 # folder_callback = CallbackFolder()
@@ -23,65 +21,6 @@ separator = 'из'
 smile_folder = '🗂️'
 smile_item = '📄'
 smile_file = '🗃️'
-
-
-async def get_sub_folders(user_id, folder_id):
-    folders = await get_folder_data(user_id, folder_id)
-    return folders.get("folders", {})
-
-
-async def get_sub_folder_names(user_id, folder_id):
-    """Возвращает список всех folder_id внутри указанной папки."""
-    folders_collection = await get_folders_collection(user_id)
-
-    # Разбиваем идентификатор папки на части
-    folder_ids = folder_id.split('/')
-
-    # Инициализируем переменные для навигации по папкам
-    target_folders = folders_collection
-    folder_id_with_path = None
-
-    # Проходим по уровням вложенности папки
-    for folder_part in folder_ids:
-        folder_id_with_path = f"{folder_id_with_path}/{folder_part}" if folder_id_with_path else folder_part
-        target_folder = target_folders.get(folder_id_with_path, {})
-        target_folders = target_folder.get("folders", {})
-
-    # Получаем все folder_id внутри указанной папки
-    sub_folder_ids = list(target_folders.keys())
-    sub_folder_names = [await get_folder_name(user_id, sub_folder_id) for sub_folder_id in sub_folder_ids]
-
-    return sub_folder_names
-
-
-async def get_folder_name(user_id, folder_id=ROOT_FOLDER_ID):
-    """Возвращает имя папки по её идентификатору."""
-    folder_data = await get_folder_data(user_id, folder_id)
-    return folder_data.get("name", "")
-
-
-async def get_folder_pin(user_id, folder_id=ROOT_FOLDER_ID):
-    """Возвращает PIN-код для папки по её идентификатору."""
-    folder = await get_folder(user_id, folder_id)
-    return folder.get_pin()
-
-
-async def get_folder_path_names(user_id, folder_id=ROOT_FOLDER_ID):
-    """Возвращает имена папок по пути к папке."""
-    folders_collection = await get_folders_collection(user_id)
-    folder_ids = folder_id.split('/')
-    path_names = []
-    target_folders = folders_collection
-    folder_id_with_path = None
-
-    for folder_id in folder_ids:
-        folder_id_with_path = f"{folder_id_with_path}/{folder_id}" if folder_id_with_path else folder_id
-        target_folder = target_folders.get(folder_id_with_path, {})
-        target_folder_name = target_folder.get("name", "")
-        path_names.append(target_folder_name)
-        target_folders = target_folder.get("folders", {})
-
-    return " / ".join(path_names) + " /"
 
 
 async def get_environment(user_id):
@@ -296,3 +235,4 @@ async def update_message_reply_markup(user_id, delete_file_ids, file_message, ma
             chat_id=user_id, message_id=file_message.message_id, reply_markup=inline_markup
         )
     return None
+

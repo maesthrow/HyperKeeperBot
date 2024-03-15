@@ -16,12 +16,12 @@ from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
-from utils.utils_ import get_folder_name, smile_folder, get_inline_markup_for_accept_cancel, smile_item
+from utils.utils_ import smile_folder, get_inline_markup_for_accept_cancel, smile_item
 from utils.utils_button_manager import cancel_button, create_general_reply_markup, general_buttons_search_items, \
     get_folder_pin_inline_markup, get_pin_control_inline_markup, get_access_control_inline_markup
 from utils.utils_constants import numbers_ico
 from utils.utils_folders import get_folder_statistic
-from utils.utils_folders_reader import get_folder
+from utils.utils_folders_reader import get_folder, get_folder_name
 from utils.utils_folders_writer import set_pin_folder, remove_pin_folder
 from utils.utils_items_reader import get_folder_items
 from utils.utils_parse_mode_converter import escape_markdown

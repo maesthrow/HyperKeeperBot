@@ -1,16 +1,18 @@
-from load_all import bot
 from utils.utils_access import get_user_info
+from utils.utils_handlers import get_folders_message_text
 
 
 class Folder:
     def __init__(
             self,
+            author_user_id: int,
             folder_id: str,
             name: str,
             access: {} = None,
             folders: {} = None,
             items: {} = None
     ):
+        self.author_user_id = author_user_id
         self.folder_id = folder_id
         self.name = name
         self.access = access
@@ -61,3 +63,8 @@ class Folder:
                 user_info = await get_user_info(tg_user_id)
                 users_access_info = f'{user_info} - {access_str}'
         return users_access_info
+
+    async def get_full_name(self):
+        full_name = await get_folders_message_text(self.author_user_id, self.folder_id)
+        return full_name
+

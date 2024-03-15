@@ -10,9 +10,9 @@ from handlers.handlers_folder import show_folders
 from handlers.handlers_folder_control import search_in_folder
 from load_all import bot, dp
 from utils.data_manager import get_data, set_data
-from utils.utils_ import get_folder_path_names
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_search_items
 from utils.utils_data import get_current_folder_id
+from utils.utils_handlers import get_folder_path_names
 from utils.utils_items import get_all_search_items, get_items_count_in_markups
 from utils.utils_statistic import get_word_items_by_count
 
