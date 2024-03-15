@@ -208,11 +208,10 @@ async def get_search_results_files(user_id, query_data):
 
 
 async def get_search_folders(user_id, folder_id, text_search, result_search_folders: dict):
-    search_folders = await get_folders_in_folder(user_id, folder_id)  # , text_search=text_search)
-    for folder_id in search_folders:
-        if text_search.lower() in search_folders[folder_id]['name'].lower():
-            result_search_folders[folder_id] = search_folders[folder_id]
-    folders_in_folder = await get_folders_in_folder(user_id, folder_id)
+    folders_in_folder = await get_folders_in_folder(user_id, folder_id)  # , text_search=text_search)
+    for folder_id in folders_in_folder:
+        if text_search.lower() in folders_in_folder[folder_id]['name'].lower():
+            result_search_folders[folder_id] = folders_in_folder[folder_id]
     for sub_folder_id in folders_in_folder:
         result_search_folders = await get_search_folders(user_id, sub_folder_id, text_search, result_search_folders)
     return result_search_folders
