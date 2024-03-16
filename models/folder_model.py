@@ -1,3 +1,5 @@
+import uuid
+
 from utils.utils_access import get_user_info
 from utils.utils_handlers import get_folders_message_text
 
@@ -18,6 +20,7 @@ class Folder:
         self.access = access
         self.folders = folders
         self.items = items
+        print(f'Folder.access {self.access}')
 
     def to_dict(self) -> dict:
         return {
@@ -26,6 +29,10 @@ class Folder:
             "folders": self.folders,
             "items": self.items,
         }
+
+    async def get_full_name(self):
+        full_name = await get_folders_message_text(self.author_user_id, self.folder_id)
+        return full_name
 
     def get_pin(self):
         return self.access.get('pin', '') if self.access else ''
@@ -39,7 +46,7 @@ class Folder:
     def remove_pin(self):
         self.set_pin('')
 
-    def has_users(self):
+    def has_access_users(self):
         return len(self.get_access_users()) > 0
 
     def get_access_users(self) -> dict:
@@ -48,23 +55,47 @@ class Folder:
             users = self.access.get('users', {})
         return users
 
-    async def get_users_info(self):
-        users_access_info = ''
+    async def get_access_users_info(self) -> str:
+        users_access_info = []
         users = self.get_access_users()
         if users:
             for tg_user_id, access_user in users.items():
-                access_for_user = str(access_user)
                 access_info = []
-                if int(access_for_user[0]):
-                    access_info.append('чтение')
-                if int(access_for_user[1]):
-                    access_info.append('запись')
+                if access_user['access_type'][0] == 'r':
+                    access_info.append('просмотр содержимого 👓')
+                elif access_user['access_type'][0] == 'w':
+                    access_info.append('просмотр и изменение содержимого 👓🖊️')
                 access_str = ', '.join(access_info)
                 user_info = await get_user_info(tg_user_id)
-                users_access_info = f'{user_info} - {access_str}'
-        return users_access_info
+                users_access_info.append(f'{user_info} - {access_str}')
+        return '\n\n'.join(users_access_info)
 
-    async def get_full_name(self):
-        full_name = await get_folders_message_text(self.author_user_id, self.folder_id)
-        return full_name
+    def add_access_user(self, user_id, access_type: str):
+        user_id = str(user_id)
+        users = self.get_access_users()
+        users[user_id] = {
+            "access_type": access_type
+        }
 
+    def get_access_tokens(self) -> list:
+        tokens = list()
+        if self.access:
+            tokens = self.access.get('tokens', [])
+        return tokens
+
+    def contains_token(self, token: str) -> bool:
+        tokens = self.get_access_tokens()
+        if tokens:
+            return token in tokens
+        return False
+
+    def new_token(self):
+        new_token = str(uuid.uuid4())[:8]
+        self.get_access_tokens().append(new_token)
+        return new_token
+
+    def use_token(self, token: str) -> bool:
+        if self.contains_token(token):
+            self.get_access_tokens().remove(token)
+            return True
+        return False

@@ -11,6 +11,7 @@ from utils.utils_access import get_user_info, get_access_str_by_type
 from utils.utils_bot import get_bot_link, get_bot_name
 from utils.utils_button_manager import get_access_provide_inline_markup
 from utils.utils_folders_reader import get_folder
+from utils.utils_folders_writer import edit_folder
 
 router = Router()
 dp.include_router(router)
@@ -36,13 +37,15 @@ async def get_access_results(from_user_id, folder_id):
     access_results = []
 
     folder: Folder = await get_folder(from_user_id, folder_id)
+    token = folder.new_token()
+    result = await edit_folder(from_user_id, folder)
 
     message_text = await get_notify_message_text(from_user_id, folder.name, 'read')
     message_content = InputTextMessageContent(
         message_text=message_text
     )
     bot_link = await get_bot_link()
-    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, 'read', bot_link)
+    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, 'read', token, bot_link)
     #url = 'https://www.pngfind.com/pngs/m/418-4184626_unlock-your-phone-for-free-unlock-cell-phone.png'
     url = 'https://clickfraud.ru/wp-content/uploads/2023/09/alex-chumak-zguburggmdy-unsplash-scaled-1-1024x612.jpg'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}read'.encode()).hexdigest()
@@ -61,12 +64,12 @@ async def get_access_results(from_user_id, folder_id):
     message_content = InputTextMessageContent(
         message_text=message_text
     )
-    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, 'write', bot_link)
+    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, 'write', token, bot_link)
     url = 'https://besthqwallpapers.com/Uploads/24-7-2020/138345/thumb2-digital-technology-background-with-zeros-and-ones-digital-blue-background-binary-code-background-digital-data-binary-code-texture.jpg'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}write'.encode()).hexdigest()
     access_write_folder_result = InlineQueryResultArticle(
         id=result_id,
-        description=f'Доступ к просмотру и изменению содержимого папки 🖊️',
+        description=f'Доступ к просмотру и изменению содержимого папки 👓🖊️',
         title=f'{smile_folder} {folder.name}',
         input_message_content=message_content,
         thumbnail_url=url,

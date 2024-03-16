@@ -11,6 +11,7 @@ from utils.utils_ import smile_folder
 from utils.utils_access import get_user_info, get_access_str_by_type
 from utils.utils_button_manager import get_simple_inline_markup
 from utils.utils_folders_reader import get_folder
+from utils.utils_folders_writer import edit_folder
 from utils.utils_parse_mode_converter import escape_markdown
 
 router = Router()
@@ -31,17 +32,31 @@ async def access_folder_handler(call: CallbackQuery):
     access_str = get_access_str_by_type(access_type)
     result = call_data.res
     if result:
-        message_text = f'✅ Пользователю {accessing_user_info} предоставлен доступ {access_str} вашей папки:'
-        message_text = escape_markdown(message_text)
-        message_text += (f'\n\n*{folder_full_name} {escape_markdown('...')}*'
-                         f'\n\nВы можете отменить это действие в любой момент в настройках доступа папки 🔐')
+        user_added = await add_user_to_folder_access(user_id, folder, access_type)
+        if user_added:
+            message_text = f'✅ Пользователю {accessing_user_info} предоставлен доступ {access_str} вашей папки:'
+            message_text = escape_markdown(message_text)
+            message_text += (f'\n\n*{folder_full_name} {escape_markdown('...')}*'
+                             f'\n\nВы можете отменить это действие в любой момент в настройках доступа папки 🔐')
 
-        accessing_user_message_text = (
-            f"✅ Пользователь {user_info} подтвердил ваш доступ {access_str} его папки:"
-            f"\n\n<b>{smile_folder} {folder.name}</b>"
-            f"\n\nТеперь она доступна в разделе главного <b>Меню</b>:"
-            f"\n🔐 <i>доступы от других пользователей</i>"
-        )
+            accessing_user_message_text = (
+                f"✅ Пользователь {user_info} подтвердил ваш доступ {access_str} его папки:"
+                f"\n\n<b>{smile_folder} {folder.name}</b>"
+                f"\n\nТеперь она доступна в разделе главного <b>Меню</b>:"
+                f"\n🔐 <i>доступы от других пользователей</i>"
+            )
+        else:
+            message_text = (f'❌ Не удалось предоставить доступ пользователю '
+                            f'{accessing_user_info} {access_str} вашей папки:')
+            message_text = escape_markdown(message_text)
+            message_text += f'\n\n*{folder_full_name} {escape_markdown('...')}*'
+
+            accessing_user_message_text = (
+                f"❌ Пользователю {user_info} не удалось предоставить вам доступ {access_str} его папки:"
+                f"\n\n<b>{smile_folder} {folder.name}</b>"                
+                f"\n\nДля повторного запроса вы должны получить новое предложение от этого пользователя 👤"
+            )
+
     else:
         message_text = f'❌ Вы отклонили запрос пользователя {accessing_user_info} на доступ {access_str} вашей папки:'
         message_text = escape_markdown(message_text)
@@ -69,16 +84,11 @@ async def access_folder_handler(call: CallbackQuery):
             reply_markup=inline_markup
         )
     )
-    # await bot.edit_message_text(
-    #     chat_id=user_id,
-    #     message_id=call.message.message_id,
-    #     text=message_text,
-    #     reply_markup=inline_markup
-    # )
-    # await bot.send_message(
-    #     chat_id=accessing_user_id,
-    #     text=accessing_user_message_text,
-    #     reply_markup=inline_markup
-    # )
 
     await call.answer()
+
+
+async def add_user_to_folder_access(user_id, folder: Folder, access_type: str) -> bool:
+    folder.add_access_user(user_id, access_type)
+    result = await edit_folder(folder.author_user_id, folder)
+    return result

@@ -55,7 +55,8 @@ async def start_init(tg_user, message, state, url_data: List[str]):
         await start_handler(state, tg_user)
     else:
         url_data_args = url_data[1].split('_')
-        if 'access-provide' in url_data_args:
+        print(f'url_data_args = {url_data_args}')
+        if url_data_args[0].startswith('ap'):
             await start_url_data_access_provide_handler(message, tg_user)
         elif len(url_data_args) == 2:
             await start_url_data_folder_handler(message, tg_user)

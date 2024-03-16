@@ -17,6 +17,7 @@ from utils.utils_button_manager import get_access_request_inline_markup, save_fi
 from utils.utils_file_finder import FileFinder
 from utils.utils_files import dict_to_location, dict_to_contact
 from utils.utils_folders_reader import get_folder
+from utils.utils_folders_writer import edit_folder
 from utils.utils_items_reader import get_folder_id
 from utils.utils_parse_mode_converter import escape_markdown
 from utils.utils_show_item_entities import show_item_full_mode, show_item_page_as_text_only
@@ -35,43 +36,55 @@ async def start_url_data_access_provide_handler(message, tg_user):
         author_user_id = int(url_data_split[1])
         folder_id = url_data_split[2]
         access_type = url_data_split[3]
+        token = url_data_split[4]
 
         if author_user_id == tg_user.id:
             await show_folders(user_id=tg_user.id, current_folder_id=folder_id, need_to_resend=True)
         else:
             author_user_chat_member = await bot.get_chat_member(author_user_id, author_user_id)
             print(f'author_user = {author_user_chat_member.user}')
-            # inline_markup = get_access_request_inline_markup(author_user_id, folder_id)
-            folder: Folder = await get_folder(author_user_id, folder_id)
             user_info = await get_user_info(str(tg_user.id))
             author_user_info = await get_user_info(str(author_user_id))
-            inline_markup = get_access_confirm_inline_markup(str(tg_user.id), folder_id, access_type[0])
-            if folder:
-                folder_full_name = await folder.get_full_name()
-                access_str = get_access_str_by_type(access_type)
-                message_text = (
-                    f"\n\nПользователь {user_info} "
-                    f"запрашивает доступ {access_str} вашей папки:"
-                )
-                message_text = escape_markdown(message_text)
-                message_text += (f"\n\n*{folder_full_name} {escape_markdown('...')}*"
-                                 f"\n\n_Подтверждаете предоставление доступа?_ 🔐")
 
-                await bot.send_message(
-                    chat_id=author_user_id,
-                    text=message_text,
-                    parse_mode=ParseMode.MARKDOWN_V2,
-                    reply_markup=inline_markup
-                )
+            folder: Folder = await get_folder(author_user_id, folder_id)
+            is_valid_token = folder.use_token(token)
+            if is_valid_token:
+                await edit_folder(author_user_id, folder)
+                # inline_markup = get_access_request_inline_markup(author_user_id, folder_id)
+                inline_markup = get_access_confirm_inline_markup(str(tg_user.id), folder_id, access_type[0])
+                if folder:
+                    folder_full_name = await folder.get_full_name()
+                    access_str = get_access_str_by_type(access_type)
+                    message_text = (
+                        f"\n\nПользователь {user_info} "
+                        f"запрашивает доступ {access_str} вашей папки:"
+                    )
+                    message_text = escape_markdown(message_text)
+                    message_text += (f"\n\n*{folder_full_name} {escape_markdown('...')}*"
+                                     f"\n\n_Подтверждаете предоставление доступа?_ 🔐")
 
-                message_text = (
-                    f"\n\nПользователю {author_user_info} "
-                    f"отправлен запрос на подтверждение доступа {access_str} его папки:"
-                    f"\n\n<b>{smile_folder} {folder.name}</b>"
-                    f"\n\nВы получите доступ сразу после его подтверждения ✅"
-                    f"\nЯ обязательно пришлю вам уведомление🔔️"
-                )
-                await MessageBox.show(tg_user.id, message_text)
+                    await bot.send_message(
+                        chat_id=author_user_id,
+                        text=message_text,
+                        parse_mode=ParseMode.MARKDOWN_V2,
+                        reply_markup=inline_markup
+                    )
+
+                    message_text = (
+                        f"\n\nПользователю {author_user_info} "
+                        f"отправлен запрос на подтверждение доступа {access_str} его папки:"
+                        f"\n\n<b>{smile_folder} {folder.name}</b>"
+                        f"\n\nВы получите доступ сразу после его подтверждения ✅"
+                        f"\nЯ обязательно пришлю вам уведомление🔔️"
+                    )
+                    await MessageBox.show(tg_user.id, message_text)
+
+            elif not is_valid_token:
+                await MessageBox.show(
+                    user_id=tg_user.id,
+                    message_text=f'⚠️ Запрос на доступ к папке по этому предложению уже был отправлен '
+                                 f'пользователю {author_user_info}'
+                                 f'\n\nПожалуйста, дождитесь подтверждения или нового предложения.')
 
         data = await get_data(tg_user.id)
         await asyncio.sleep(0.5)

@@ -369,7 +369,7 @@ async def new_folder(message: Message, state: FSMContext):
 
 
 @router.message(states.FolderState.EditName)
-async def edit_folder(message: aiogram.types.Message, state: FSMContext):
+async def edit_folder_handler(message: aiogram.types.Message, state: FSMContext):
     folder_new_name = await get_enter_folder_name(message, is_edit=True)
     if not folder_new_name:
         return

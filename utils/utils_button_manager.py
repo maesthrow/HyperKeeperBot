@@ -579,8 +579,17 @@ def get_access_control_inline_markup(user_id, folder_id: str, has_users: bool) -
     return builder.as_markup()
 
 
-def get_access_provide_inline_markup(from_user_id, folder_id: str, access_type: str, bot_link) -> InlineKeyboardMarkup:
-    folder_info = to_url_data(f'access-provide_{from_user_id}_{folder_id}_{access_type}')
+def get_access_provide_inline_markup(
+        from_user_id,
+        folder_id: str,
+        access_type: str,
+        token: str,
+        bot_link: str
+) -> InlineKeyboardMarkup:
+
+    folder_info = to_url_data(f'ap_{from_user_id}_{folder_id}_{access_type}_{token}')
+    folder_info = folder_info[:64]
+    print(f'folder_info = {folder_info}')
     builder = InlineKeyboardBuilder()
     builder.button(
         text=f'✅ Принять 🚀️',

@@ -53,7 +53,11 @@ async def get_folder(user_id, folder_id: str = ROOT_FOLDER_ID):
     if "access" in folder_data:
         access = folder_data["access"]
     else:
-        access = None
+        access = {
+            "pin": '',
+            "tokens": [],
+            "users": {}
+        }
 
     if folder_data:
         folder = Folder(
