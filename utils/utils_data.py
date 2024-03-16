@@ -1,6 +1,6 @@
 from aiogram.types import User
 
-from mongo_db.mongo_collection_accesses import add_user_accesses
+from mongo_db.mongo_collection_accesses import add_user_accesses, get_user_accesses_collection
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection, add_user_folders
 from mongo_db.mongo_collection_users import get_user_collection, set_user_collection, add_user
 from utils.data_manager import get_data, set_data
@@ -69,4 +69,23 @@ async def set_to_user_collection(user_id, collection_name: str, collection=None)
 
     data = await get_data(user_id)
     data[f'{collection}_collection'] = collection
+    await set_data(user_id, data)
+
+
+async def get_accesses_collection(user_id):
+    data = await get_data(user_id)
+    accesses_collection = data.get('accesses_collection', None)
+    if not accesses_collection:
+        accesses_collection = await get_user_accesses_collection(user_id)
+        await set_accesses_collection(user_id, accesses_collection)
+
+    return accesses_collection
+
+
+async def set_accesses_collection(user_id, accesses_collection=None):
+    if not accesses_collection:
+        accesses_collection = await get_user_accesses_collection(user_id)
+
+    data = await get_data(user_id)
+    data['accesses_collection'] = accesses_collection
     await set_data(user_id, data)

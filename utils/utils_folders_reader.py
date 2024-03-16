@@ -101,6 +101,7 @@ async def get_sub_folder_names(user_id, folder_id):
 
     return sub_folder_names
 
+
 async def get_folder_name(user_id, folder_id=ROOT_FOLDER_ID):
     """Возвращает имя папки по её идентификатору."""
     folder_data = await get_folder_data(user_id, folder_id)

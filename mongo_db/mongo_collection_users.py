@@ -47,7 +47,7 @@ async def set_user_data(tg_user_id, data):
 
 
 async def get_user_collection(tg_user_id, collection_name: str):
-    """Возвращает папки пользователя по идентификатору."""
+    """Возвращает коллекцию пользователя по наименованию."""
     user_document = await get_user_data(tg_user_id)
     if user_document:
         return user_document.get(collection_name, {})
@@ -55,7 +55,7 @@ async def get_user_collection(tg_user_id, collection_name: str):
 
 
 async def set_user_collection(tg_user_id, collection_name: str, collection):
-    """Обновляет папки пользователя по идентификатору."""
+    """Обновляет коллекцию пользователя по наименованию."""
     user_data = await get_user_data(tg_user_id)
     user_data[collection_name] = collection
     await set_user_data(tg_user_id, user_data)
