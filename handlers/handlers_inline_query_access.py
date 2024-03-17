@@ -29,7 +29,7 @@ async def inline_query_search_folders(query: InlineQuery):
     await bot.answer_inline_query(
         query.id,
         results=search_results_folders,
-        cache_time=60,
+        cache_time=0,
     )
 
 
@@ -39,6 +39,11 @@ async def get_access_results(from_user_id, folder_id):
     folder: Folder = await get_folder(from_user_id, folder_id)
     token = folder.new_token()
     result = await edit_folder(from_user_id, folder)
+    if not result:
+        print('edit_folder failed')
+        return access_results
+    else:
+        print('edit_folder success')
 
     message_text = await get_notify_message_text(from_user_id, folder.name, 'read')
     message_content = InputTextMessageContent(

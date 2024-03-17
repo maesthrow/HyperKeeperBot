@@ -51,6 +51,12 @@ async def get_folder(user_id, folder_id: str = ROOT_FOLDER_ID):
     folder_data = await get_folder_data(user_id, folder_id)
 
     if "access" in folder_data:
+        if "pin" not in folder_data["access"]:
+            folder_data["access"]["pin"] = ''
+        if "tokens" not in folder_data["access"]:
+            folder_data["access"]["tokens"] = []
+        if "users" not in folder_data["access"]:
+            folder_data["access"]["users"] = {}
         access = folder_data["access"]
     else:
         access = {

@@ -102,14 +102,13 @@ async def edit_folder(user_id, folder: str | Folder):
     user_id = int(user_id)
     folders_collection = await get_folders_collection(user_id)
 
-    folder_id = ''
     if isinstance(folder, Folder):
-        folder_id = folder.folder_id
+        folder: Folder = folder
     else:
-        folder_id = folder
+        folder: Folder = await get_folder(user_id, folder)
 
     # Разбиваем идентификатор папки на части
-    folder_ids = folder_id.split('/')
+    folder_ids = folder.folder_id.split('/')
 
     # Инициализируем переменные для навигации по папкам
     target_folders = folders_collection
@@ -121,7 +120,7 @@ async def edit_folder(user_id, folder: str | Folder):
         target_folder = target_folders.get(folder_id_with_path, {})
         target_folders = target_folder.get("folders", {})
     # Получаем данные о папке, которую нужно изменить
-    folder_to_edit = target_folders.get(folder_id, None)
+    folder_to_edit = target_folders.get(folder.folder_id, None)
 
     if folder_to_edit:
         # Обновляем папку

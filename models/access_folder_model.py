@@ -1,0 +1,28 @@
+
+class AccessFolder:
+    def __init__(
+            self,
+            user_id: int,
+            from_user_id: int,
+            folder_id: str,
+            access_type: str,
+            pin: str = None,
+    ):
+        self.user_id = user_id
+        self.from_user_id = from_user_id
+        self.folder_id = folder_id
+        self.access_type = access_type[0]
+        self.pin = pin
+
+    def to_dict(self) -> dict:
+        return {
+            "access_type": self.access_type,
+            "pin": self.pin,
+        }
+
+    @staticmethod
+    def get_dict_by_properties(access_type: str, pin: str = None):
+        return {
+            "access_type": access_type[0],
+            "pin": pin
+        }

@@ -9,6 +9,7 @@ from load_all import dp, bot
 from models.folder_model import Folder
 from utils.utils_ import smile_folder
 from utils.utils_access import get_user_info, get_access_str_by_type
+from utils.utils_accesses_folders_db import util_access_add_from_user_folder
 from utils.utils_button_manager import get_simple_inline_markup
 from utils.utils_folders_reader import get_folder
 from utils.utils_folders_writer import edit_folder
@@ -32,8 +33,11 @@ async def access_folder_handler(call: CallbackQuery):
     access_str = get_access_str_by_type(access_type)
     result = call_data.res
     if result:
-        user_added = await add_user_to_folder_access(user_id, folder, access_type)
-        if user_added:
+        access_to_user_added = await util_access_add_from_user_folder(accessing_user_id, user_id, folder_id, access_type)
+        user_to_access_added = False
+        if access_to_user_added:
+            user_to_access_added = await add_user_to_folder_access(accessing_user_id, folder, access_type)
+        if access_to_user_added and user_to_access_added:
             message_text = f'✅ Пользователю {accessing_user_info} предоставлен доступ {access_str} вашей папки:'
             message_text = escape_markdown(message_text)
             message_text += (f'\n\n*{folder_full_name} {escape_markdown('...')}*'

@@ -20,7 +20,6 @@ class Folder:
         self.access = access
         self.folders = folders
         self.items = items
-        print(f'Folder.access {self.access}')
 
     def to_dict(self) -> dict:
         return {

@@ -89,3 +89,17 @@ async def set_accesses_collection(user_id, accesses_collection=None):
     data = await get_data(user_id)
     data['accesses_collection'] = accesses_collection
     await set_data(user_id, data)
+
+
+async def get_accesses_from_user_collection(user_id, from_user_id):
+    accesses_collection = await get_accesses_collection(user_id)
+    accesses_from_user_collection = accesses_collection.get(from_user_id, {})
+    return accesses_from_user_collection
+
+
+async def set_accesses_from_user_collection(user_id, from_user_id, from_user_collection=None):
+    accesses_collection = await get_accesses_collection(user_id)
+    accesses_collection[from_user_id] = from_user_collection
+    await set_accesses_collection(user_id, accesses_collection)
+
+
