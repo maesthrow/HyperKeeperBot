@@ -49,7 +49,7 @@ async def setup_bot_commands():
         BotCommand(command="/search", description="🔍️ live-поиск"),
         BotCommand(command="/profile", description="👤 мой профиль"),
         BotCommand(command="/settings", description="⚙️ настройки"),
-        BotCommand(command="/help", description="❔ справка"),
+        BotCommand(command="/help", description="❔ помощь"),
     ]
     await bot.set_my_commands(bot_commands)
 
@@ -59,4 +59,4 @@ async def setup_bot_commands():
 # search - 🔍️ live-поиск
 # profile - 👤 мой профиль
 # settings - ⚙️ настройки
-# help - ❔ справка
+# help - ❔ помощь

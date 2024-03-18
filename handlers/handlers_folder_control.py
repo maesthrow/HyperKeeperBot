@@ -191,7 +191,7 @@ async def pin_folder_handler(call: CallbackQuery, state: FSMContext):
 
 
 @router.callback_query(PinControlCallback.filter())
-async def pin_folder_handler(call: CallbackQuery, state: FSMContext):
+async def pin_folder_control_handler(call: CallbackQuery, state: FSMContext):
     user_id = call.from_user.id
     call_data = PinControlCallback.unpack(call.data)
     folder_id = call_data.folder_id
@@ -328,6 +328,10 @@ async def number_new_pin_folder_handler(call, inline_markup, pin_code_button):
         # await bot.edit_message_text(
         #     text=message_text, chat_id=user_id, message_id=call.message.message_id, reply_markup=inline_markup
         # )
+
+
+async def get_user_code_word():
+    pass
 
 
 async def number_enter_pin_folder_handler(call, inline_markup, pin_code_button):

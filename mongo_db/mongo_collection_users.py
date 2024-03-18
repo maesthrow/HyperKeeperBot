@@ -23,6 +23,7 @@ async def add_user(tg_user: User):
                 "items_on_page_count": 4,
                 "language": "russian"
             },
+            "code_word": None
         }
         user_full_str = get_user_full_str(tg_user)
         try:

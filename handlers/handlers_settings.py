@@ -67,18 +67,6 @@ router = Router()
 dp.include_router(router)
 
 
-@router.message(Command(commands=["settings"]))
-async def search_item_handler(message: aiogram.types.Message):
-    await bot.delete_message(
-        chat_id=message.chat.id,
-        message_id=message.message_id,
-    )
-    pre_message = await bot.send_message(message.chat.id, "⌛️", reply_markup=ReplyKeyboardRemove())
-    await bot.delete_message(chat_id=pre_message.chat.id, message_id=pre_message.message_id)
-    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=settings_buttons)
-    await bot.send_message(message.chat.id, "<b>⚙️ Настройки:</b>", reply_markup=inline_markup)
-
-
 @router.callback_query(lambda callback_query: callback_query.data == 'settings_count_folders_on_page')
 async def settings_count_folders_on_page_handler(call: CallbackQuery):
     settings = await get_from_user_collection(call.from_user.id, 'settings')

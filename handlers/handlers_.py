@@ -8,7 +8,7 @@ from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove
+from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
@@ -19,6 +19,7 @@ from handlers.handlers_item_add_mode import add_files_to_message_handler
 from handlers.handlers_read_voice import read_voice_offer
 from handlers.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
     text_to_message_handler
+from handlers.handlers_settings import settings_buttons
 from handlers.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
 from load_all import dp, bot
@@ -109,6 +110,16 @@ async def inline_search(message: Message, state: FSMContext):
         parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=builder.as_markup())
     await bot.delete_message(message.from_user.id, message.message_id)
+
+
+@router.message(Command(commands=["settings"]))
+async def search_item_handler(message: aiogram.types.Message):
+    await bot.delete_message(
+        chat_id=message.chat.id,
+        message_id=message.message_id,
+    )
+    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=settings_buttons)
+    await bot.send_message(message.chat.id, "<b>⚙️ Настройки:</b>", reply_markup=inline_markup)
 
 
 @router.message(Command(commands=["storage"]))
