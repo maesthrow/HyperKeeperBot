@@ -40,6 +40,8 @@ from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id
 from utils.utils_sender_message_loop import send_storage_folders, send_storage_with_items
 
+import handlers.handlers_item
+
 router = Router()
 dp.include_router(router)
 
