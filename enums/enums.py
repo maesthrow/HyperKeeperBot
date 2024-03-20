@@ -15,3 +15,9 @@ class Language(Enum):
     ITALIAN = {"italian": "🇮🇹 Italiano"}
     KAZAKH = {"kazakh": "🇰🇿 қазақ"}
     CHINESE = {"chinese": "🇨🇳 中國人"}
+
+
+class AccessType(Enum):
+    ABSENSE = ''
+    READ = 'r'
+    WRITE = 'w'

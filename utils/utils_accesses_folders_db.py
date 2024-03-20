@@ -1,10 +1,11 @@
 from models.access_folder_model import AccessFolder
+from utils.utils_access import AccessType
 from utils.utils_accesses_folders_writer import add_access_folder_from_user, delete_access_folder_from_user, \
     edit_access_folder_from_user
 from utils.utils_data import set_accesses_from_user_collection, get_accesses_from_user_collection
 
 
-async def util_access_add_from_user_folder(user_id, from_user_id, folder_id, access_type):
+async def util_access_add_from_user_folder(user_id, from_user_id, folder_id, access_type: AccessType):
     result = await add_access_folder_from_user(user_id, from_user_id, folder_id, access_type)
     if result:
         value = AccessFolder.get_dict_by_properties(access_type)

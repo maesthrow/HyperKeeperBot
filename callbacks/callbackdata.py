@@ -1,7 +1,7 @@
 from aiogram.enums import ContentType
 from aiogram.filters.callback_data import CallbackData
 
-from models.item_model import Item
+from utils.utils_access import AccessType
 
 
 class FolderCallback(CallbackData, prefix="folder"):
@@ -175,13 +175,13 @@ class AccessControlCallback(CallbackData, prefix='access_control'):
 class AccessRequestCallback(CallbackData, prefix='access_request'):
     author_user_id: str
     folder_id: str
-    type: str
+    type: AccessType
 
 
 class AccessConfirmCallback(CallbackData, prefix='access_confirm'):
     acc_user_id: str
     folder_id: str
-    type: str
+    type: AccessType
     res: bool
 
 

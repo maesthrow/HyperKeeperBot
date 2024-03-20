@@ -1,18 +1,8 @@
-# async def get_accesses_data(user_id, folder_id):
-#     accesses_from_user_collection = await get_accesses_from_user_collection(user_id, from_user_id)
-#
-#     folders_collection = await get_folders_collection(user_id)
-#     folder_ids = folder_id.split('/')
-#     target_folders = folders_collection
-#     folder_id_with_path = None
-#     target_folder = None
-#     for folder_id in folder_ids:
-#         folder_id_with_path = f"{folder_id_with_path}/{folder_id}" if folder_id_with_path else folder_id
-#         target_folder = target_folders.get(folder_id_with_path, {})
-#         target_folders = target_folder.get("folders", {})
-#     return target_folder
+from enums.enums import AccessType
 from models.access_folder_model import AccessFolder
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_data import get_accesses_from_user_collection
+from utils.utils_folders import get_parent_folder_id
 
 
 async def get_access_folder(user_id, from_user_id, folder_id):
@@ -34,3 +24,21 @@ async def get_access_folder(user_id, from_user_id, folder_id):
         return access_folder
 
     return None
+
+
+async def get_current_access_type_from_user_folder(user_id, from_user_id, folder_id) -> AccessType:
+    from_user_id = str(from_user_id)
+    current_access_type = AccessType.ABSENSE
+    print(f'user_id = {user_id}')
+    print(f'from_user_id = {from_user_id}')
+    accesses_from_user_collection = await get_accesses_from_user_collection(user_id, from_user_id)
+    print(f'folder_id = {folder_id}')
+    print(f'accesses_from_user_collection = {accesses_from_user_collection}')
+    if not accesses_from_user_collection:
+        return current_access_type
+    elif folder_id in accesses_from_user_collection:
+        current_access_type = AccessType(accesses_from_user_collection[folder_id].get('access_type', ''))
+    elif folder_id != ROOT_FOLDER_ID:
+        folder_id = get_parent_folder_id(folder_id)
+        return await get_current_access_type_from_user_folder(user_id, from_user_id, folder_id)
+    return current_access_type

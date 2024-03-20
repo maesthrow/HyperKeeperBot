@@ -3,6 +3,7 @@ import hashlib
 from aiogram import Router
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 
+from enums.enums import AccessType
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
@@ -45,12 +46,12 @@ async def get_access_results(from_user_id, folder_id):
     else:
         print('edit_folder success')
 
-    message_text = await get_notify_message_text(from_user_id, folder.name, 'read')
+    message_text = await get_notify_message_text(from_user_id, folder.name, AccessType.READ)
     message_content = InputTextMessageContent(
         message_text=message_text
     )
     bot_link = await get_bot_link()
-    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, 'read', token, bot_link)
+    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, AccessType.READ, token, bot_link)
     #url = 'https://www.pngfind.com/pngs/m/418-4184626_unlock-your-phone-for-free-unlock-cell-phone.png'
     url = 'https://clickfraud.ru/wp-content/uploads/2023/09/alex-chumak-zguburggmdy-unsplash-scaled-1-1024x612.jpg'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}read'.encode()).hexdigest()
@@ -65,11 +66,11 @@ async def get_access_results(from_user_id, folder_id):
     )
     access_results.append(access_read_folder_result)
 
-    message_text = await get_notify_message_text(from_user_id, folder.name, 'write')
+    message_text = await get_notify_message_text(from_user_id, folder.name, AccessType.WRITE)
     message_content = InputTextMessageContent(
         message_text=message_text
     )
-    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, 'write', token, bot_link)
+    inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, AccessType.WRITE, token, bot_link)
     url = 'https://besthqwallpapers.com/Uploads/24-7-2020/138345/thumb2-digital-technology-background-with-zeros-and-ones-digital-blue-background-binary-code-background-digital-data-binary-code-texture.jpg'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}write'.encode()).hexdigest()
     access_write_folder_result = InlineQueryResultArticle(
@@ -86,7 +87,7 @@ async def get_access_results(from_user_id, folder_id):
     return access_results
 
 
-async def get_notify_message_text(from_user_id, folder_name: str, access_type: str) -> str:
+async def get_notify_message_text(from_user_id, folder_name: str, access_type: AccessType) -> str:
     access_str = get_access_str_by_type(access_type)
     user_info = await get_user_info(from_user_id)
     bot_name = await get_bot_name()

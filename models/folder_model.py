@@ -1,6 +1,10 @@
 import uuid
 
+from enums.enums import AccessType
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_access import get_user_info
+from utils.utils_folders import get_parent_folder_id
+from utils.utils_folders_reader import get_folders_in_folder, get_folder
 from utils.utils_handlers import get_folders_message_text
 
 
@@ -60,20 +64,27 @@ class Folder:
         if users:
             for tg_user_id, access_user in users.items():
                 access_info = []
-                if access_user['access_type'][0] == 'r':
+                if access_user['access_type'] == AccessType.READ.value:
                     access_info.append('просмотр содержимого 👓')
-                elif access_user['access_type'][0] == 'w':
+                elif access_user['access_type'][0] == AccessType.WRITE.value:
                     access_info.append('просмотр и изменение содержимого 👓🖊️')
                 access_str = ', '.join(access_info)
                 user_info = await get_user_info(tg_user_id)
                 users_access_info.append(f'{user_info} - {access_str}')
+        # else:
+        #     if self.folder_id != ROOT_FOLDER_ID:
+        #         folder_id = get_parent_folder_id(self.folder_id)
+        #         folder: Folder = await get_folder(self.author_user_id, folder_id)
+        #         if folder:
+        #             users_access_info = await folder.get_access_users_info()
+
         return '\n\n'.join(users_access_info)
 
-    def add_access_user(self, user_id, access_type: str):
+    def add_access_user(self, user_id, access_type: AccessType):
         user_id = str(user_id)
         users = self.get_access_users()
         users[user_id] = {
-            "access_type": access_type
+            "access_type": access_type.value
         }
 
     def get_access_tokens(self) -> list:

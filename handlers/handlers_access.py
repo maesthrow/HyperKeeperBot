@@ -5,14 +5,14 @@ from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery
 
 from callbacks.callbackdata import AccessConfirmCallback
+from enums.enums import AccessType
 from load_all import dp, bot
 from models.folder_model import Folder
 from utils.utils_ import smile_folder
 from utils.utils_access import get_user_info, get_access_str_by_type
 from utils.utils_accesses_folders_db import util_access_add_from_user_folder
 from utils.utils_button_manager import get_simple_inline_markup
-from utils.utils_data import get_accesses_from_user_collection
-from utils.utils_folders_reader import get_folder
+from utils.utils_folders_reader import get_folder, get_folders_in_folder
 from utils.utils_folders_writer import edit_folder
 from utils.utils_parse_mode_converter import escape_markdown
 
@@ -22,19 +22,21 @@ dp.include_router(router)
 
 @router.callback_query(AccessConfirmCallback.filter())
 async def access_folder_handler(call: CallbackQuery):
-    user_id = call.from_user.id
-    user_info = await get_user_info(str(user_id))
+    from_user_id = call.from_user.id
+    user_info = await get_user_info(str(from_user_id))
     call_data = AccessConfirmCallback.unpack(call.data)
-    accessing_user_id = call_data.acc_user_id
+    accessing_user_id = int(call_data.acc_user_id)
     accessing_user_info = await get_user_info(str(accessing_user_id))
     folder_id = call_data.folder_id
-    folder: Folder = await get_folder(user_id, folder_id)
+    folder: Folder = await get_folder(from_user_id, folder_id)
     folder_full_name = await folder.get_full_name()
-    access_type = call_data.type
+    access_type = AccessType(call_data.type)
     access_str = get_access_str_by_type(access_type)
     result = call_data.res
     if result:
-        access_to_user_added = await util_access_add_from_user_folder(accessing_user_id, user_id, folder_id, access_type)
+        access_to_user_added = await util_access_add_from_user_folder(
+            accessing_user_id, from_user_id, folder_id, access_type
+        )
         user_to_access_added = False
         if access_to_user_added:
             user_to_access_added = await add_user_to_folder_access(accessing_user_id, folder, access_type)
@@ -76,7 +78,7 @@ async def access_folder_handler(call: CallbackQuery):
     inline_markup = get_simple_inline_markup('✔️ OK')
     await asyncio.gather(
         bot.edit_message_text(
-            chat_id=user_id,
+            chat_id=from_user_id,
             message_id=call.message.message_id,
             text=message_text,
             parse_mode=ParseMode.MARKDOWN_V2,
@@ -93,12 +95,24 @@ async def access_folder_handler(call: CallbackQuery):
     await call.answer()
 
 
-async def add_user_to_folder_access(user_id, folder: Folder, access_type: str) -> bool:
+async def add_user_to_folder_access(user_id, folder: Folder, access_type: AccessType) -> bool:
     folder.add_access_user(user_id, access_type)
-    result = await edit_folder(folder.author_user_id, folder)
-    return result
+    return await edit_folder(folder.author_user_id, folder)
 
 
-async def accesses_from_user_is_contains_folder(user_id, folder: Folder, access_type) -> bool:
-    accesses_from_user_collection = await get_accesses_from_user_collection(user_id, folder.author_user_id)
-    return folder.folder_id in accesses_from_user_collection
+async def add_user_to_folder_access_full(user_id, folder: Folder, access_type: AccessType) -> bool:
+    result = True
+    folder.add_access_user(user_id, access_type)
+    folders = await get_folders_in_folder(folder.author_user_id, folder.folder_id)
+    if folders:
+        for folder_id in folders.keys():
+            folder = await get_folder(folder.author_user_id, folder_id)
+            if folder:
+                result = await add_user_to_folder_access_full(user_id, folder, access_type)
+    if result:
+        return await edit_folder(folder.author_user_id, folder)
+
+
+
+
+

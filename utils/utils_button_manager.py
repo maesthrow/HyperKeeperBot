@@ -12,6 +12,7 @@ from callbacks.callbackdata import TextPagesCallback, SaveItemCallback, \
     ReadVoiceRunCallback, AccessRequestCallback, AccessConfirmCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
+from utils.utils_access import AccessType
 from utils.utils_bot import to_url_data
 from utils.utils_files import file_has_caption
 
@@ -582,12 +583,12 @@ def get_access_control_inline_markup(user_id, folder_id: str, has_users: bool) -
 def get_access_provide_inline_markup(
         from_user_id,
         folder_id: str,
-        access_type: str,
+        access_type: AccessType,
         token: str,
         bot_link: str
 ) -> InlineKeyboardMarkup:
 
-    folder_info = to_url_data(f'ap_{from_user_id}_{folder_id}_{access_type}_{token}')
+    folder_info = to_url_data(f'ap_{from_user_id}_{folder_id}_{access_type.value}_{token}')
     folder_info = folder_info[:64]
     print(f'folder_info = {folder_info}')
     builder = InlineKeyboardBuilder()
@@ -603,28 +604,32 @@ def get_access_request_inline_markup(from_user_id, folder_id) -> InlineKeyboardM
     builder = InlineKeyboardBuilder()
     builder.button(
         text=f'Запросить доступ на просмотр папки 👓',
-        callback_data=AccessRequestCallback(author_user_id=str(from_user_id), folder_id=folder_id, type='read').pack()
+        callback_data=AccessRequestCallback(
+            author_user_id=str(from_user_id), folder_id=folder_id, type=AccessType.READ.value
+        ).pack()
     )
     builder.button(
         text=f'Запросить доступ на изменение cодержимого🖊️️',
-        callback_data=AccessRequestCallback(author_user_id=str(from_user_id), folder_id=folder_id, type='write').pack()
+        callback_data=AccessRequestCallback(
+            author_user_id=str(from_user_id), folder_id=folder_id, type=AccessType.WRITE.value
+        ).pack()
     )
     builder.adjust(1)
     return builder.as_markup()
 
 
-def get_access_confirm_inline_markup(accessing_user_id: str, folder_id: str, type: str):
+def get_access_confirm_inline_markup(accessing_user_id: str, folder_id: str, access_type: AccessType):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='✔️ Подтвердить',
         callback_data=AccessConfirmCallback(
-            acc_user_id=accessing_user_id, folder_id=folder_id, type=type, res=True
+            acc_user_id=accessing_user_id, folder_id=folder_id, type=access_type.value, res=True
         ).pack()
     )
     builder.button(
         text='✖️ Отклонить',
         callback_data=AccessConfirmCallback(
-            acc_user_id=accessing_user_id, folder_id=folder_id, type=type, res=False
+            acc_user_id=accessing_user_id, folder_id=folder_id, type=access_type.value, res=False
         ).pack()
     )
     builder.adjust(2)

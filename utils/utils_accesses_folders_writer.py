@@ -1,9 +1,10 @@
+from enums.enums import AccessType
 from models.access_folder_model import AccessFolder
 from mongo_db.mongo_collection_accesses import set_user_accesses_from_user_collection
 from utils.utils_data import get_accesses_from_user_collection
 
 
-async def add_access_folder_from_user(user_id, from_user_id, folder_id, access_type: str):
+async def add_access_folder_from_user(user_id, from_user_id, folder_id, access_type: AccessType):
     """Добавляет в доступы пользователя папку другого пользователя."""
     try:
         accesses_from_user_collection = await get_accesses_from_user_collection(user_id, from_user_id)

@@ -93,13 +93,20 @@ async def set_accesses_collection(user_id, accesses_collection=None):
 
 async def get_accesses_from_user_collection(user_id, from_user_id):
     accesses_collection = await get_accesses_collection(user_id)
-    accesses_from_user_collection = accesses_collection.get(from_user_id, {})
+    print(f'accesses_collection {accesses_collection}')
+    if accesses_collection:
+        accesses_from_user_collection = accesses_collection.get(from_user_id, {})
+    else:
+        accesses_from_user_collection = await set_accesses_from_user_collection(user_id, str(from_user_id))
     return accesses_from_user_collection
 
 
 async def set_accesses_from_user_collection(user_id, from_user_id, from_user_collection=None):
     accesses_collection = await get_accesses_collection(user_id)
+    if not from_user_collection:
+        from_user_collection = {}
     accesses_collection[from_user_id] = from_user_collection
     await set_accesses_collection(user_id, accesses_collection)
+    return accesses_collection[from_user_id]
 
 
