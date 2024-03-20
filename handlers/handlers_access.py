@@ -11,6 +11,7 @@ from utils.utils_ import smile_folder
 from utils.utils_access import get_user_info, get_access_str_by_type
 from utils.utils_accesses_folders_db import util_access_add_from_user_folder
 from utils.utils_button_manager import get_simple_inline_markup
+from utils.utils_data import get_accesses_from_user_collection
 from utils.utils_folders_reader import get_folder
 from utils.utils_folders_writer import edit_folder
 from utils.utils_parse_mode_converter import escape_markdown
@@ -96,3 +97,8 @@ async def add_user_to_folder_access(user_id, folder: Folder, access_type: str) -
     folder.add_access_user(user_id, access_type)
     result = await edit_folder(folder.author_user_id, folder)
     return result
+
+
+async def accesses_from_user_is_contains_folder(user_id, folder: Folder, access_type) -> bool:
+    accesses_from_user_collection = await get_accesses_from_user_collection(user_id, folder.author_user_id)
+    return folder.folder_id in accesses_from_user_collection
