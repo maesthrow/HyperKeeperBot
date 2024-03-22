@@ -46,9 +46,9 @@ async def get_access_users_info(folder: Folder) -> str:
         for user_id, access_type in folder_users_accesses.items():
             access_str = ''
             if folder_users_accesses[user_id] == AccessType.READ.value:
-                access_str = '👓 просмотр содержимого'
+                access_str = '👁️ просмотр содержимого' # 👓
             elif folder_users_accesses[user_id] == AccessType.WRITE.value:
-                access_str = '👓🖊️ просмотр и изменение содержимого'
+                access_str = '👁️🖊️ просмотр и изменение содержимого' # 👓
             user_info = await get_user_info(user_id)
             if access_str:
                 users_access_info.append(f'{user_info} - {access_str}')

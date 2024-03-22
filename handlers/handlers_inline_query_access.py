@@ -53,11 +53,13 @@ async def get_access_results(from_user_id, folder_id):
     bot_link = await get_bot_link()
     inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, AccessType.READ, token, bot_link)
     #url = 'https://www.pngfind.com/pngs/m/418-4184626_unlock-your-phone-for-free-unlock-cell-phone.png'
-    url = 'https://clickfraud.ru/wp-content/uploads/2023/09/alex-chumak-zguburggmdy-unsplash-scaled-1-1024x612.jpg'
+    url = 'https://i.ibb.co/y4tSvn3/folder-access-read.png'
+    #url = 'https://i.ibb.co/kBDqVK9/View-access-to-folder.png'
+    #url = 'https://i.ibb.co/L8dx2cp/access-read.png'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}read'.encode()).hexdigest()
     access_read_folder_result = InlineQueryResultArticle(
         id=result_id,
-        description=f'Доступ к просмотру содержимого папки 👓',
+        description=f'Доступ к просмотру содержимого папки 👁️', # 👓
         title=f'{smile_folder} {folder.name}',
         input_message_content=message_content,
         thumbnail_url=url,
@@ -71,11 +73,13 @@ async def get_access_results(from_user_id, folder_id):
         message_text=message_text
     )
     inline_markup = get_access_provide_inline_markup(from_user_id, folder_id, AccessType.WRITE, token, bot_link)
-    url = 'https://besthqwallpapers.com/Uploads/24-7-2020/138345/thumb2-digital-technology-background-with-zeros-and-ones-digital-blue-background-binary-code-background-digital-data-binary-code-texture.jpg'
+    url = 'https://i.ibb.co/XYsGZfv/folder-access-write.png'
+    #url = 'https://i.ibb.co/HqftVFM/View-and-edit-access.png'
+    #url = 'https://i.ibb.co/w6Rc8HF/access-write.png'
     result_id = hashlib.md5(f'{from_user_id}{folder_id}write'.encode()).hexdigest()
     access_write_folder_result = InlineQueryResultArticle(
         id=result_id,
-        description=f'Доступ к просмотру и изменению содержимого папки 👓🖊️',
+        description=f'Доступ к просмотру и изменению содержимого папки 👁️🖊️', # 👓
         title=f'{smile_folder} {folder.name}',
         input_message_content=message_content,
         thumbnail_url=url,
