@@ -30,6 +30,7 @@ from utils.utils_folders_db import util_delete_folder, util_add_new_folder, util
 from utils.utils_folders_reader import get_folder, get_folder_name, get_sub_folder_names
 from utils.utils_handlers import get_folder_path_names, get_folders_message_text
 from utils.utils_items import show_all_items
+from utils.utils_parse_mode_converter import escape_markdown
 
 # from aiogram.utils.exceptions import MessageNotModified
 
@@ -557,6 +558,7 @@ async def folder_control_menu_handler(message: aiogram.types.Message):
     user_id = message.from_user.id
     current_folder_id = await get_current_folder_id(user_id)
     folders_message_text = await get_folders_message_text(user_id, current_folder_id)
+    folders_message_text = escape_markdown(folders_message_text)
     folders_message_text = f'🛠 *Меню управления папкой*\n\n{folders_message_text}'
     inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
     data = await get_data(user_id)

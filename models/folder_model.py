@@ -80,6 +80,7 @@ class Folder:
     def get_access_user(self, user_id) -> AccessType:
         user_id = str(user_id)
         users = self.get_access_users()
+        print(f'users {users}')
         if users and user_id in users:
             return AccessType(users[user_id].get('access_type', ''))
         else:

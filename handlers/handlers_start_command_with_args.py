@@ -56,6 +56,7 @@ async def start_url_data_access_provide_handler(message, tg_user):
                 inline_markup = get_access_confirm_inline_markup(str(tg_user.id), folder_id, access_type)
                 if folder:
                     folder_full_name = await folder.get_full_name()
+                    folder_full_name = escape_markdown(folder_full_name)
                     access_str = get_access_str_by_type(access_type)
 
                     current_access_type_folder = await get_current_access_type_from_user_folder(

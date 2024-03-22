@@ -565,7 +565,7 @@ def get_access_control_inline_markup(user_id, folder_id: str, has_users: bool) -
     )
     if has_users:
         builder.button(
-            text='👤 Выбрать пользователя',
+            text='👥 Выбрать пользователя', # 👤
             callback_data=AccessControlCallback(action='select_user', folder_id=folder_id).pack()
         )
         builder.button(

@@ -40,11 +40,11 @@ async def get_current_access_type_from_user_folder(user_id, from_user_id, folder
         return current_access_type
     elif folder_id in accesses_from_user_collection:
         current_access_type = AccessType(accesses_from_user_collection[folder_id].get('access_type', ''))
-    else:
+    if current_access_type in (AccessType.ABSENSE, AccessType.READ):
         folder: Folder = await get_folder(from_user_id, folder_id)
         if folder:
-            current_access_type = folder.get_access_user(from_user_id)
-        if not current_access_type:
+            current_access_type = folder.get_access_user(user_id)
+        if current_access_type in (AccessType.ABSENSE, AccessType.READ):
             if folder_id != ROOT_FOLDER_ID:
                 folder_id = get_parent_folder_id(folder_id)
                 return await get_current_access_type_from_user_folder(user_id, from_user_id, folder_id)

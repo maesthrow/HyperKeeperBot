@@ -30,6 +30,7 @@ async def access_folder_handler(call: CallbackQuery):
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(from_user_id, folder_id)
     folder_full_name = await folder.get_full_name()
+    folder_full_name = escape_markdown(folder_full_name)
     access_type = AccessType(call_data.type)
     access_str = get_access_str_by_type(access_type)
     result = call_data.res
