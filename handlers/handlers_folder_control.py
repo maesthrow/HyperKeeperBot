@@ -17,6 +17,7 @@ from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
 from utils.utils_ import smile_folder, get_inline_markup_for_accept_cancel, smile_item
+from utils.utils_access import get_access_users_info
 from utils.utils_button_manager import cancel_button, create_general_reply_markup, general_buttons_search_items, \
     get_folder_pin_inline_markup, get_pin_control_inline_markup, get_access_control_inline_markup
 from utils.utils_constants import numbers_ico
@@ -510,7 +511,7 @@ async def access_folder_handler(call: CallbackQuery):
     call_data = AccessFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(user_id, folder_id)
-    users_access_info = await folder.get_access_users_info() or 'Ничего не найдено.'
+    users_access_info = await get_access_users_info(folder) or 'Ничего не найдено.'
     users_access_info = escape_markdown(users_access_info)
     message_text = (f'🔐 *Управление доступом к папке*'
                     f'\n\n{smile_folder} {folder.name}'

@@ -1,8 +1,10 @@
 from enums.enums import AccessType
 from models.access_folder_model import AccessFolder
+from models.folder_model import Folder
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_data import get_accesses_from_user_collection
 from utils.utils_folders import get_parent_folder_id
+from utils.utils_folders_reader import get_folder
 
 
 async def get_access_folder(user_id, from_user_id, folder_id):
@@ -38,7 +40,13 @@ async def get_current_access_type_from_user_folder(user_id, from_user_id, folder
         return current_access_type
     elif folder_id in accesses_from_user_collection:
         current_access_type = AccessType(accesses_from_user_collection[folder_id].get('access_type', ''))
-    elif folder_id != ROOT_FOLDER_ID:
-        folder_id = get_parent_folder_id(folder_id)
-        return await get_current_access_type_from_user_folder(user_id, from_user_id, folder_id)
+    else:
+        folder: Folder = await get_folder(from_user_id, folder_id)
+        if folder:
+            current_access_type = folder.get_access_user(from_user_id)
+        if not current_access_type:
+            if folder_id != ROOT_FOLDER_ID:
+                folder_id = get_parent_folder_id(folder_id)
+                return await get_current_access_type_from_user_folder(user_id, from_user_id, folder_id)
+
     return current_access_type

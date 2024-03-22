@@ -100,17 +100,17 @@ async def add_user_to_folder_access(user_id, folder: Folder, access_type: Access
     return await edit_folder(folder.author_user_id, folder)
 
 
-async def add_user_to_folder_access_full(user_id, folder: Folder, access_type: AccessType) -> bool:
-    result = True
-    folder.add_access_user(user_id, access_type)
-    folders = await get_folders_in_folder(folder.author_user_id, folder.folder_id)
-    if folders:
-        for folder_id in folders.keys():
-            folder = await get_folder(folder.author_user_id, folder_id)
-            if folder:
-                result = await add_user_to_folder_access_full(user_id, folder, access_type)
-    if result:
-        return await edit_folder(folder.author_user_id, folder)
+# async def add_user_to_folder_access_full(user_id, folder: Folder, access_type: AccessType) -> bool:
+#     result = True
+#     folder.add_access_user(user_id, access_type)
+#     folders = await get_folders_in_folder(folder.author_user_id, folder.folder_id)
+#     if folders:
+#         for folder_id in folders.keys():
+#             folder = await get_folder(folder.author_user_id, folder_id)
+#             if folder:
+#                 result = await add_user_to_folder_access_full(user_id, folder, access_type)
+#     if result:
+#         return await edit_folder(folder.author_user_id, folder)
 
 
 
