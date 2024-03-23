@@ -4,11 +4,13 @@ from aiogram_dialog.widgets.text import Format
 from dialogs import keyboards
 from handlers.states import FolderControlStates
 from load_all import dp
+from models.item_model import INVISIBLE_CHAR
 from utils.utils_ import smile_folder, smile_item
 from utils.utils_data import get_current_folder_id
 from utils.utils_folders import get_folder_statistic
 from utils.utils_folders_reader import get_folder_name
 from utils.utils_handlers import get_folders_message_text
+from utils.utils_items_reader import get_folder_items
 from utils.utils_parse_mode_converter import escape_markdown
 
 
@@ -34,17 +36,34 @@ async def get_statistic_data(dialog_manager: DialogManager, **kwargs):
     deep_folders_count = dict_folder_statistic['deep_folders_count']
     deep_items_count = dict_folder_statistic['deep_items_count']
 
-    statistic_text = (f"<u>Количество папок</u> {smile_folder}: <b>{folders_count}</b>\n"
-                      f"<u>Количество записей</u> {smile_item}: <b>{items_count}</b>\n\n"
-                      f"<b>С учетом вложенных папок:</b>\n"
-                      f"<u>Всего папок</u> {smile_folder}: <b>{deep_folders_count}</b>\n"
-                      f"<u>Всего записей</u> {smile_item}: <b>{deep_items_count}</b>")
+    statistic_text = (f"<i>Количество папок:</i> <b><i>{folders_count}</i></b> {smile_folder}\n"
+                      f"<i>Количество записей:</i> <b><i>{items_count}</i></b> {smile_item}\n\n"
+                      f"<u>С учетом вложенных папок:</u>\n"
+                      f"<i>Всего папок:</i> <b><i>{deep_folders_count}</i></b> {smile_folder}\n"
+                      f"<i>Всего записей:</i> <b><i>{deep_items_count}</i></b> {smile_item}")
 
-    folder_statistic_text = f"📊 <b>Статистика папки</b>\n\n"\
+    folder_statistic_text = f"📊 <b>Статистика папки</b>{INVISIBLE_CHAR*20}\n\n"\
                             f"{smile_folder} {folder_name}:\n\n"\
                             f"{statistic_text}"
 
     data['folder_statistic_text'] = folder_statistic_text
+    return data
+
+
+async def get_delete_all_items_data(dialog_manager: DialogManager, **kwargs):
+    data = {}
+    user_id = dialog_manager.event.from_user.id
+    folder_id = await get_current_folder_id(user_id)
+    folder_name = await get_folder_name(user_id, folder_id)
+    items_count = len(await get_folder_items(user_id, folder_id))
+    if items_count:
+        message_text = f"Действительно хотите удалить все записи ({items_count}) в папке " \
+                       f"{smile_folder} {folder_name} ?"
+    else:
+        message_text = "В этой папке нет записей."
+    data['folder_id'] = folder_id
+    data['items_count'] = items_count
+    data['message_text'] = message_text
     return data
 
 
@@ -62,8 +81,19 @@ folder_control_statistic_window = Window(
     getter=get_statistic_data
 )
 
+folder_control_delete_all_items_window = Window(
+    Format("{message_text}"),
+    *keyboards.folder_control_delete_all_items(),
+    state=FolderControlStates.DeleteAllItemsQuestion,
+    getter=get_delete_all_items_data
+)
 
-dialog_folder_control_main_menu = Dialog(folder_control_main_window, folder_control_statistic_window)
+
+dialog_folder_control_main_menu = Dialog(
+    folder_control_main_window,
+    folder_control_statistic_window,
+    folder_control_delete_all_items_window,
+)
 
 dp.include_router(dialog_folder_control_main_menu)
 
