@@ -24,3 +24,7 @@ class ItemState(StatesGroup):
 
 class FileProcess(State):
     pass
+
+
+class FolderControlStates(StatesGroup):
+    MainMenu = State()
