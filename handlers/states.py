@@ -28,3 +28,4 @@ class FileProcess(State):
 
 class FolderControlStates(StatesGroup):
     MainMenu = State()
+    StatisticMenu = State()

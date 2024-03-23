@@ -23,6 +23,7 @@ async def main():
 
 
 if __name__ == '__main__':
+    import dialogs.folder_control_dialog
     import handlers.handlers_
     import handlers.handlers_search_end
     import handlers.handlers_item_entities

@@ -432,9 +432,9 @@ async def button_pin_folder_handler(call: CallbackQuery):
 
         pin_code_button.callback_data = pin_code_data.pack()
         if pin_code_data.visible:
-            numbers = numbers_ico.values()
+            pin_numbers = numbers_ico.values()
             text_reversed = pin_code_button.text[::-1]
-            pattern_reversed = r'|'.join(map(lambda x: re.escape(x[::-1]), numbers))
+            pattern_reversed = r'|'.join(map(lambda x: re.escape(x[::-1]), pin_numbers))
             text_reversed_modified = re.sub(pattern_reversed, '❔'[::-1], text_reversed, 1)
             pin_code_button.text = text_reversed_modified[::-1]
         else:

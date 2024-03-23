@@ -9,10 +9,12 @@ from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message
+from aiogram_dialog import DialogManager
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 
 from callbacks.callbackdata import FolderCallback
 from handlers import states
+from handlers.states import FolderControlStates
 from load_all import bot, dp
 from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
@@ -22,8 +24,8 @@ from utils.utils_button_manager import (create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
                                         check_button_exists_part_of_text,
                                         get_folders_with_items_inline_markup, cancel_button, new_general_buttons_folder,
-                                        current_folder_control_button, get_folder_control_inline_markup,
-                                        get_folder_pin_inline_markup)
+                                        current_folder_control_button, get_folder_pin_inline_markup,
+                                        get_folder_control_inline_markup)
 from utils.utils_data import get_current_folder_id, set_current_folder_id
 from utils.utils_folders import get_parent_folder_id, is_valid_folder_name, invalid_chars, clean_folder_name
 from utils.utils_folders_db import util_delete_folder, util_add_new_folder, util_rename_folder
@@ -554,20 +556,26 @@ async def go_to_page_items(call: CallbackQuery):
 
 
 @router.message(F.text == current_folder_control_button.text)
-async def folder_control_menu_handler(message: aiogram.types.Message):
-    user_id = message.from_user.id
-    current_folder_id = await get_current_folder_id(user_id)
-    folders_message_text = await get_folders_message_text(user_id, current_folder_id)
-    folders_message_text = escape_markdown(folders_message_text)
-    folders_message_text = f'🛠 *Меню управления папкой*\n\n{folders_message_text}'
-    inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
-    data = await get_data(user_id)
-    data['folder_control_menu_message'] = \
-        await bot.send_message(
-            chat_id=user_id, text=folders_message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
-        )
-    await set_data(user_id, data)
+async def folder_control_menu_handler(message: Message, dialog_manager: DialogManager):
+    await dialog_manager.start(FolderControlStates.MainMenu)
     await bot.delete_message(message.chat.id, message.message_id)
+
+
+#@router.message(F.text == current_folder_control_button.text)
+# async def folder_control_menu_handler_old(message: Message):
+#     user_id = message.from_user.id
+#     current_folder_id = await get_current_folder_id(user_id)
+#     folders_message_text = await get_folders_message_text(user_id, current_folder_id)
+#     folders_message_text = escape_markdown(folders_message_text)
+#     folders_message_text = f'🛠 *Меню управления папкой*\n\n{folders_message_text}'
+#     inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
+#     data = await get_data(user_id)
+#     data['folder_control_menu_message'] = \
+#         await bot.send_message(
+#             chat_id=user_id, text=folders_message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+#         )
+#     await set_data(user_id, data)
+#     await bot.delete_message(message.chat.id, message.message_id)
 
 # @router.message(F.text == "️📊 Статистика")
 # async def statistic_folder_handler(message: aiogram.types.Message):
