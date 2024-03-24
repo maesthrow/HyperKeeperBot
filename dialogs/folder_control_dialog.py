@@ -1,13 +1,20 @@
+from typing import Optional
+
+from aiogram.enums import ParseMode
+from aiogram.types import Message
 from aiogram_dialog import Window, Dialog, DialogManager, setup_dialogs
-from aiogram_dialog.widgets.text import Format
+from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.kbd import Start, Back, Cancel, Button
+from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs import keyboards
+from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_handler
 from handlers.states import FolderControlStates
 from load_all import dp
 from models.item_model import INVISIBLE_CHAR
 from utils.utils_ import smile_folder, smile_item
 from utils.utils_data import get_current_folder_id
-from utils.utils_folders import get_folder_statistic
+from utils.utils_folders import get_folder_statistic, is_valid_folder_name
 from utils.utils_folders_reader import get_folder_name
 from utils.utils_handlers import get_folders_message_text
 from utils.utils_items_reader import get_folder_items
@@ -19,7 +26,7 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     folder_id = await get_current_folder_id(user_id)
     folders_message_text = await get_folders_message_text(user_id, folder_id)
-    folders_message_text = escape_markdown(folders_message_text)
+    #folders_message_text = escape_markdown(folders_message_text)
     data['folder_id'] = folder_id
     data['folders_message_text'] = f'🛠 <b>Меню управления папкой</b>\n\n{folders_message_text}'
     return data
@@ -46,8 +53,8 @@ async def get_statistic_data(dialog_manager: DialogManager, **kwargs):
                       f"<i>Всего папок:</i> <b><i>{deep_folders_count}</i></b> {smile_folder}\n"
                       f"<i>Всего записей:</i> <b><i>{deep_items_count}</i></b> {smile_item}")
 
-    folder_statistic_text = f"📊 <b>Статистика папки</b>{INVISIBLE_CHAR*20}\n\n"\
-                            f"{smile_folder} {folder_name}:\n\n"\
+    folder_statistic_text = f"📊 <b>Статистика папки</b>{INVISIBLE_CHAR * 20}\n\n" \
+                            f"{smile_folder} {folder_name}:\n\n" \
                             f"{statistic_text}"
 
     data['folder_statistic_text'] = folder_statistic_text
@@ -71,6 +78,29 @@ async def get_delete_all_items_data(dialog_manager: DialogManager, **kwargs):
     return data
 
 
+async def get_rename_data(dialog_manager: DialogManager, **kwargs):
+    data = {}
+    user_id = dialog_manager.event.from_user.id
+    folder_id = await get_current_folder_id(user_id)
+    folder_name = await get_folder_name(user_id, folder_id)
+    folder_name = escape_markdown(folder_name)
+    message_text = f"*Переименовать папку* {smile_folder}"\
+                   f"\n\nМожете скопировать текущее название:"\
+                   f"\n'`{folder_name}`'"\
+                   f"\n\n_*Напишите новое название папки:*_"
+    data['user_id'] = user_id
+    data['folder_id'] = folder_id
+    data['message_text'] = message_text
+    return data
+
+
+def filter_invalid_chars(message: Message) -> Optional[str]:
+    input_text = message.text
+    if is_valid_folder_name(input_text):
+        return input_text
+    return None
+
+
 folder_control_main_window = Window(
     Format("{folders_message_text}"),
     *keyboards.folder_control_main_menu(),
@@ -84,7 +114,6 @@ folder_control_info_message_window = Window(
     state=FolderControlStates.InfoMessage,
     getter=get_message_text
 )
-
 
 folder_control_statistic_window = Window(
     Format("{folder_statistic_text}"),
@@ -100,12 +129,25 @@ folder_control_delete_all_items_window = Window(
     getter=get_delete_all_items_data
 )
 
+folder_control_rename_window = Window(
+    Format("{message_text}"),
+    TextInput(
+        id="new_folder_name",
+        on_success=on_rename_folder,
+        on_error=on_error_rename_folder,
+        filter=filter_invalid_chars),
+    Button(id='cancel_rename', text=Const('Отменить'), on_click=cancel_handler),
+    state=FolderControlStates.Rename,
+    getter=get_rename_data,
+    parse_mode=ParseMode.MARKDOWN_V2
+)
 
 dialog_folder_control_main_menu = Dialog(
     folder_control_main_window,
     folder_control_info_message_window,
     folder_control_statistic_window,
     folder_control_delete_all_items_window,
+    folder_control_rename_window,
 )
 
 dp.include_router(dialog_folder_control_main_menu)

@@ -562,20 +562,20 @@ async def folder_control_menu_handler(message: Message, dialog_manager: DialogMa
 
 
 #@router.message(F.text == current_folder_control_button.text)
-# async def folder_control_menu_handler_old(message: Message):
-#     user_id = message.from_user.id
-#     current_folder_id = await get_current_folder_id(user_id)
-#     folders_message_text = await get_folders_message_text(user_id, current_folder_id)
-#     folders_message_text = escape_markdown(folders_message_text)
-#     folders_message_text = f'🛠 *Меню управления папкой*\n\n{folders_message_text}'
-#     inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
-#     data = await get_data(user_id)
-#     data['folder_control_menu_message'] = \
-#         await bot.send_message(
-#             chat_id=user_id, text=folders_message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
-#         )
-#     await set_data(user_id, data)
-#     await bot.delete_message(message.chat.id, message.message_id)
+async def folder_control_menu_handler_old(message: Message):
+    user_id = message.from_user.id
+    current_folder_id = await get_current_folder_id(user_id)
+    folders_message_text = await get_folders_message_text(user_id, current_folder_id)
+    folders_message_text = escape_markdown(folders_message_text)
+    folders_message_text = f'🛠 *Меню управления папкой*\n\n{folders_message_text}'
+    inline_markup = get_folder_control_inline_markup(user_id, current_folder_id)
+    data = await get_data(user_id)
+    data['folder_control_menu_message'] = \
+        await bot.send_message(
+            chat_id=user_id, text=folders_message_text, parse_mode=ParseMode.MARKDOWN_V2, reply_markup=inline_markup
+        )
+    await set_data(user_id, data)
+    await bot.delete_message(message.chat.id, message.message_id)
 
 # @router.message(F.text == "️📊 Статистика")
 # async def statistic_folder_handler(message: aiogram.types.Message):

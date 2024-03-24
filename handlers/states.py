@@ -31,3 +31,6 @@ class FolderControlStates(StatesGroup):
     InfoMessage = State()
     StatisticMenu = State()
     DeleteAllItemsQuestion = State()
+    Rename = State()
+    Delete = State()
+
