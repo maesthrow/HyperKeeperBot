@@ -199,7 +199,7 @@ async def is_only_folders_mode_keyboard(user_id):
 
 
 @router.callback_query(FolderCallback.filter())
-async def to_folder(call: CallbackQuery, callback_data: FolderCallback):
+async def to_folder(call: CallbackQuery, callback_data: FolderCallback, state: FSMContext):
     user_id = call.from_user.id
     folder_id = callback_data.folder_id
 
@@ -213,6 +213,7 @@ async def to_folder(call: CallbackQuery, callback_data: FolderCallback):
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup
         )
+        await state.set_state(states.FolderState.EnterPin)
         # await show_folders(user_id=user_id, current_folder_id=folder_id)
     else:
         await show_folders(user_id=user_id, current_folder_id=folder_id)

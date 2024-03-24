@@ -5,12 +5,14 @@ from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram_dialog import DialogManager
 
 from callbacks.callbackdata import EditFolderCallback, StatisticFolderCallback, MessageBoxCallback, \
     SearchInFolderCallback, PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, \
     NewPinCodeButtonCallback, EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback
 from handlers import states
 from handlers.handlers_folder import show_folders
+from handlers.states import FolderControlStates
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
@@ -169,7 +171,7 @@ async def search_in_folder(user_id, state):
 
 
 @router.callback_query(PinFolderCallback.filter())
-async def pin_folder_handler(call: CallbackQuery, state: FSMContext):
+async def pin_folder_handler(call: CallbackQuery, state: FSMContext = None):
     user_id = call.from_user.id
     call_data = PinFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
@@ -408,12 +410,18 @@ async def show_enter_pin_result(call, user_id, inline_markup, pin_code_button, p
 
 
 @router.callback_query(PinKeyboardButtonCallback.filter())
-async def button_pin_folder_handler(call: CallbackQuery):
+async def button_pin_folder_handler(call: CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
     user_id = call.from_user.id
     call_data = PinKeyboardButtonCallback.unpack(call.data)
     action = call_data.action
     if action == 'close':
-        await bot.delete_message(user_id, call.message.message_id)
+        # print(f'state {state}')
+        # print(f'state.get_state() = {state.get_state()}')
+        if await state.get_state() == states.FolderState.EnterPin.state:
+            await bot.delete_message(user_id, call.message.message_id)
+            await state.set_state(state=None)
+        else:
+            await dialog_manager.start(FolderControlStates.MainMenu)
     elif action == 'backspace':
         inline_markup = call.message.reply_markup
         pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]

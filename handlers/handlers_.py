@@ -285,5 +285,7 @@ async def media_files_handler(message: Message, state: FSMContext):
 
 
 @router.callback_query(MessageBoxCallback.filter())
-async def message_box_show_handler(call: CallbackQuery):
+async def message_box_show_handler(call: CallbackQuery, state: FSMContext):
     await bot.delete_message(call.from_user.id, call.message.message_id)
+    await state.set_state(state=None)
+

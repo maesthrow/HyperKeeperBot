@@ -5,6 +5,7 @@ class FolderState(StatesGroup):
     NewName = State()
     EditName = State()
     Delete = State()
+    EnterPin = State()
 
 
 class ItemState(StatesGroup):
@@ -33,4 +34,5 @@ class FolderControlStates(StatesGroup):
     DeleteAllItemsQuestion = State()
     Rename = State()
     Delete = State()
+    AfterDelete = State()
 

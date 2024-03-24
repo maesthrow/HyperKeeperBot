@@ -8,7 +8,7 @@ from aiogram_dialog.widgets.kbd import Start, Back, Cancel, Button
 from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs import keyboards
-from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_handler
+from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_delete_handler
 from handlers.states import FolderControlStates
 from load_all import dp
 from models.item_model import INVISIBLE_CHAR
@@ -94,6 +94,16 @@ async def get_rename_data(dialog_manager: DialogManager, **kwargs):
     return data
 
 
+async def get_delete_data(dialog_manager: DialogManager, **kwargs):
+    data = {}
+    user_id = dialog_manager.event.from_user.id
+    folder_id = await get_current_folder_id(user_id)
+    folder_name = await get_folder_name(user_id, folder_id)
+    message_text = f"Хотите удалить папку {smile_folder} '{folder_name}' и все ее содержимое?"
+    data['message_text'] = message_text
+    return data
+
+
 def filter_invalid_chars(message: Message) -> Optional[str]:
     input_text = message.text
     if is_valid_folder_name(input_text):
@@ -136,10 +146,24 @@ folder_control_rename_window = Window(
         on_success=on_rename_folder,
         on_error=on_error_rename_folder,
         filter=filter_invalid_chars),
-    Button(id='cancel_rename', text=Const('Отменить'), on_click=cancel_handler),
+    Button(id='cancel_rename', text=Const('Отменить'), on_click=cancel_delete_handler),
     state=FolderControlStates.Rename,
     getter=get_rename_data,
     parse_mode=ParseMode.MARKDOWN_V2
+)
+
+folder_control_delete_window = Window(
+    Format("{message_text}"),
+    *keyboards.folder_control_delete(),
+    state=FolderControlStates.Delete,
+    getter=get_delete_data
+)
+
+folder_control_after_delete_message_window = Window(
+    Format("{message_text}"),
+    *keyboards.folder_control_after_delete_message(),
+    state=FolderControlStates.AfterDelete,
+    getter=get_message_text
 )
 
 dialog_folder_control_main_menu = Dialog(
@@ -148,6 +172,8 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_statistic_window,
     folder_control_delete_all_items_window,
     folder_control_rename_window,
+    folder_control_delete_window,
+    folder_control_after_delete_message_window,
 )
 
 dp.include_router(dialog_folder_control_main_menu)
