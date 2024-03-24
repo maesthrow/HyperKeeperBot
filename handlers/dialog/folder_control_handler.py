@@ -7,6 +7,7 @@ from aiogram_dialog.widgets.kbd import Button
 from handlers.handlers_folder import show_folders
 from handlers.states import FolderControlStates
 from load_all import bot
+from utils.message_box import MessageBox
 from utils.utils_data import get_current_folder_id
 from utils.utils_items_db import util_delete_all_items_in_folder
 
@@ -46,31 +47,30 @@ async def close_menu_handler(callback: CallbackQuery, button: Button, manager: D
 
 async def access_delete_all_items_handler(callback: CallbackQuery, button: Button, manager: DialogManager):
     user_id = manager.event.from_user.id
-    #folder_id = manager.dialog_data.get('folder_id', None)
     folder_id = await get_current_folder_id(user_id)
-    print(f'access_delete_all_items_handler folder_id = {await manager.load_data()}')
-    result_message = ''
+    message_text = "Не получилось удалить записи ✖️"
     if folder_id:
         try:
             # Вызываем метод для удаления папки
             result = await util_delete_all_items_in_folder(user_id, folder_id)
             print(f"result {result}")
-            if result:
-                result_message = await callback.message.answer(f"Все записи в папке удалены ☑️")
-            else:
-                result_message = await callback.message.answer(text=f"Не получилось удалить записи.'", show_alert=True)
             await callback.answer()
-            await manager.switch_to(FolderControlStates.MainMenu)
-            await show_folders(user_id, need_to_resend=False)
+            if result:
+                await show_folders(user_id, need_to_resend=False)
+                message_text = "Все записи в папке удалены ☑️"
         except:
             await callback.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
-            await show_folders(user_id, need_to_resend=False)
+    else:
+        await callback.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
 
-        if result_message:
-            await asyncio.sleep(0.7)
-            await bot.delete_message(chat_id=result_message.chat.id, message_id=result_message.message_id)
+    manager.current_context().dialog_data["message_text"] = message_text
+    await manager.switch_to(FolderControlStates.InfoMessage)
 
 
 async def cancel_delete_all_items_handler(callback: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.switch_to(FolderControlStates.MainMenu)
+
+
+async def info_message_ok_handler(callback: CallbackQuery, button: Button, manager: DialogManager):
     await manager.switch_to(FolderControlStates.MainMenu)
 

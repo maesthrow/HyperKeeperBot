@@ -4,7 +4,7 @@ from aiogram_dialog.widgets.text import Const
 
 from handlers.dialog.folder_control_handler import pin_code_handler, access_settings_handler, statistic_handler, \
     delete_all_items_handler, rename_folder_handler, delete_folder_handler, search_in_folder_handler, \
-    close_menu_handler, access_delete_all_items_handler, cancel_delete_all_items_handler
+    close_menu_handler, access_delete_all_items_handler, cancel_delete_all_items_handler, info_message_ok_handler
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 
@@ -67,4 +67,9 @@ def folder_control_delete_all_items() -> widgets:
         Row(*_folder_control_delete_all_items_buttons[:2]),
         Row(_folder_control_delete_all_items_buttons[2]),
     ]
+    return keyboard
+
+
+def folder_control_info_message() -> widgets:
+    keyboard = [Row(Button(Const("OK"), id="info_ok", on_click=info_message_ok_handler))]
     return keyboard

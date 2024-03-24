@@ -25,6 +25,10 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
     return data
 
 
+async def get_message_text(dialog_manager: DialogManager, **kwargs):
+    return {"message_text": dialog_manager.current_context().dialog_data.get("message_text", None)}
+
+
 async def get_statistic_data(dialog_manager: DialogManager, **kwargs):
     data = {}
     user_id = dialog_manager.event.from_user.id
@@ -74,6 +78,14 @@ folder_control_main_window = Window(
     getter=get_main_menu_data
 )
 
+folder_control_info_message_window = Window(
+    Format("{message_text}"),
+    *keyboards.folder_control_info_message(),
+    state=FolderControlStates.InfoMessage,
+    getter=get_message_text
+)
+
+
 folder_control_statistic_window = Window(
     Format("{folder_statistic_text}"),
     *keyboards.folder_control_statistic(),
@@ -91,6 +103,7 @@ folder_control_delete_all_items_window = Window(
 
 dialog_folder_control_main_menu = Dialog(
     folder_control_main_window,
+    folder_control_info_message_window,
     folder_control_statistic_window,
     folder_control_delete_all_items_window,
 )

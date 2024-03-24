@@ -28,5 +28,6 @@ class FileProcess(State):
 
 class FolderControlStates(StatesGroup):
     MainMenu = State()
+    InfoMessage = State()
     StatisticMenu = State()
     DeleteAllItemsQuestion = State()
