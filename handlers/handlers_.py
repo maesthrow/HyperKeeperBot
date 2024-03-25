@@ -10,10 +10,13 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_dialog import DialogManager
+from aiogram_dialog.setup import DialogRegistry, setup_dialogs
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
+from dialogs.folder_control_dialog import dialog_folder_control_main_menu
 from handlers import states
-from handlers.filters import NewItemValidateFilter
+from handlers.filters import NewItemValidateFilter, FromUserChatConfirmMessageFilter
 from handlers.handlers_folder import show_all_folders, show_folders
 from handlers.handlers_item_add_mode import add_files_to_message_handler
 from handlers.handlers_read_voice import read_voice_offer
@@ -44,13 +47,23 @@ import handlers.handlers_item
 
 router = Router()
 dp.include_router(router)
+dp.include_router(dialog_folder_control_main_menu)
+setup_dialogs(dp)
 
 
 @router.message(CommandStart())
-async def start(message: Message, state: FSMContext):
+async def start(message: Message, dialog_manager: DialogManager, state: FSMContext):
     tg_user = message.from_user
     url_data = from_url_data(message.text).split()
     await start_init(tg_user, message, state, url_data)
+
+
+# @router.message(FromUserChatConfirmMessageFilter())
+# async def from_user_chat_message(message: Message, dialog_manager: DialogManager, state: FSMContext):
+#     current_state = await state.get_state()
+#     print(f'current_state = {current_state}')
+#     if current_state == states.FolderControlStates.AccessMenu.state:
+#         await dialog_manager.switch_to(states.FolderControlStates.MainMenu)
 
 
 async def start_init(tg_user, message, state, url_data: List[str]):
@@ -60,7 +73,7 @@ async def start_init(tg_user, message, state, url_data: List[str]):
         url_data_args = url_data[1].split('_')
         print(f'url_data_args = {url_data_args}')
         if url_data_args[0].startswith('ap'):
-            await start_url_data_access_provide_handler(message, tg_user)
+            await start_url_data_access_provide_handler(message, tg_user, state)
         elif len(url_data_args) == 2:
             await start_url_data_folder_handler(message, tg_user)
         elif 2 < len(url_data_args) <= 4:

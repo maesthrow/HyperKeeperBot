@@ -35,4 +35,5 @@ class FolderControlStates(StatesGroup):
     Rename = State()
     Delete = State()
     AfterDelete = State()
+    AccessMenu = State()
 

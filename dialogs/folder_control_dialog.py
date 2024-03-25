@@ -2,20 +2,22 @@ from typing import Optional
 
 from aiogram.enums import ParseMode
 from aiogram.types import Message
-from aiogram_dialog import Window, Dialog, DialogManager, setup_dialogs
-from aiogram_dialog.widgets.input import TextInput
-from aiogram_dialog.widgets.kbd import Start, Back, Cancel, Button
+from aiogram_dialog import Window, Dialog, DialogManager
+from aiogram_dialog.widgets.input import TextInput, MessageInput
+from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs import keyboards
-from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_delete_handler
+from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_delete_handler, \
+    stop_window_handler
 from handlers.states import FolderControlStates
-from load_all import dp
+from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
 from utils.utils_ import smile_folder, smile_item
+from utils.utils_access import get_access_users_info
 from utils.utils_data import get_current_folder_id
 from utils.utils_folders import get_folder_statistic, is_valid_folder_name
-from utils.utils_folders_reader import get_folder_name
+from utils.utils_folders_reader import get_folder_name, get_folder
 from utils.utils_handlers import get_folders_message_text
 from utils.utils_items_reader import get_folder_items
 from utils.utils_parse_mode_converter import escape_markdown
@@ -25,10 +27,10 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
     data = {}
     user_id = dialog_manager.event.from_user.id
     folder_id = await get_current_folder_id(user_id)
-    folders_message_text = await get_folders_message_text(user_id, folder_id)
-    #folders_message_text = escape_markdown(folders_message_text)
+    message_text = await get_folders_message_text(user_id, folder_id)
+    #message_text = escape_markdown(folders_message_text)
     data['folder_id'] = folder_id
-    data['folders_message_text'] = f'🛠 <b>Меню управления папкой</b>\n\n{folders_message_text}'
+    data['message_text'] = f'🛠 <b>Меню управления папкой</b>\n\n{message_text}'
     return data
 
 
@@ -104,6 +106,24 @@ async def get_delete_data(dialog_manager: DialogManager, **kwargs):
     return data
 
 
+async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
+    data = {}
+    user_id = dialog_manager.event.from_user.id
+    folder_id = await get_current_folder_id(user_id)
+    folder: Folder = await get_folder(user_id, folder_id)
+    switch_inline_query = f'access_{user_id}_{folder_id}'
+    users_access_info = await get_access_users_info(folder) or 'Ничего не найдено.'
+    #users_access_info = escape_markdown(users_access_info)
+    message_text = f'🔐 <b>Управление доступом к папке</b>'\
+                   f'\n\n{smile_folder} {folder.name}'\
+                   f'\n\n<i>Пользователи, которым вы предоставили доступ:</i>'\
+                   f'\n\n{users_access_info}'
+    data['folder_has_access_users'] = folder.has_access_users()
+    data['switch_inline_query'] = switch_inline_query
+    data['message_text'] = message_text
+    return data
+
+
 def filter_invalid_chars(message: Message) -> Optional[str]:
     input_text = message.text
     if is_valid_folder_name(input_text):
@@ -112,7 +132,7 @@ def filter_invalid_chars(message: Message) -> Optional[str]:
 
 
 folder_control_main_window = Window(
-    Format("{folders_message_text}"),
+    Format("{message_text}"),
     *keyboards.folder_control_main_menu(),
     state=FolderControlStates.MainMenu,
     getter=get_main_menu_data
@@ -166,6 +186,14 @@ folder_control_after_delete_message_window = Window(
     getter=get_message_text
 )
 
+folder_control_access_menu_window = Window(
+    Format("{message_text}"),
+    MessageInput(func=stop_window_handler),
+    *keyboards.folder_control_access_menu(),
+    state=FolderControlStates.AccessMenu,
+    getter=get_access_menu_data
+)
+
 dialog_folder_control_main_menu = Dialog(
     folder_control_main_window,
     folder_control_info_message_window,
@@ -174,8 +202,6 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_rename_window,
     folder_control_delete_window,
     folder_control_after_delete_message_window,
+    folder_control_access_menu_window
 )
 
-dp.include_router(dialog_folder_control_main_menu)
-
-setup_dialogs(dp)

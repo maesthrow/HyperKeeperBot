@@ -1,6 +1,7 @@
 import asyncio
 
 from aiogram.enums import ParseMode, ContentType
+from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, Location, Contact
 
 from enums.enums import AccessType
@@ -25,7 +26,7 @@ from utils.utils_parse_mode_converter import escape_markdown
 from utils.utils_show_item_entities import show_item_full_mode, show_item_page_as_text_only
 
 
-async def start_url_data_access_provide_handler(message, tg_user):
+async def start_url_data_access_provide_handler(message, tg_user, state: FSMContext):
     await asyncio.sleep(0.3)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
@@ -72,12 +73,13 @@ async def start_url_data_access_provide_handler(message, tg_user):
                         author_user_message_text = escape_markdown(author_user_message_text)
                         author_user_message_text += (f"\n\n*{folder_full_name} {escape_markdown('...')}*"
                                                      f"\n\nВы можете менять это в настройках доступа папки 🔐")
-                        await MessageBox.show(author_user_id, author_user_message_text, parse_mode=ParseMode.MARKDOWN_V2)
+                        await MessageBox.show(author_user_id, author_user_message_text,
+                                              parse_mode=ParseMode.MARKDOWN_V2)
 
                         message_text = (
                             f"Пользователь {author_user_info} "
-                            f"ранее уже предоставил вам доступ {access_str} его папки:"                            
-                            f"\n\n<b>{smile_folder} {folder.name}</b>"                           
+                            f"ранее уже предоставил вам доступ {access_str} его папки:"
+                            f"\n\n<b>{smile_folder} {folder.name}</b>"
                             f"\n\nВы можете найти папку в разделе главного <b>Меню</b>:"
                             f"\n🔐 <i>доступы от других пользователей</i>"
                         )
@@ -90,7 +92,7 @@ async def start_url_data_access_provide_handler(message, tg_user):
                         )
                         author_user_message_text = escape_markdown(author_user_message_text)
                         author_user_message_text += (f"\n\n*{folder_full_name} {escape_markdown('...')}*"
-                                         f"\n\n_Подтверждаете предоставление доступа?_ 🔐")
+                                                     f"\n\n_Подтверждаете предоставление доступа?_ 🔐")
 
                         await bot.send_message(
                             chat_id=author_user_id,

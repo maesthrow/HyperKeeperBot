@@ -2,6 +2,7 @@ import asyncio
 
 from aiogram import Router
 from aiogram.enums import ParseMode
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
 from callbacks.callbackdata import AccessConfirmCallback
@@ -21,7 +22,10 @@ dp.include_router(router)
 
 
 @router.callback_query(AccessConfirmCallback.filter())
-async def access_folder_handler(call: CallbackQuery):
+async def access_folder_handler(call: CallbackQuery, state: FSMContext):
+    print(f'access_folder_handler state = {await state.get_state()}')
+    await state.set_state(state=None)
+
     from_user_id = call.from_user.id
     user_info = await get_user_info(str(from_user_id))
     call_data = AccessConfirmCallback.unpack(call.data)

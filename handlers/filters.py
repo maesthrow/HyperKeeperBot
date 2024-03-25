@@ -4,6 +4,7 @@ from aiogram.filters import Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State
 from aiogram.types import KeyboardButton, Message
+from aiogram_dialog import DialogManager
 
 from handlers import states
 from handlers.states import ItemState
@@ -61,3 +62,10 @@ class ItemAllAddModesFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
         return current_state in (states.ItemState.NewStepAdd, states.ItemState.AddTo)
+
+
+class FromUserChatConfirmMessageFilter(Filter):
+    async def __call__(self, message: Message, state: FSMContext) -> bool:
+        current_state = await state.get_state()
+        print(message.text)
+        return 'доступа?' in message.text

@@ -1,6 +1,8 @@
+import asyncio
+
 from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.widgets.kbd import Button
 
@@ -40,8 +42,8 @@ async def pin_code_handler(callback: CallbackQuery, button: Button, manager: Dia
     )
 
 
-async def access_settings_handler(callback: CallbackQuery, button: Button, manager: DialogManager):
-    pass
+async def access_menu_handler(callback: CallbackQuery, button: Button, manager: DialogManager):
+    await manager.switch_to(FolderControlStates.AccessMenu)
 
 
 async def statistic_handler(callback: CallbackQuery, button: Button, manager: DialogManager):
@@ -66,6 +68,7 @@ async def search_in_folder_handler(callback: CallbackQuery, button: Button, mana
 
 async def close_menu_handler(callback: CallbackQuery, button: Button, manager: DialogManager):
     await manager.done()
+    #await manager.close_manager()
     await callback.message.delete()
 
 
@@ -142,3 +145,8 @@ async def access_delete_handler(callback: CallbackQuery, button: Button, manager
 
     manager.current_context().dialog_data["message_text"] = message_text
     await manager.switch_to(FolderControlStates.InfoMessage)
+
+
+async def stop_window_handler(event, source, manager: DialogManager):
+    print('stop_window_handler')
+    await manager.done(show_mode=ShowMode.NO_UPDATE)
