@@ -7,7 +7,7 @@ from load_all import bot
 
 
 class MessageBox:
-    ok_button = InlineKeyboardButton(text='OK', callback_data=MessageBoxCallback(result='ok').pack())
+    ok_button = InlineKeyboardButton(text='Ok', callback_data=MessageBoxCallback(result='ok').pack())
     ok_builder = InlineKeyboardBuilder()
     ok_builder.add(ok_button)
 
