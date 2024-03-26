@@ -66,7 +66,7 @@ def audio_to_dict(audio: Audio):
         'file_name': audio.file_name,
         'mime_type': audio.mime_type,
         'file_size': audio.file_size,
-        'thumbnail': audio.thumbnail
+        #'thumbnail': audio.thumbnail # чревато ошибками при записи в БД
     }
 
 

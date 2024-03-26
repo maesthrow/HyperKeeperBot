@@ -16,6 +16,7 @@ from handlers.handlers_search import show_search_results
 from load_all import dp, bot
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
+from utils.message_box import MessageBox
 from utils.utils_ import update_message_reply_markup
 from utils.utils_button_manager import item_inline_buttons, item_inline_buttons_with_files, \
     complete_edit_item_button, clean_title_buttons, clean_text_buttons, cancel_save_new_item_button, \
@@ -195,7 +196,7 @@ async def cancel_add_mode_on_new_item(message: Message, state: FSMContext):
 @router.message(states.ItemState.NewStepTitle, F.text == without_title_button.text)
 async def skip_enter_item_title_handler(message: Message, state: FSMContext):
     data = await state.get_data()
-    item: Item = data.get('item')
+    item: Item = data.get('item', None)
     await on_create_new_item(state, item, message=message)
 
 
@@ -214,8 +215,9 @@ async def add_to_new_item_handler(message: Message, state: FSMContext):
 @router.message(states.ItemState.NewStepTitle, NotInButtonsFilter(general_new_item_buttons))
 async def new_item(message: aiogram.types.Message, state: FSMContext):
     data = await state.get_data()
-    item = data.get('item')
-    item.title = message.text.strip()  # to_markdown_text(message.text, message.entities)
+    item: Item = data.get('item', None)
+    if item:
+        item.title = message.text.strip()  # to_markdown_text(message.text, message.entities)
     await on_create_new_item(state, item, message=message)
     await bot.delete_message(message.chat.id, message.message_id)
 
@@ -238,17 +240,19 @@ async def on_create_new_item(state: FSMContext, item: Item, message: Message = N
     data = await state.get_data()
 
     if new_item_id:
-        accept_add_item_message = await bot.send_message(chat_id=user_id, text="Новая запись успешно добавлена ✅")
-        data['accept_add_item_message'] = accept_add_item_message
-        await set_data(user_id, data)
-        await asyncio.sleep(0.4)
+        #accept_add_item_message = await bot.send_message(chat_id=user_id, text="Новая запись успешно добавлена ✅")
+        #data['accept_add_item_message'] = accept_add_item_message
+        #await set_data(user_id, data)
+        #await asyncio.sleep(0.4)
         await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=False)
         await asyncio.sleep(0.2)
         await show_item(user_id, new_item_id)
+        await asyncio.sleep(0.2)
+        await MessageBox.show(user_id, "Новая запись успешно добавлена ✅")
     else:
-        await bot.send_message(chat_id=user_id, text="Не получилось добавить запись ❌")
-        # await asyncio.sleep(0.4)
         await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=True)
+        await asyncio.sleep(0.2)
+        await MessageBox.show(user_id, "Не получилось добавить запись ❌")
 
 
 # @router.message(F.text == "️🧹 Удалить все записи в папке")

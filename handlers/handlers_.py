@@ -276,6 +276,9 @@ async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
+    if message.content_type == 'audio':
+        print(f'audio {message.audio}')
+
     IS_PREMIUM = True
     if (IS_PREMIUM and
             (message.content_type == 'voice' or message.content_type == 'video_note')):

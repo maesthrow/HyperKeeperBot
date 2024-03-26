@@ -7,7 +7,9 @@ async def util_add_item_to_folder(user_id, folder_id, item: Item):
     new_item_id = await add_item_to_folder(user_id, folder_id, item)
     if new_item_id:
         await set_folders_collection(user_id)
-    return new_item_id
+        return new_item_id
+    else:
+        return None
 
 
 async def util_delete_item(user_id, item_id):
