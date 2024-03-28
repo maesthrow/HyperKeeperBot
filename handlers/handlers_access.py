@@ -5,10 +5,13 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 
-from callbacks.callbackdata import AccessConfirmCallback
+from callbacks.callbackdata import AccessConfirmCallback, AccessConfirmOkCallback, AccessConfirmRejectCallback
 from enums.enums import AccessType
 from load_all import dp, bot
+from models.access_folder_model import AccessFolder
 from models.folder_model import Folder
+from utils.data_manager import get_data
+from utils.message_box import MessageBox
 from utils.utils_ import smile_folder
 from utils.utils_access import get_user_info, get_access_str_by_type
 from utils.utils_accesses_folders_db import util_access_add_from_user_folder
@@ -98,6 +101,110 @@ async def access_folder_handler(call: CallbackQuery, state: FSMContext):
     )
 
     await call.answer()
+
+
+async def get_texts_access_folder_confirm_ok(accessing_user_id, from_user_id, folder_id, access_type: AccessType):
+    user_info = await get_user_info(str(from_user_id))
+    accessing_user_info = await get_user_info(str(accessing_user_id))
+    folder: Folder = await get_folder(from_user_id, folder_id)
+    folder_full_name = await folder.get_full_name()
+    #folder_full_name = escape_markdown(folder_full_name)
+    access_str = get_access_str_by_type(access_type)
+
+    access_to_user_added = await util_access_add_from_user_folder(
+        accessing_user_id, from_user_id, folder_id, access_type
+    )
+    user_to_access_added = False
+    if access_to_user_added:
+        user_to_access_added = await add_user_to_folder_access(accessing_user_id, folder, access_type)
+    if access_to_user_added and user_to_access_added:
+        message_text = f'✅ Пользователю {accessing_user_info} предоставлен доступ {access_str} вашей папки:'
+        #message_text = escape_markdown(message_text)
+        message_text += (f'\n\n<b>{folder_full_name} ...</b>'
+                         f'\n\nВы можете отменить это действие в любой момент в настройках доступа папки 🔐')
+
+        accessing_user_message_text = (
+            f"✅ Пользователь {user_info} подтвердил ваш доступ {access_str} его папки:"
+            f"\n\n<b>{smile_folder} {folder.name}</b>"
+            f"\n\nТеперь она доступна в разделе главного <b>Меню</b>:"
+            f"\n🔐 <i>доступы от других пользователей</i>"
+        )
+    else:
+        message_text = (f'❌ Не удалось предоставить доступ пользователю '
+                        f'{accessing_user_info} {access_str} вашей папки:')
+        #message_text = escape_markdown(message_text)
+        message_text += f'\n\n<v>{folder_full_name} ...</b>'
+
+        accessing_user_message_text = (
+            f"❌ Пользователю {user_info} не удалось предоставить вам доступ {access_str} его папки:"
+            f"\n\n<b>{smile_folder} {folder.name}</b>"
+            f"\n\nДля повторного запроса вы должны получить новое предложение от этого пользователя 👤"
+        )
+    return message_text, accessing_user_message_text
+
+
+async def get_texts_access_folder_confirm_reject(accessing_user_id, from_user_id, folder_id, access_type: AccessType):
+    user_info = await get_user_info(str(from_user_id))
+    accessing_user_info = await get_user_info(str(accessing_user_id))
+    folder: Folder = await get_folder(from_user_id, folder_id)
+    folder_full_name = await folder.get_full_name()
+    #folder_full_name = escape_markdown(folder_full_name)
+    access_str = get_access_str_by_type(access_type)
+
+    message_text = f'❌ Вы отклонили запрос пользователя {accessing_user_info} на доступ {access_str} вашей папки:'
+    #message_text = escape_markdown(message_text)
+    message_text += f'\n\n<b>{folder_full_name} ...</b>'
+
+    accessing_user_message_text = (
+        f"❌ Пользователь {user_info} отклонил ваш запрос на доступ {access_str} его папки:"
+        f"\n\n<b>{smile_folder} {folder.name}</b>"
+        f"\n\nДля повторного запроса вы должны получить новое предложение от этого пользователя 👤"
+    )
+    return message_text, accessing_user_message_text
+
+
+async def get_access_confirm_ok_messages(from_user_id):
+    data = await get_data(from_user_id)
+    access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
+    if access_folder_confirm:
+        from_user_message_text, accessing_user_message_text = await get_texts_access_folder_confirm_ok(
+            access_folder_confirm.user_id,
+            access_folder_confirm.from_user_id,
+            access_folder_confirm.folder_id,
+            access_folder_confirm.get_access_type()
+        )
+        return from_user_message_text, accessing_user_message_text
+    return None
+
+
+async def get_access_confirm_reject_messages(from_user_id):
+    data = await get_data(from_user_id)
+    access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
+    if access_folder_confirm:
+        from_user_message_text, accessing_user_message_text = await get_texts_access_folder_confirm_reject(
+            access_folder_confirm.user_id,
+            access_folder_confirm.from_user_id,
+            access_folder_confirm.folder_id,
+            access_folder_confirm.get_access_type()
+        )
+        return from_user_message_text, accessing_user_message_text
+    return None
+
+
+@router.callback_query(AccessConfirmOkCallback.filter())
+async def access_confirm_ok_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    from_user_message_text, accessing_user_message_text = await get_access_confirm_ok_messages(user_id)
+    await call.answer()
+    await MessageBox.show(user_id, from_user_message_text, edit_message_id=call.message.message_id)
+
+
+@router.callback_query(AccessConfirmRejectCallback.filter())
+async def access_confirm_reject_handler(call: CallbackQuery, state: FSMContext):
+    user_id = call.from_user.id
+    from_user_message_text, accessing_user_message_text = await get_access_confirm_reject_messages(user_id)
+    await call.answer()
+    await MessageBox.show(user_id, from_user_message_text, edit_message_id=call.message.message_id)
 
 
 async def add_user_to_folder_access(user_id, folder: Folder, access_type: AccessType) -> bool:

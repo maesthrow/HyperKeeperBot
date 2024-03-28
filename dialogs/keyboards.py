@@ -23,6 +23,10 @@ def _has_access_users(data: dict, widget, context) -> bool:
     return result
 
 
+def _is_visible_always_false(data: dict, widget, context) -> bool:
+    return False
+
+
 _folder_control_main_menu_buttons = [
     Button(Const("🔑 PIN-код"), id="pin_code", on_click=pin_code_handler),
     Button(Const("🔐 Настроить доступ"), id="access_menu", on_click=access_menu_handler),
@@ -43,6 +47,14 @@ _folder_control_access_menu_buttons = [
     Button(Const("🚫 Приостановить доступ для всех"), id="access_stop_all", on_click=statistic_handler,
            when=_has_access_users),
     Button(Const("↩️ Назад"), id="access_menu_back", on_click=info_message_ok_handler),
+]
+
+
+_folder_control_access_confirm_buttons = [
+    Button(text=Const("✔️ Подтвердить"), id="access_confirm_ok", on_click=access_confirm_ok_handler,
+           when=_is_visible_always_false),
+    Button(text=Const("✖️ Отклонить"), id="access_confirm_reject", on_click=access_confirm_reject_handler,
+           when=_is_visible_always_false)
 ]
 
 
@@ -119,6 +131,8 @@ def folder_control_access_menu() -> widgets:
         Row(_folder_control_access_menu_buttons[1]),
         Row(_folder_control_access_menu_buttons[2]),
         Row(_folder_control_access_menu_buttons[3]),
+        Row(_folder_control_access_confirm_buttons[0]),
+        Row(_folder_control_access_confirm_buttons[1]),
     ]
     return keyboard
 
@@ -126,8 +140,8 @@ def folder_control_access_menu() -> widgets:
 def folder_control_access_confirm() -> widgets:
     keyboard = [
         Row(
-            Button(text=Const("✔️ Подтвердить"), id="access_confirm_ok", on_click=access_confirm_ok_handler),
-            Button(text=Const("✖️ Отклонить"), id="access_confirm_reject", on_click=access_confirm_reject_handler)
+            _folder_control_access_confirm_buttons[0],
+            _folder_control_access_confirm_buttons[1]
         ),
     ]
     return keyboard

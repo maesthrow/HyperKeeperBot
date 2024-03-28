@@ -53,9 +53,10 @@ setup_dialogs(dp)
 
 @router.message(CommandStart())
 async def start(message: Message, dialog_manager: DialogManager, state: FSMContext):
+    print(f'start {dialog_manager}')
     tg_user = message.from_user
     url_data = from_url_data(message.text).split()
-    await start_init(tg_user, message, state, url_data)
+    await start_init(tg_user, message, state, url_data, dialog_manager)
 
 
 # @router.message(FromUserChatConfirmMessageFilter())
@@ -66,14 +67,14 @@ async def start(message: Message, dialog_manager: DialogManager, state: FSMConte
 #         await dialog_manager.switch_to(states.FolderControlStates.MainMenu)
 
 
-async def start_init(tg_user, message, state, url_data: List[str]):
+async def start_init(tg_user, message, state, url_data: List[str], dialog_manager: DialogManager):
     if len(url_data) == 1:
         await start_handler(state, tg_user)
     else:
         url_data_args = url_data[1].split('_')
         print(f'url_data_args = {url_data_args}')
         if url_data_args[0].startswith('ap'):
-            await start_url_data_access_provide_handler(message, tg_user, state)
+            await start_url_data_access_provide_handler(message, tg_user, state, dialog_manager)
         elif len(url_data_args) == 2:
             await start_url_data_folder_handler(message, tg_user)
         elif 2 < len(url_data_args) <= 4:

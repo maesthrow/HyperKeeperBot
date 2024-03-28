@@ -3,15 +3,13 @@ import asyncio
 from aiogram.enums import ParseMode, ContentType
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, Location, Contact
-from aiogram_dialog import DialogManager, BaseDialogManager
-from aiogram_dialog.manager.manager import ManagerImpl
+from aiogram_dialog import DialogManager
 
-from dialogs.dialog_data import DialogData
 from enums.enums import AccessType
 from handlers.handlers_folder import show_folders
 from handlers.handlers_item import show_item
-from handlers.states import FolderControlStates
 from load_all import bot
+from models.access_folder_model import AccessFolder
 from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
 from utils.message_box import MessageBox
@@ -30,7 +28,7 @@ from utils.utils_parse_mode_converter import escape_markdown
 from utils.utils_show_item_entities import show_item_full_mode, show_item_page_as_text_only
 
 
-async def start_url_data_access_provide_handler(message, tg_user, state: FSMContext):
+async def start_url_data_access_provide_handler(message, tg_user, state: FSMContext, dialog_manager: DialogManager):
     await asyncio.sleep(0.3)
     data = await get_data(tg_user.id)
     author_user_id = data.get('author_user_id', None)
@@ -98,19 +96,19 @@ async def start_url_data_access_provide_handler(message, tg_user, state: FSMCont
                         author_user_message_text += (f"\n\n*{folder_full_name} {escape_markdown('...')}*"
                                                      f"\n\n_Подтверждаете предоставление доступа?_ 🔐")
 
-                        dialog_manager_auth_user: ManagerImpl = await DialogData.get_manager(author_user_id)
-                        print(f'dialog_manager_auth_user {dialog_manager_auth_user}')
-                        if dialog_manager_auth_user:
-                            # dialog_manager_auth_user: BaseDialogManager = (
-                            #     dialog_manager_auth_user.bg(author_user_id, author_user_id))
-                            await dialog_manager_auth_user.start(FolderControlStates.AccessConfirm)
-                        else:
-                            await bot.send_message(
-                                chat_id=author_user_id,
-                                text=author_user_message_text,
-                                parse_mode=ParseMode.MARKDOWN_V2,
-                                reply_markup=inline_markup
-                            )
+                        await bot.send_message(
+                            chat_id=author_user_id,
+                            text=author_user_message_text,
+                            parse_mode=ParseMode.MARKDOWN_V2,
+                            reply_markup=inline_markup
+                        )
+
+                        access_folder_confirm: AccessFolder = AccessFolder(
+                            tg_user.id, int(author_user_id), folder_id, access_type
+                        )
+                        data_author_user = await get_data(author_user_id)
+                        data_author_user['access_folder_confirm'] = access_folder_confirm
+                        await set_data(author_user_id, data_author_user)
 
                         message_text = (
                             f"\n\nПользователю {author_user_info} "

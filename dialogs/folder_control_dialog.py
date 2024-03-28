@@ -9,7 +9,7 @@ from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs import keyboards
 from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_delete_handler, \
-    stop_window_handler
+    access_confirm_message_handler
 from handlers.states import FolderControlStates
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
@@ -188,18 +188,16 @@ folder_control_after_delete_message_window = Window(
 
 folder_control_access_menu_window = Window(
     Format("{message_text}"),
-    #MessageInput(func=stop_window_handler),
     *keyboards.folder_control_access_menu(),
     state=FolderControlStates.AccessMenu,
     getter=get_access_menu_data
 )
 
 folder_control_access_confirm_window = Window(
-    #Format("{message_text}"),
-    Const("Подтверждаете доступ?"),
-    *keyboards.folder_control_access_confirm(),
+    Format("{message_text}"),
+    Button(id='access_confirm', text=Const('Ok'), on_click=access_confirm_message_handler),
     state=FolderControlStates.AccessConfirm,
-    #getter=get_access_menu_data
+    getter=get_message_text
 )
 
 dialog_folder_control_main_menu = Dialog(
@@ -210,6 +208,7 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_rename_window,
     folder_control_delete_window,
     folder_control_after_delete_message_window,
-    folder_control_access_menu_window
+    folder_control_access_menu_window,
+    folder_control_access_confirm_window
 )
 
