@@ -158,25 +158,29 @@ async def access_delete_handler(callback: CallbackQuery, button: Button, dialog_
     await dialog_manager.switch_to(FolderControlStates.InfoMessage)
 
 
-async def access_confirm_ok_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    user_id = callback.from_user.id
-    data = await get_data(user_id)
-    access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
-    if access_folder_confirm:
-        from_user_message_text, accessing_user_message_text = await get_access_confirm_ok_messages(user_id)
-        dialog_manager.current_context().dialog_data["message_text"] = from_user_message_text
-        await dialog_manager.switch_to(FolderControlStates.AccessConfirm)
+# async def access_confirm_ok_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+#     user_id = callback.from_user.id
+#     data = await get_data(user_id)
+#     access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
+#     if access_folder_confirm:
+#         from_user_message_text, accessing_user_message_text = await get_access_confirm_ok_messages(user_id)
+#         dialog_manager.current_context().dialog_data["message_text"] = from_user_message_text
+#         await dialog_manager.switch_to(FolderControlStates.AccessConfirm)
 
 
-async def access_confirm_reject_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    user_id = callback.from_user.id
-    data = await get_data(user_id)
-    access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
-    if access_folder_confirm:
-        from_user_message_text, accessing_user_message_text = await get_access_confirm_reject_messages(user_id)
-        dialog_manager.current_context().dialog_data["message_text"] = from_user_message_text
-        await dialog_manager.switch_to(FolderControlStates.AccessConfirm)
+# async def access_confirm_reject_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+#     user_id = callback.from_user.id
+#     data = await get_data(user_id)
+#     access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
+#     if access_folder_confirm:
+#         from_user_message_text, accessing_user_message_text = await get_access_confirm_reject_messages(user_id)
+#         dialog_manager.current_context().dialog_data["message_text"] = from_user_message_text
+#         await dialog_manager.switch_to(FolderControlStates.AccessConfirm)
 
 
 async def access_confirm_message_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.switch_to(FolderControlStates.AccessMenu)
+
+
+async def access_choose_users_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    await dialog_manager.switch_to(FolderControlStates.AccessChooseUsers)

@@ -4,7 +4,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import Message
 from aiogram_dialog import Window, Dialog, DialogManager
 from aiogram_dialog.widgets.input import TextInput, MessageInput
-from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.kbd import Button, ScrollingGroup
 from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs import keyboards
@@ -13,6 +13,7 @@ from handlers.dialog.folder_control_handler import on_rename_folder, on_error_re
 from handlers.states import FolderControlStates
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
+from utils.data_manager import get_data
 from utils.utils_ import smile_folder, smile_item
 from utils.utils_access import get_access_users_info
 from utils.utils_data import get_current_folder_id
@@ -36,6 +37,11 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
 
 async def get_message_text(dialog_manager: DialogManager, **kwargs):
     return {"message_text": dialog_manager.current_context().dialog_data.get("message_text", None)}
+
+
+async def get_data_message_text(dialog_manager: DialogManager, **kwargs):
+    data = await get_data(dialog_manager.event.from_user.id)
+    return {"message_text": data.get("access_confirm_message_text", None)}
 
 
 async def get_statistic_data(dialog_manager: DialogManager, **kwargs):
@@ -197,6 +203,14 @@ folder_control_access_confirm_window = Window(
     Format("{message_text}"),
     Button(id='access_confirm', text=Const('Ok'), on_click=access_confirm_message_handler),
     state=FolderControlStates.AccessConfirm,
+    getter=get_data_message_text
+)
+
+folder_control_access_choose_users_window = Window(
+    Const("Выбор пользователя"),
+    #ScrollingGroup
+    #*keyboards.folder_control_after_delete_message(),
+    state=FolderControlStates.AccessChooseUsers,
     getter=get_message_text
 )
 
@@ -209,6 +223,7 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_delete_window,
     folder_control_after_delete_message_window,
     folder_control_access_menu_window,
-    folder_control_access_confirm_window
+    folder_control_access_confirm_window,
+    folder_control_access_choose_users_window,
 )
 

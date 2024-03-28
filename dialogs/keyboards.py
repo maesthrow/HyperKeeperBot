@@ -6,7 +6,7 @@ from dialogs.widgets import InlineQueryButton
 from handlers.dialog.folder_control_handler import pin_code_handler, access_menu_handler, statistic_handler, \
     delete_all_items_handler, rename_folder_handler, delete_folder_handler, search_in_folder_handler, \
     close_menu_handler, access_delete_all_items_handler, info_message_ok_handler, cancel_delete_handler, \
-    access_delete_handler, access_confirm_ok_handler, access_confirm_reject_handler
+    access_delete_handler, access_choose_users_handler
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 
@@ -42,7 +42,7 @@ _folder_control_main_menu_buttons = [
 _folder_control_access_menu_buttons = [
     InlineQueryButton(Const("➕ Добавить пользователя"), id="access_add_user",
                       switch_inline_query=Format("{switch_inline_query}")),
-    Button(Const("👥 Выбрать пользователя"), id="access_choose_user", on_click=access_menu_handler,
+    Button(Const("👥 Выбрать пользователя"), id="access_choose_user", on_click=access_choose_users_handler,
            when=_has_access_users),  # 👤
     Button(Const("🚫 Приостановить доступ для всех"), id="access_stop_all", on_click=statistic_handler,
            when=_has_access_users),
@@ -50,12 +50,12 @@ _folder_control_access_menu_buttons = [
 ]
 
 
-_folder_control_access_confirm_buttons = [
-    Button(text=Const("✔️ Подтвердить"), id="access_confirm_ok", on_click=access_confirm_ok_handler,
-           when=_is_visible_always_false),
-    Button(text=Const("✖️ Отклонить"), id="access_confirm_reject", on_click=access_confirm_reject_handler,
-           when=_is_visible_always_false)
-]
+# _folder_control_access_confirm_buttons = [
+#     Button(text=Const("✔️ Подтвердить"), id="access_confirm_ok", on_click=access_confirm_ok_handler,
+#            when=_is_visible_always_false),
+#     Button(text=Const("✖️ Отклонить"), id="access_confirm_reject", on_click=access_confirm_reject_handler,
+#            when=_is_visible_always_false)
+# ]
 
 
 def folder_control_main_menu() -> widgets:
@@ -131,17 +131,17 @@ def folder_control_access_menu() -> widgets:
         Row(_folder_control_access_menu_buttons[1]),
         Row(_folder_control_access_menu_buttons[2]),
         Row(_folder_control_access_menu_buttons[3]),
-        Row(_folder_control_access_confirm_buttons[0]),
-        Row(_folder_control_access_confirm_buttons[1]),
+        # Row(_folder_control_access_confirm_buttons[0]),
+        # Row(_folder_control_access_confirm_buttons[1]),
     ]
     return keyboard
 
 
-def folder_control_access_confirm() -> widgets:
-    keyboard = [
-        Row(
-            _folder_control_access_confirm_buttons[0],
-            _folder_control_access_confirm_buttons[1]
-        ),
-    ]
-    return keyboard
+# def folder_control_access_confirm() -> widgets:
+#     keyboard = [
+#         Row(
+#             _folder_control_access_confirm_buttons[0],
+#             _folder_control_access_confirm_buttons[1]
+#         ),
+#     ]
+#     return keyboard
