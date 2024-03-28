@@ -208,10 +208,10 @@ folder_control_access_confirm_window = Window(
 
 folder_control_access_choose_users_window = Window(
     Const("Выбор пользователя"),
-    #ScrollingGroup
+    ScrollingGroup(*keyboards.folder_control_main_menu(), height=2, id='access_choose_users'),
     #*keyboards.folder_control_after_delete_message(),
     state=FolderControlStates.AccessChooseUsers,
-    getter=get_message_text
+    #getter=get_message_text
 )
 
 dialog_folder_control_main_menu = Dialog(

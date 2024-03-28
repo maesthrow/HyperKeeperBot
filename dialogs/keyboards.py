@@ -137,6 +137,10 @@ def folder_control_access_menu() -> widgets:
     return keyboard
 
 
+def folder_control_access_users() -> widgets:
+    return None
+
+
 # def folder_control_access_confirm() -> widgets:
 #     keyboard = [
 #         Row(
