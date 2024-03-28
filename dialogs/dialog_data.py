@@ -1,7 +1,7 @@
 from typing import Optional
 
 from aiogram.fsm.state import State
-from aiogram_dialog import DialogManager, ShowMode, Data, StartMode, ChatEvent
+from aiogram_dialog import DialogManager, ShowMode, Data, StartMode, ChatEvent, BaseDialogManager
 from aiogram_dialog.manager.manager import ManagerImpl
 
 from utils.data_manager import get_data, set_data
@@ -9,16 +9,18 @@ from utils.data_manager import get_data, set_data
 
 class DialogData:
     @staticmethod
-    async def get_manager(user_id: int) -> DialogManager:
+    async def get_manager(user_id: int) -> ManagerImpl:
         data = await get_data(user_id)
         dialog_manager = data.get('dialog_manager', None)
         return dialog_manager
 
     @staticmethod
-    async def set_manager(user_id: int, dialog_manager: DialogManager | None):
+    async def set_manager(user_id: int, dialog_manager: ManagerImpl | None):
+        print(f'set_manager')
         data = await get_data(user_id)
         data['dialog_manager'] = dialog_manager
         await set_data(user_id, data)
+        print(f'set_manager dialog_manager {dialog_manager}')
 
     @staticmethod
     async def clear_manager(user_id: int):

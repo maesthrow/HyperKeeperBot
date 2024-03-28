@@ -6,7 +6,7 @@ from dialogs.widgets import InlineQueryButton
 from handlers.dialog.folder_control_handler import pin_code_handler, access_menu_handler, statistic_handler, \
     delete_all_items_handler, rename_folder_handler, delete_folder_handler, search_in_folder_handler, \
     close_menu_handler, access_delete_all_items_handler, info_message_ok_handler, cancel_delete_handler, \
-    access_delete_handler
+    access_delete_handler, access_confirm_ok_handler, access_confirm_reject_handler
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 
@@ -122,3 +122,12 @@ def folder_control_access_menu() -> widgets:
     ]
     return keyboard
 
+
+def folder_control_access_confirm() -> widgets:
+    keyboard = [
+        Row(
+            Button(text=Const("✔️ Подтвердить"), id="access_confirm_ok", on_click=access_confirm_ok_handler),
+            Button(text=Const("✖️ Отклонить"), id="access_confirm_reject", on_click=access_confirm_reject_handler)
+        ),
+    ]
+    return keyboard

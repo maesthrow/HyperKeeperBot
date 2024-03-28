@@ -73,7 +73,6 @@ async def search_in_folder_handler(callback: CallbackQuery, button: Button, dial
 async def close_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.done()
     await DialogData.clear_manager(callback.from_user.id)
-    #await dialog_manager.close_manager()
     await callback.message.delete()
 
 
@@ -162,3 +161,11 @@ async def stop_window_handler(event, source, dialog_manager: DialogManager):
     print('stop_window_handler')
     await dialog_manager.done(show_mode=ShowMode.NO_UPDATE)
     await DialogData.clear_manager(event.from_user.id)
+
+
+async def access_confirm_ok_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    pass
+
+
+async def access_confirm_reject_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    pass

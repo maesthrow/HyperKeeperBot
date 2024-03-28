@@ -188,10 +188,18 @@ folder_control_after_delete_message_window = Window(
 
 folder_control_access_menu_window = Window(
     Format("{message_text}"),
-    MessageInput(func=stop_window_handler),
+    #MessageInput(func=stop_window_handler),
     *keyboards.folder_control_access_menu(),
     state=FolderControlStates.AccessMenu,
     getter=get_access_menu_data
+)
+
+folder_control_access_confirm_window = Window(
+    #Format("{message_text}"),
+    Const("Подтверждаете доступ?"),
+    *keyboards.folder_control_access_confirm(),
+    state=FolderControlStates.AccessConfirm,
+    #getter=get_access_menu_data
 )
 
 dialog_folder_control_main_menu = Dialog(

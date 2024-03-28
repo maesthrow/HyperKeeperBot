@@ -3,10 +3,14 @@ import asyncio
 from aiogram.enums import ParseMode, ContentType
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, Location, Contact
+from aiogram_dialog import DialogManager, BaseDialogManager
+from aiogram_dialog.manager.manager import ManagerImpl
 
+from dialogs.dialog_data import DialogData
 from enums.enums import AccessType
 from handlers.handlers_folder import show_folders
 from handlers.handlers_item import show_item
+from handlers.states import FolderControlStates
 from load_all import bot
 from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
@@ -94,12 +98,19 @@ async def start_url_data_access_provide_handler(message, tg_user, state: FSMCont
                         author_user_message_text += (f"\n\n*{folder_full_name} {escape_markdown('...')}*"
                                                      f"\n\n_Подтверждаете предоставление доступа?_ 🔐")
 
-                        await bot.send_message(
-                            chat_id=author_user_id,
-                            text=author_user_message_text,
-                            parse_mode=ParseMode.MARKDOWN_V2,
-                            reply_markup=inline_markup
-                        )
+                        dialog_manager_auth_user: ManagerImpl = await DialogData.get_manager(author_user_id)
+                        print(f'dialog_manager_auth_user {dialog_manager_auth_user}')
+                        if dialog_manager_auth_user:
+                            # dialog_manager_auth_user: BaseDialogManager = (
+                            #     dialog_manager_auth_user.bg(author_user_id, author_user_id))
+                            await dialog_manager_auth_user.start(FolderControlStates.AccessConfirm)
+                        else:
+                            await bot.send_message(
+                                chat_id=author_user_id,
+                                text=author_user_message_text,
+                                parse_mode=ParseMode.MARKDOWN_V2,
+                                reply_markup=inline_markup
+                            )
 
                         message_text = (
                             f"\n\nПользователю {author_user_info} "

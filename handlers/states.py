@@ -36,4 +36,5 @@ class FolderControlStates(StatesGroup):
     Delete = State()
     AfterDelete = State()
     AccessMenu = State()
+    AccessConfirm = State()
 
