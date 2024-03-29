@@ -39,9 +39,8 @@ async def get_message_text(dialog_manager: DialogManager, **kwargs):
     return {"message_text": dialog_manager.current_context().dialog_data.get("message_text", None)}
 
 
-async def get_data_message_text(dialog_manager: DialogManager, **kwargs):
-    data = await get_data(dialog_manager.event.from_user.id)
-    return {"message_text": data.get("access_confirm_message_text", None)}
+async def get_start_data_message_text(dialog_manager: DialogManager, **kwargs):
+    return {"message_text": dialog_manager.current_context().start_data.get("message_text", None)}
 
 
 async def get_statistic_data(dialog_manager: DialogManager, **kwargs):
@@ -203,7 +202,7 @@ folder_control_access_confirm_window = Window(
     Format("{message_text}"),
     Button(id='access_confirm', text=Const('Ok'), on_click=access_confirm_message_handler),
     state=FolderControlStates.AccessConfirm,
-    getter=get_data_message_text
+    getter=get_start_data_message_text
 )
 
 folder_control_access_choose_users_window = Window(

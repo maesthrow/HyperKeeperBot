@@ -137,11 +137,11 @@ dp.include_router(router)
 
 @router.callback_query(AccessConfirmCallback.filter())
 async def access_folder_handler(call: CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
+    await call.answer()
     from_user_id = call.from_user.id
     call_data = AccessConfirmCallback.unpack(call.data)
     accessing_user_id = int(call_data.acc_user_id)
     folder_id = call_data.folder_id
-    folder: Folder = await get_folder(from_user_id, folder_id)
     access_type = AccessType(call_data.type)
     result = call_data.res
     if result:
@@ -153,10 +153,11 @@ async def access_folder_handler(call: CallbackQuery, state: FSMContext, dialog_m
             accessing_user_id, from_user_id, folder_id, access_type
         )
 
-    data = await get_data(from_user_id)
-    data["access_confirm_message_text"] = from_user_message_text
-    await set_data(from_user_id, data)
-    await dialog_manager.start(state=FolderControlStates.AccessConfirm, show_mode=ShowMode.EDIT)
+    await dialog_manager.start(
+        state=FolderControlStates.AccessConfirm,
+        show_mode=ShowMode.EDIT,
+        data={"message_text": from_user_message_text}
+    )
 
     inline_markup = get_simple_inline_markup('✔️ OK')
     await bot.send_message(
@@ -165,7 +166,6 @@ async def access_folder_handler(call: CallbackQuery, state: FSMContext, dialog_m
             parse_mode=ParseMode.HTML,
             reply_markup=inline_markup
         )
-    await call.answer()
 
 
 async def get_texts_access_folder_confirm_ok(accessing_user_id, from_user_id, folder_id, access_type: AccessType):
