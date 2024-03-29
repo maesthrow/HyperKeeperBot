@@ -10,12 +10,9 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, KeyboardButton, Message
 from aiogram_dialog import DialogManager
-from aiogram_dialog.api.entities import Context
-from aiogram_dialog.manager.manager import ManagerImpl
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 
 from callbacks.callbackdata import FolderCallback
-from dialogs.dialog_data import DialogData
 from handlers import states
 from handlers.states import FolderControlStates
 from load_all import bot, dp
@@ -560,7 +557,7 @@ async def go_to_page_items(call: CallbackQuery):
 
 
 @router.message(F.text == current_folder_control_button.text)
-async def folder_control_menu_handler(message: Message, dialog_manager: ManagerImpl):
+async def folder_control_menu_handler(message: Message, dialog_manager: DialogManager):
     await dialog_manager.start(FolderControlStates.MainMenu)
     #await DialogData.set_manager(message.from_user.id, dialog_manager)
     await bot.delete_message(message.chat.id, message.message_id)

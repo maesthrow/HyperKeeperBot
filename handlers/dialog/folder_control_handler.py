@@ -5,14 +5,10 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.widgets.kbd import Button
 
 from callbacks.callbackdata import FolderCallback
-from dialogs.dialog_data import DialogData
-from handlers.handlers_access import get_access_confirm_ok_messages, get_access_confirm_reject_messages
 from handlers.handlers_folder import show_folders, to_folder
 from handlers.states import FolderControlStates
 from load_all import bot
-from models.access_folder_model import AccessFolder
 from models.folder_model import Folder
-from utils.data_manager import get_data
 from utils.utils_ import smile_folder
 from utils.utils_button_manager import get_pin_control_inline_markup, get_folder_pin_inline_markup
 from utils.utils_data import get_current_folder_id
@@ -20,6 +16,11 @@ from utils.utils_folders import invalid_chars, get_parent_folder_id
 from utils.utils_folders_db import util_rename_folder, util_delete_folder
 from utils.utils_folders_reader import get_folder_name, get_folder
 from utils.utils_items_db import util_delete_all_items_in_folder
+
+### НЕЛЬЗЯ УБИРАТЬ! ###
+import handlers.handlers_access
+h_a = handlers.handlers_access
+#################################
 
 
 async def pin_code_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -36,7 +37,6 @@ async def pin_code_handler(callback: CallbackQuery, button: Button, dialog_manag
         message_text = f'_Придумайте PIN\-код для папки:_\n\n{smile_folder} {folder.name}'
 
     await dialog_manager.done()
-    await DialogData.clear_manager(user_id)
 
     await callback.message.delete()
     await bot.send_message(
@@ -73,7 +73,7 @@ async def search_in_folder_handler(callback: CallbackQuery, button: Button, dial
 
 async def close_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.done()
-    await DialogData.clear_manager(callback.from_user.id)
+    #await DialogData.clear_manager(callback.from_user.id)
     await callback.message.delete()
 
 
