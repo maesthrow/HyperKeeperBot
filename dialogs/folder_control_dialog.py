@@ -1,15 +1,17 @@
+import operator
 from typing import Optional
 
 from aiogram.enums import ParseMode
 from aiogram.types import Message
 from aiogram_dialog import Window, Dialog, DialogManager
 from aiogram_dialog.widgets.input import TextInput, MessageInput
-from aiogram_dialog.widgets.kbd import Button, ScrollingGroup
+from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select
 from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs import keyboards
+from enums.enums import AccessType
 from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_delete_handler, \
-    access_confirm_message_handler
+    access_confirm_message_handler, info_message_ok_handler
 from handlers.states import FolderControlStates
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
@@ -117,12 +119,28 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
     folder_id = await get_current_folder_id(user_id)
     folder: Folder = await get_folder(user_id, folder_id)
     switch_inline_query = f'access_{user_id}_{folder_id}'
-    users_access_info = await get_access_users_info(folder) or 'Ничего не найдено.'
+    users_access_info_str, users_access_info_entities = await get_access_users_info(folder)
+    users_access_info = users_access_info_str or 'Ничего не найдено.'
     #users_access_info = escape_markdown(users_access_info)
     message_text = f'🔐 <b>Управление доступом к папке</b>'\
                    f'\n\n{smile_folder} {folder.name}'\
                    f'\n\n<i>Пользователи, которым вы предоставили доступ:</i>'\
                    f'\n\n{users_access_info}'
+
+    users_data = []
+    if users_access_info_entities:
+        for i in range(1):
+            for user_data in users_access_info_entities:
+                access_icon = '✏️' if user_data['access_type'] == AccessType.WRITE.value else '👁️'
+                users_data.append(
+                    {
+                        "id": user_data['number'],
+                        "name": f"👤 {user_data['number']}. {user_data['user_name']} {access_icon}"
+                        #"name": f"👤 {i + 1}. {user_data['user_name']} {access_icon}"
+                    }
+                )
+
+    data['users'] = users_data
     data['folder_has_access_users'] = folder.has_access_users()
     data['switch_inline_query'] = switch_inline_query
     data['message_text'] = message_text
@@ -193,7 +211,21 @@ folder_control_after_delete_message_window = Window(
 
 folder_control_access_menu_window = Window(
     Format("{message_text}"),
-    *keyboards.folder_control_access_menu(),
+    *keyboards.folder_control_access_menu(0, 1),
+    ScrollingGroup(
+        Select(
+            Format("{item[name]}"),
+            id='access_choose_users_scroll',
+            item_id_getter=operator.itemgetter('id'),
+            items='users',
+            on_click=None
+        ),
+        id='access_choose_users',
+        height=5,
+        width=1,
+        hide_on_single_page=True
+    ),
+    *keyboards.folder_control_access_menu(2, 3),
     state=FolderControlStates.AccessMenu,
     getter=get_access_menu_data
 )
@@ -203,14 +235,6 @@ folder_control_access_confirm_window = Window(
     Button(id='access_confirm', text=Const('Ok'), on_click=access_confirm_message_handler),
     state=FolderControlStates.AccessConfirm,
     getter=get_start_data_message_text
-)
-
-folder_control_access_choose_users_window = Window(
-    Const("Выбор пользователя"),
-    ScrollingGroup(*keyboards.folder_control_main_menu(), height=2, id='access_choose_users'),
-    #*keyboards.folder_control_after_delete_message(),
-    state=FolderControlStates.AccessChooseUsers,
-    #getter=get_message_text
 )
 
 dialog_folder_control_main_menu = Dialog(
@@ -223,6 +247,5 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_after_delete_message_window,
     folder_control_access_menu_window,
     folder_control_access_confirm_window,
-    folder_control_access_choose_users_window,
 )
 

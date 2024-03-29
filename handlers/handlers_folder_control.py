@@ -519,8 +519,10 @@ async def access_folder_handler(call: CallbackQuery):
     call_data = AccessFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(user_id, folder_id)
-    users_access_info = await get_access_users_info(folder) or 'Ничего не найдено.'
-    users_access_info = escape_markdown(users_access_info)
+
+    users_access_info_str, users_access_info_entities = await get_access_users_info(folder)
+    users_access_info = users_access_info_str or 'Ничего не найдено.'
+    users_access_info = escape_markdown(users_access_info_str)
     folder_name = escape_markdown(f'{smile_folder} {folder.name}')
     message_text = (f'🔐 *Управление доступом к папке*'
                     f'\n\n{folder_name}'

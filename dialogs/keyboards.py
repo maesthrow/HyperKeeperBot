@@ -43,7 +43,7 @@ _folder_control_access_menu_buttons = [
     InlineQueryButton(Const("➕ Добавить пользователя"), id="access_add_user",
                       switch_inline_query=Format("{switch_inline_query}")),
     Button(Const("👥 Выбрать пользователя"), id="access_choose_user", on_click=access_choose_users_handler,
-           when=_has_access_users),  # 👤
+           when=_is_visible_always_false),  # 👤
     Button(Const("🚫 Приостановить доступ для всех"), id="access_stop_all", on_click=statistic_handler,
            when=_has_access_users),
     Button(Const("↩️ Назад"), id="access_menu_back", on_click=info_message_ok_handler),
@@ -125,15 +125,12 @@ def folder_control_after_delete_message() -> widgets:
     return keyboard
 
 
-def folder_control_access_menu() -> widgets:
-    keyboard = [
-        Row(_folder_control_access_menu_buttons[0]),
-        Row(_folder_control_access_menu_buttons[1]),
-        Row(_folder_control_access_menu_buttons[2]),
-        Row(_folder_control_access_menu_buttons[3]),
-        # Row(_folder_control_access_confirm_buttons[0]),
-        # Row(_folder_control_access_confirm_buttons[1]),
-    ]
+def folder_control_access_menu(*args) -> widgets:
+    keyboard = []
+    for index in args:
+        if -1 < index < len(_folder_control_access_menu_buttons):
+            keyboard.append(_folder_control_access_menu_buttons[index])
+
     return keyboard
 
 
