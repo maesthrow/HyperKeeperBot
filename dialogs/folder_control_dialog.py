@@ -5,13 +5,13 @@ from aiogram.enums import ParseMode
 from aiogram.types import Message
 from aiogram_dialog import Window, Dialog, DialogManager
 from aiogram_dialog.widgets.input import TextInput, MessageInput
-from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select
+from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select, Back
 from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs import keyboards
 from enums.enums import AccessType
 from handlers.dialog.folder_control_handler import on_rename_folder, on_error_rename_folder, cancel_delete_handler, \
-    access_confirm_message_handler, info_message_ok_handler
+    access_confirm_message_handler, info_message_ok_handler, access_user_selected_handler, on_back_click_handler
 from handlers.states import FolderControlStates
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
@@ -134,8 +134,10 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
                 access_icon = '✏️' if user_data['access_type'] == AccessType.WRITE.value else '👁️'
                 users_data.append(
                     {
-                        "id": user_data['number'],
-                        "name": f"👤 {user_data['number']}. {user_data['user_name']} {access_icon}"
+                        "user_id": user_data['user_id'],
+                        "number": user_data['number'],
+                        "name": f"👤 {user_data['number']}. {user_data['user_name']} {access_icon}",
+                        "access_type": user_data['access_type'],
                         #"name": f"👤 {i + 1}. {user_data['user_name']} {access_icon}"
                     }
                 )
@@ -143,6 +145,17 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
     data['users'] = users_data
     data['folder_has_access_users'] = folder.has_access_users()
     data['switch_inline_query'] = switch_inline_query
+    data['message_text'] = message_text
+    dialog_manager.current_context().dialog_data = data
+    return data
+
+
+async def get_user_selected_data(dialog_manager: DialogManager, **kwargs):
+    data = {}
+    dialog_data = dialog_manager.current_context().dialog_data
+    user = dialog_data.get('user', None)
+    data['user'] = dialog_data.get('user', None)
+    message_text = user.get('name', '') or ''
     data['message_text'] = message_text
     return data
 
@@ -216,9 +229,9 @@ folder_control_access_menu_window = Window(
         Select(
             Format("{item[name]}"),
             id='access_choose_users_scroll',
-            item_id_getter=operator.itemgetter('id'),
+            item_id_getter=operator.itemgetter('user_id'),
             items='users',
-            on_click=None
+            on_click=access_user_selected_handler
         ),
         id='access_choose_users',
         height=5,
@@ -237,6 +250,15 @@ folder_control_access_confirm_window = Window(
     getter=get_start_data_message_text
 )
 
+
+folder_control_access_user_selected_window = Window(
+    Format("{message_text}"),
+    *keyboards.folder_control_user_selected(),
+    Back(Const("↩️ Назад"), on_click=on_back_click_handler),
+    state=FolderControlStates.AccessUserSelected,
+    getter=get_user_selected_data
+)
+
 dialog_folder_control_main_menu = Dialog(
     folder_control_main_window,
     folder_control_info_message_window,
@@ -247,5 +269,6 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_after_delete_message_window,
     folder_control_access_menu_window,
     folder_control_access_confirm_window,
+    folder_control_access_user_selected_window,
 )
 

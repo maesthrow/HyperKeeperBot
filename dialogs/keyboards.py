@@ -1,12 +1,14 @@
 from aiogram_dialog import widgets
-from aiogram_dialog.widgets.kbd import Button, Row
+from aiogram_dialog.widgets.kbd import Button, Row, Column
 from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs.widgets import InlineQueryButton
+from enums.enums import AccessType
 from handlers.dialog.folder_control_handler import pin_code_handler, access_menu_handler, statistic_handler, \
     delete_all_items_handler, rename_folder_handler, delete_folder_handler, search_in_folder_handler, \
     close_menu_handler, access_delete_all_items_handler, info_message_ok_handler, cancel_delete_handler, \
-    access_delete_handler, access_choose_users_handler
+    access_delete_handler, access_choose_users_handler, access_user_expand_handler, access_user_decrease_handler, \
+    access_user_stop_handler
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 
@@ -21,6 +23,18 @@ def _is_not_root_folder(data: dict, widget, context) -> bool:
 def _has_access_users(data: dict, widget, context) -> bool:
     result = data.get('folder_has_access_users', False)
     return result
+
+
+def _is_read_access_type(data: dict, widget, context) -> bool:
+    user = data.get('user', None)
+    access_type = AccessType(user.get('access_type', 'r')) if user else AccessType.READ
+    return access_type == AccessType.READ
+
+
+def _is_write_access_type(data: dict, widget, context) -> bool:
+    user = data.get('user', None)
+    access_type = AccessType(user.get('access_type', 'w')) if user else AccessType.READ
+    return access_type == AccessType.WRITE
 
 
 def _is_visible_always_false(data: dict, widget, context) -> bool:
@@ -44,11 +58,18 @@ _folder_control_access_menu_buttons = [
                       switch_inline_query=Format("{switch_inline_query}")),
     Button(Const("👥 Выбрать пользователя"), id="access_choose_user", on_click=access_choose_users_handler,
            when=_is_visible_always_false),  # 👤
-    Button(Const("🚫 Приостановить доступ для всех"), id="access_stop_all", on_click=statistic_handler,
+    Button(Const("🚫 Приостановить доступ для всех"), id="access_stop_all", on_click=None,
            when=_has_access_users),
     Button(Const("↩️ Назад"), id="access_menu_back", on_click=info_message_ok_handler),
 ]
 
+_folder_control_access_user_selected_buttons = [
+    Button(Const("↕️ Расширить доступ до редактирования ✏️"), id="access_user_expand", on_click=access_user_expand_handler,
+           when=_is_read_access_type),
+    Button(Const("⤵️ Понизить доступ до просмотра 👁️"), id="access_user_decrease", on_click=access_user_decrease_handler,
+           when=_is_write_access_type),
+    Button(Const("🚫 Приостановить доступ"), id="access_user_stop", on_click=access_user_stop_handler),
+]
 
 # _folder_control_access_confirm_buttons = [
 #     Button(text=Const("✔️ Подтвердить"), id="access_confirm_ok", on_click=access_confirm_ok_handler,
@@ -131,6 +152,11 @@ def folder_control_access_menu(*args) -> widgets:
         if -1 < index < len(_folder_control_access_menu_buttons):
             keyboard.append(_folder_control_access_menu_buttons[index])
 
+    return keyboard
+
+
+def folder_control_user_selected() -> widgets:
+    keyboard = [Column(*_folder_control_access_user_selected_buttons)]
     return keyboard
 
 

@@ -2,7 +2,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
-from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.kbd import Button, Select
 
 from callbacks.callbackdata import FolderCallback
 from handlers.handlers_folder import show_folders, to_folder
@@ -184,3 +184,30 @@ async def access_confirm_message_handler(callback: CallbackQuery, button: Button
 
 async def access_choose_users_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.switch_to(FolderControlStates.AccessChooseUsers)
+
+
+async def access_user_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, user_id):
+    data = dialog_manager.current_context().dialog_data
+    print(f'data {data}')
+    users = data.get('users')
+    print(f'users {users}')
+    user = next(filter(lambda _user: _user['user_id'] == user_id, users), None)
+    print(f'user {user}')
+    dialog_manager.current_context().dialog_data = {'user': user}
+    await dialog_manager.switch_to(FolderControlStates.AccessUserSelected)
+
+
+async def access_user_expand_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    pass
+
+
+async def access_user_decrease_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    pass
+
+
+async def access_user_stop_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    pass
+
+
+async def on_back_click_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    await dialog_manager.back()

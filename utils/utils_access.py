@@ -59,6 +59,7 @@ async def get_access_users_info(folder: Folder) -> tuple:
                 access_users_info_str.append(f'👤 {number}. {user_info} - {access_str}')
                 access_users_info_entities.append(
                     {
+                        "user_id": user_id,
                         "number": number,
                         "user_name": get_user_name_from_user_info(user_info),
                         "access_type": access_type,
