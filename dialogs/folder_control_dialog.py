@@ -17,7 +17,7 @@ from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
 from utils.data_manager import get_data
 from utils.utils_ import smile_folder, smile_item
-from utils.utils_access import get_access_users_info
+from utils.utils_access import get_access_users_info, get_user_info, get_access_str_by_type
 from utils.utils_data import get_current_folder_id
 from utils.utils_folders import get_folder_statistic, is_valid_folder_name
 from utils.utils_folders_reader import get_folder_name, get_folder
@@ -31,7 +31,7 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     folder_id = await get_current_folder_id(user_id)
     message_text = await get_folders_message_text(user_id, folder_id)
-    #message_text = escape_markdown(folders_message_text)
+    # message_text = escape_markdown(folders_message_text)
     data['folder_id'] = folder_id
     data['message_text'] = f'🛠 <b>Меню управления папкой</b>\n\n{message_text}'
     return data
@@ -93,9 +93,9 @@ async def get_rename_data(dialog_manager: DialogManager, **kwargs):
     folder_id = await get_current_folder_id(user_id)
     folder_name = await get_folder_name(user_id, folder_id)
     folder_name = escape_markdown(folder_name)
-    message_text = f"*Переименовать папку* {smile_folder}"\
-                   f"\n\nМожете скопировать текущее название:"\
-                   f"\n'`{folder_name}`'"\
+    message_text = f"*Переименовать папку* {smile_folder}" \
+                   f"\n\nМожете скопировать текущее название:" \
+                   f"\n'`{folder_name}`'" \
                    f"\n\n_*Напишите новое название папки:*_"
     data['user_id'] = user_id
     data['folder_id'] = folder_id
@@ -121,10 +121,10 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
     switch_inline_query = f'access_{user_id}_{folder_id}'
     users_access_info_str, users_access_info_entities = await get_access_users_info(folder)
     users_access_info = users_access_info_str or 'Ничего не найдено.'
-    #users_access_info = escape_markdown(users_access_info)
-    message_text = f'🔐 <b>Управление доступом к папке</b>'\
-                   f'\n\n{smile_folder} {folder.name}'\
-                   f'\n\n<i>Пользователи, которым вы предоставили доступ:</i>'\
+    # users_access_info = escape_markdown(users_access_info)
+    message_text = f'🔐 <b>Управление доступом к папке</b>' \
+                   f'\n\n{smile_folder} {folder.name}' \
+                   f'\n\n<i>Пользователи, которым вы предоставили доступ:</i>' \
                    f'\n\n{users_access_info}'
 
     users_data = []
@@ -138,11 +138,12 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
                         "number": user_data['number'],
                         "name": f"👤 {user_data['number']}. {user_data['user_name']} {access_icon}",
                         "access_type": user_data['access_type'],
-                        #"name": f"👤 {i + 1}. {user_data['user_name']} {access_icon}"
+                        # "name": f"👤 {i + 1}. {user_data['user_name']} {access_icon}"
                     }
                 )
 
     data['users'] = users_data
+    data['folder_name'] = folder.name
     data['folder_has_access_users'] = folder.has_access_users()
     data['switch_inline_query'] = switch_inline_query
     data['message_text'] = message_text
@@ -154,8 +155,15 @@ async def get_user_selected_data(dialog_manager: DialogManager, **kwargs):
     data = {}
     dialog_data = dialog_manager.current_context().dialog_data
     user = dialog_data.get('user', None)
-    data['user'] = dialog_data.get('user', None)
-    message_text = user.get('name', '') or ''
+    data['user'] = user
+    user_name = await get_user_info(user.get('user_id', None))
+    folder_name = dialog_data.get('folder_name', '')
+    access_srt = get_access_str_by_type(AccessType(user.get('access_type', '')))
+    message_text = f'👤 {user_name}' \
+                   f'\n\nИмеет доступ {access_srt} папки:' \
+                   f'\n\n{smile_folder} {folder_name}'
+                 # f'\n\n<i>Выберите действие:</i>')
+
     data['message_text'] = message_text
     return data
 
@@ -250,7 +258,6 @@ folder_control_access_confirm_window = Window(
     getter=get_start_data_message_text
 )
 
-
 folder_control_access_user_selected_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_user_selected(),
@@ -271,4 +278,3 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_access_confirm_window,
     folder_control_access_user_selected_window,
 )
-

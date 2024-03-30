@@ -188,12 +188,12 @@ async def access_choose_users_handler(callback: CallbackQuery, button: Button, d
 
 async def access_user_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, user_id):
     data = dialog_manager.current_context().dialog_data
-    print(f'data {data}')
+    folder_name = data.get('folder_name', None)
     users = data.get('users')
-    print(f'users {users}')
     user = next(filter(lambda _user: _user['user_id'] == user_id, users), None)
-    print(f'user {user}')
-    dialog_manager.current_context().dialog_data = {'user': user}
+    dialog_manager.current_context().dialog_data = {
+        'user': user, 'folder_name': folder_name
+    }
     await dialog_manager.switch_to(FolderControlStates.AccessUserSelected)
 
 

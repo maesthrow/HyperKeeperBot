@@ -64,9 +64,9 @@ _folder_control_access_menu_buttons = [
 ]
 
 _folder_control_access_user_selected_buttons = [
-    Button(Const("↕️ Расширить доступ до редактирования ✏️"), id="access_user_expand", on_click=access_user_expand_handler,
+    Button(Const("Расширить доступ до редактирования ✏️"), id="access_user_expand", on_click=access_user_expand_handler,
            when=_is_read_access_type),
-    Button(Const("⤵️ Понизить доступ до просмотра 👁️"), id="access_user_decrease", on_click=access_user_decrease_handler,
+    Button(Const("Понизить доступ только до просмотра 👁️"), id="access_user_decrease", on_click=access_user_decrease_handler,
            when=_is_write_access_type),
     Button(Const("🚫 Приостановить доступ"), id="access_user_stop", on_click=access_user_stop_handler),
 ]
