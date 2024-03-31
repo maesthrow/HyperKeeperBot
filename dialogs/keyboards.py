@@ -6,9 +6,10 @@ from dialogs.widgets import InlineQueryButton
 from enums.enums import AccessType
 from handlers.dialog.folder_control_handler import pin_code_handler, access_menu_handler, statistic_handler, \
     delete_all_items_handler, rename_folder_handler, delete_folder_handler, search_in_folder_handler, \
-    close_menu_handler, access_delete_all_items_handler, info_message_ok_handler, cancel_delete_handler, \
-    access_delete_handler, access_choose_users_handler, access_user_expand_handler, access_user_decrease_handler, \
-    access_user_stop_handler, info_message_access_user_selected_handler
+    close_menu_handler, confirm_delete_all_items_handler, info_message_ok_handler, cancel_delete_handler, \
+    confirm_delete_handler, access_user_expand_handler, access_user_decrease_handler, \
+    access_user_stop_handler, info_message_access_user_selected_handler, stop_all_users_access_handler, \
+    cancel_stop_all_users_access_handler, confirm_stop_all_users_access_handler
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 
@@ -56,9 +57,7 @@ _folder_control_main_menu_buttons = [
 _folder_control_access_menu_buttons = [
     InlineQueryButton(Const("➕ Добавить пользователя"), id="access_add_user",
                       switch_inline_query=Format("{switch_inline_query}")),
-    Button(Const("👥 Выбрать пользователя"), id="access_choose_user", on_click=access_choose_users_handler,
-           when=_is_visible_always_false),  # 👤
-    Button(Const("🚫 Приостановить доступ для всех"), id="access_stop_all", on_click=None,
+    Button(Const("🚫 Приостановить доступ для всех"), id="access_stop_all", on_click=stop_all_users_access_handler,
            when=_has_access_users),
     Button(Const("↩️ Назад"), id="access_menu_back", on_click=info_message_ok_handler),
 ]
@@ -110,7 +109,7 @@ def _folder_has_not_items(data: dict, widget, context) -> bool:
 
 
 _folder_control_delete_all_items_buttons = [
-    Button(Const("✔️ Да, удалить"), id="delete_all_items", on_click=access_delete_all_items_handler,
+    Button(Const("✔️ Да, удалить"), id="delete_all_items", on_click=confirm_delete_all_items_handler,
            when=_folder_has_items),
     Button(Const("✖️ Не удалять"), id="not_delete_all_items", on_click=cancel_delete_handler,
            when=_folder_has_items),
@@ -118,8 +117,13 @@ _folder_control_delete_all_items_buttons = [
 ]
 
 _folder_control_delete_buttons = [
-    Button(Const("✔️ Да, удалить"), id="delete_all_items", on_click=access_delete_handler),
+    Button(Const("✔️ Да, удалить"), id="delete_all_items", on_click=confirm_delete_handler),
     Button(Const("✖️ Не удалять"), id="not_delete_all_items", on_click=cancel_delete_handler),
+]
+
+_folder_control_stop_all_users_access_buttons = [
+    Button(Const("✔️ Да"), id="yes_stop_all_users_access", on_click=confirm_stop_all_users_access_handler),
+    Button(Const("✖️ Нет"), id="no_stop_all_users_access", on_click=cancel_stop_all_users_access_handler),
 ]
 
 
@@ -133,6 +137,11 @@ def folder_control_delete_all_items() -> widgets:
 
 def folder_control_delete() -> widgets:
     keyboard = [Row(*_folder_control_delete_buttons)]
+    return keyboard
+
+
+def stop_all_users_access() -> widgets:
+    keyboard = [Row(*_folder_control_stop_all_users_access_buttons)]
     return keyboard
 
 

@@ -19,7 +19,7 @@ from load_all import bot, dp
 from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
-    get_page_info, check_current_items_page, smile_folder
+    get_page_info, check_current_items_page, smile_folder, get_level_folders
 from utils.utils_button_manager import (create_general_reply_markup,
                                         general_buttons_folder_show_all, general_buttons_movement_item, \
                                         check_button_exists_part_of_text,
@@ -38,7 +38,8 @@ from utils.utils_parse_mode_converter import escape_markdown
 
 cancel_enter_folder_name_button = InlineKeyboardButton(text="Отмена", callback_data=f"cancel_enter_folder_name")
 back_to_up_level_folder_button = InlineKeyboardButton(text="↩️ Назад", callback_data="back_to_up_level_folder")
-up_to_root_level_folder_button = InlineKeyboardButton(text="⬆️ 🗂️ Хранилище", callback_data="up_to_root_level_folder") #⤴️
+up_to_root_level_folder_button = InlineKeyboardButton(
+    text="⤴️ 🗂️ Хранилище", callback_data="up_to_root_level_folder") #⤴️ 🗂️
 
 router = Router()
 dp.include_router(router)
@@ -99,13 +100,7 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
         if items_inline_markup.inline_keyboard:
             folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup,
                                                                          items_inline_markup)
-        if current_folder_id != ROOT_FOLDER_ID:
-            folders_inline_markup.inline_keyboard.append(
-                [
-                    back_to_up_level_folder_button,
-                    up_to_root_level_folder_button
-                ]
-            )
+        folders_inline_markup = finalized_inline_markup(folders_inline_markup, current_folder_id)
 
     if await is_only_folders_mode_keyboard(user_id) and current_folder_page > 0:
         need_to_resend = True
@@ -160,13 +155,7 @@ async def show_all_folders(user_id, current_folder_id=None, need_resend=False):
     new_page_folders = folders_page_info.get('page_folders')
 
     folders_inline_markup = await get_inline_markup_folders(user_id, current_folder_id, current_folder_page)
-    if current_folder_id != ROOT_FOLDER_ID:
-        folders_inline_markup.inline_keyboard.append(
-            [
-                back_to_up_level_folder_button,
-                up_to_root_level_folder_button
-            ]
-        )
+    folders_inline_markup = finalized_inline_markup(folders_inline_markup, current_folder_id)
 
     if not await is_only_folders_mode_keyboard(user_id):
         need_resend = True
@@ -519,13 +508,7 @@ async def go_to_page_folders(call: CallbackQuery):
             for row in inline_markup.inline_keyboard:
                 if 'item' in row[-1].callback_data:  # and 'page_items' not in button.callback_data):
                     folders_inline_markup.inline_keyboard.append(row)
-        if current_folder_id != ROOT_FOLDER_ID:
-            folders_inline_markup.inline_keyboard.append(
-                [
-                    back_to_up_level_folder_button,
-                    up_to_root_level_folder_button
-                ]
-            )
+        folders_inline_markup = finalized_inline_markup(folders_inline_markup, current_folder_id)
 
         folders_message = await folders_message.edit_text(
             folders_message.text,
@@ -565,13 +548,7 @@ async def go_to_page_items(call: CallbackQuery):
 
         for row in items_inline_markup.inline_keyboard:
             new_inline_markup.inline_keyboard.append(row)
-        if current_folder_id != ROOT_FOLDER_ID:
-            new_inline_markup.inline_keyboard.append(
-                [
-                    back_to_up_level_folder_button,
-                    up_to_root_level_folder_button
-                ]
-            )
+        new_inline_markup = finalized_inline_markup(new_inline_markup, current_folder_id)
 
         folders_message = await folders_message.edit_text(
             folders_message.text,
@@ -608,29 +585,11 @@ async def folder_control_menu_handler_old(message: Message):
     await set_data(user_id, data)
     await bot.delete_message(message.chat.id, message.message_id)
 
-# @router.message(F.text == "️📊 Статистика")
-# async def statistic_folder_handler(message: aiogram.types.Message):
-#     user_id = message.from_user.id
-#     current_folder_id = await get_current_folder_id(user_id)
-#     folder_name = await get_folder_name(user_id, current_folder_id)
-#     dict_folder_statistic = await get_folder_statistic(user_id, current_folder_id)
-#     folders_count = dict_folder_statistic['folders_count']
-#     items_count = dict_folder_statistic['items_count']
-#     deep_folders_count = dict_folder_statistic['deep_folders_count']
-#     deep_items_count = dict_folder_statistic['deep_items_count']
-#     statistic_text = (f"<u>Количество папок</u> {smile_folder}: <b>{folders_count}</b>\n"
-#                       f"<u>Количество записей</u> {smile_item}: <b>{items_count}</b>\n\n"
-#                       f"<b>С учетом вложенных папок:</b>\n"
-#                       f"<u>Всего папок</u> {smile_folder}: <b>{deep_folders_count}</b>\n"
-#                       f"<u>Всего записей</u> {smile_item}: <b>{deep_items_count}</b>")
-#
-#     general_buttons = general_buttons_statistic_folder[:]
-#     markup = create_general_reply_markup(general_buttons)
-#     await bot.send_message(message.chat.id, f"📊 <b>Статистика папки</b>\n"
-#                                             f"{smile_folder} {folder_name}:\n\n"
-#                                             f"{statistic_text}",
-#                            reply_markup=markup)
-#
-#     data = await get_data(user_id)
-#     data['current_keyboard'] = markup
-#     await set_data(user_id, data)
+
+def finalized_inline_markup(folders_inline_markup, current_folder_id):
+    level_folder = get_level_folders(current_folder_id)
+    if level_folder > 1:
+        folders_inline_markup.inline_keyboard.append([up_to_root_level_folder_button])
+    if level_folder > 0:
+        folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
+    return folders_inline_markup

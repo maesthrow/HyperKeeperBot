@@ -18,7 +18,7 @@ from dialogs.folder_control_dialog import dialog_folder_control_main_menu
 from handlers import states
 from handlers.filters import NewItemValidateFilter, FromUserChatConfirmMessageFilter
 from handlers.handlers_folder import show_all_folders, show_folders, back_to_up_level_folder_button, \
-    up_to_root_level_folder_button
+    up_to_root_level_folder_button, finalized_inline_markup
 from handlers.handlers_item_add_mode import add_files_to_message_handler
 from handlers.handlers_read_voice import read_voice_offer
 from handlers.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
@@ -203,14 +203,7 @@ async def show_storage(message: Message, state: FSMContext, folder_id=ROOT_FOLDE
     if items_inline_markup.inline_keyboard:
         folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
-
-    if folder_id != ROOT_FOLDER_ID:
-        folders_inline_markup.inline_keyboard.append(
-            [
-                back_to_up_level_folder_button,
-                up_to_root_level_folder_button
-            ]
-        )
+    folders_inline_markup = finalized_inline_markup(folders_inline_markup, folder_id)
 
     print(f"len {len(folders_inline_markup.inline_keyboard)}\n{folders_inline_markup.inline_keyboard}")
 

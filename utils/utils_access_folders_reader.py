@@ -31,10 +31,10 @@ async def get_access_folder(user_id, from_user_id, folder_id):
 async def get_current_access_type_from_user_folder(user_id, from_user_id, folder_id) -> AccessType:
     from_user_id = str(from_user_id)
     current_access_type = AccessType.ABSENSE
-    print(f'user_id = {user_id}')
-    print(f'from_user_id = {from_user_id}')
+    # print(f'user_id = {user_id}')
+    # print(f'from_user_id = {from_user_id}')
     accesses_from_user_collection = await get_accesses_from_user_collection(user_id, from_user_id)
-    print(f'folder_id = {folder_id}')
+    # print(f'folder_id = {folder_id}')
     print(f'accesses_from_user_collection = {accesses_from_user_collection}')
     if not accesses_from_user_collection:
         return current_access_type

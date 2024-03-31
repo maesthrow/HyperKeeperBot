@@ -195,7 +195,7 @@ async def get_inline_markup_for_pages(instance_text, inline_markup, current_page
     return inline_markup
 
 
-async def get_level_folders(folder_id):
+def get_level_folders(folder_id):
     return len(folder_id.split('/')) - 1
 
 
@@ -203,7 +203,7 @@ async def get_page_info(user_id, folder_id, entities_key, current_page=None):
     data = await get_data(user_id)
 
     page_entities = data.get(f'page_{entities_key}')
-    level = await get_level_folders(folder_id)
+    level = get_level_folders(folder_id)
     if page_entities:
         list_pages = page_entities.split('/')
     else:

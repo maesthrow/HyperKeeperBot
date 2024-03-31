@@ -108,7 +108,7 @@ async def get_delete_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     folder_id = await get_current_folder_id(user_id)
     folder_name = await get_folder_name(user_id, folder_id)
-    message_text = f"Хотите удалить папку {smile_folder} '{folder_name}' и все ее содержимое?"
+    message_text = f"Хотите удалить папку <b>{smile_folder} {folder_name}</b>\nи все ее содержимое?"
     data['message_text'] = message_text
     return data
 
@@ -145,7 +145,7 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
     data['users'] = users_data
     data['folder_id'] = folder_id
     data['folder_name'] = folder.name
-    data['folder_has_access_users'] = folder.has_access_users()
+    data['folder_has_access_users'] = len(users_data) > 0
     data['switch_inline_query'] = switch_inline_query
     data['message_text'] = message_text
     dialog_manager.current_context().dialog_data = data
@@ -168,6 +168,17 @@ async def get_user_selected_data(dialog_manager: DialogManager, **kwargs):
                  # f'\n\n<i>Выберите действие:</i>')
 
     data['user'] = user
+    data['message_text'] = message_text
+    return data
+
+
+async def get_stop_all_users_access_data(dialog_manager: DialogManager, **kwargs):
+    data = {}
+    user_id = dialog_manager.event.from_user.id
+    folder_id = await get_current_folder_id(user_id)
+    folder_name = await get_folder_name(user_id, folder_id)
+    message_text = (f"Действительно хотите приостановить доступ к папке "
+                    f"<b>{smile_folder} {folder_name}</b>\nдля всех пользователей?")
     data['message_text'] = message_text
     return data
 
@@ -236,7 +247,7 @@ folder_control_after_delete_message_window = Window(
 
 folder_control_access_menu_window = Window(
     Format("{message_text}"),
-    *keyboards.folder_control_access_menu(0, 1),
+    *keyboards.folder_control_access_menu(0),
     ScrollingGroup(
         Select(
             Format("{item[name]}"),
@@ -250,7 +261,7 @@ folder_control_access_menu_window = Window(
         width=1,
         hide_on_single_page=True
     ),
-    *keyboards.folder_control_access_menu(2, 3),
+    *keyboards.folder_control_access_menu(1, 2),
     state=FolderControlStates.AccessMenu,
     getter=get_access_menu_data
 )
@@ -277,6 +288,13 @@ folder_control_info_message_access_user_selected_window = Window(
     getter=get_message_text
 )
 
+folder_control_stop_all_users_access_window = Window(
+    Format("{message_text}"),
+    *keyboards.stop_all_users_access(),
+    state=FolderControlStates.StopAllUsersAccess,
+    getter=get_stop_all_users_access_data
+)
+
 dialog_folder_control_main_menu = Dialog(
     folder_control_main_window,
     folder_control_info_message_window,
@@ -289,4 +307,5 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_access_confirm_window,
     folder_control_access_user_selected_window,
     folder_control_info_message_access_user_selected_window,
+    folder_control_stop_all_users_access_window,
 )

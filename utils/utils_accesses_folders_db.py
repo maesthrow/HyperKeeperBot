@@ -16,7 +16,7 @@ async def util_access_add_from_user_folder(user_id, from_user_id, folder_id, acc
 async def util_access_delete_from_user_folder(user_id, from_user_id, folder_id):
     result = await delete_access_folder_from_user(user_id, from_user_id, folder_id)
     if result:
-        await update_data(user_id, from_user_id, folder_id, value={})
+        await update_data(user_id, from_user_id, folder_id, value=None)
     return result
 
 
@@ -29,11 +29,14 @@ async def util_access_edit_from_user_folder(access_folder: AccessFolder):
 
 
 async def update_data(user_id, from_user_id, folder_id, value):
+    user_id = str(user_id)
     access_from_user_collection = await get_accesses_from_user_collection(user_id, from_user_id)
     if access_from_user_collection:
-        access_from_user_collection[folder_id] = value
-    else:
-        access_from_user_collection = {
-            folder_id: value
-        }
+        print(f'update_data access_from_user_collection {access_from_user_collection}')
+        if value:
+            access_from_user_collection[folder_id] = value
+        elif folder_id in access_from_user_collection:
+            del access_from_user_collection[folder_id]
+    elif value:
+        access_from_user_collection = {folder_id: value}
     await set_accesses_from_user_collection(user_id, from_user_id, access_from_user_collection)
