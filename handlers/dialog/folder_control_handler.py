@@ -217,15 +217,20 @@ async def access_user_stop_handler(callback: CallbackQuery, button: Button, dial
     from_user_id = dialog_manager.event.from_user.id
 
     print(f'{accessing_user_id} {from_user_id} {folder_id}')
+    folder: Folder = await get_folder(from_user_id, folder_id)
     access_from_user_deleted = await util_access_delete_from_user_folder(accessing_user_id, from_user_id, folder_id)
     if access_from_user_deleted:
-        folder: Folder = await get_folder(from_user_id, folder_id)
         user_from_access_deleted = await h_a.delete_user_from_folder_access(accessing_user_id, folder)
     else:
         user_from_access_deleted = False
     if access_from_user_deleted and user_from_access_deleted:
-        user_name = await get_user_info(user.get('user_id', None))
+        user_name = await get_user_info(accessing_user_id)
         message_text = f"Доступ к папке {smile_folder} {folder_name} приостановлен для пользователя {user_name}"
+        from_user_name = await get_user_info(str(from_user_id))
+        folder_full_name = await folder.get_full_name()
+        accessing_user_message_text = (f"Пользователь {from_user_name} приостановил для вас доступ к его папке "
+                                       f"{folder_full_name}")
+        await h_a.sent_message_to_accessing_user(accessing_user_id, accessing_user_message_text)
     else:
         message_text = "Что то пошло не так."
     dialog_manager.current_context().dialog_data["message_text"] = message_text

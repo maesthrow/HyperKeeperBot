@@ -158,14 +158,17 @@ async def access_folder_handler(call: CallbackQuery, state: FSMContext, dialog_m
         show_mode=ShowMode.EDIT,
         data={"message_text": from_user_message_text}
     )
+    await sent_message_to_accessing_user(accessing_user_id, accessing_user_message_text)
 
+
+async def sent_message_to_accessing_user(accessing_user_id, message_text):
     inline_markup = get_simple_inline_markup('✔️ OK')
     await bot.send_message(
-            chat_id=accessing_user_id,
-            text=accessing_user_message_text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=inline_markup
-        )
+        chat_id=accessing_user_id,
+        text=message_text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=inline_markup
+    )
 
 
 async def get_texts_access_folder_confirm_ok(accessing_user_id, from_user_id, folder_id, access_type: AccessType):
