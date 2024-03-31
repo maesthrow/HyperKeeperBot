@@ -17,7 +17,8 @@ from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
 from dialogs.folder_control_dialog import dialog_folder_control_main_menu
 from handlers import states
 from handlers.filters import NewItemValidateFilter, FromUserChatConfirmMessageFilter
-from handlers.handlers_folder import show_all_folders, show_folders
+from handlers.handlers_folder import show_all_folders, show_folders, back_to_up_level_folder_button, \
+    up_to_root_level_folder_button
 from handlers.handlers_item_add_mode import add_files_to_message_handler
 from handlers.handlers_read_voice import read_voice_offer
 from handlers.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
@@ -142,7 +143,8 @@ async def search_item_handler(message: aiogram.types.Message):
 async def storage(message: Message, state: FSMContext):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         user_id = message.from_user.id
-        folder: Folder = await get_folder(user_id)
+        folder_id = await get_current_folder_id(user_id)
+        folder: Folder = await get_folder(user_id, folder_id)
         pin = folder.get_pin() if folder else None
         if pin:
             inline_markup = get_folder_pin_inline_markup(user_id, pin=pin)
@@ -153,11 +155,11 @@ async def storage(message: Message, state: FSMContext):
                 reply_markup=inline_markup
             )
         else:
-            future = executor.submit(functools.partial(show_storage, message, state))
+            future = executor.submit(functools.partial(show_storage, message, state, folder_id))
             result = await future.result(timeout=5)
 
 
-async def show_storage(message: Message, state: FSMContext):
+async def show_storage(message: Message, state: FSMContext, folder_id=ROOT_FOLDER_ID):
     await state.clear()
 
     user_id = message.from_user.id
@@ -171,16 +173,16 @@ async def show_storage(message: Message, state: FSMContext):
 
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
-        if movement_item_initial_folder_id != ROOT_FOLDER_ID:
+        if movement_item_initial_folder_id != folder_id:
             general_buttons.insert(0, [KeyboardButton(text="🔀 Переместить в текущую папку")])
     else:
         general_buttons = new_general_buttons_folder[:]
 
     markup = create_general_reply_markup(general_buttons)
 
-    current_folder_path_names = await get_folder_path_names(user_id)
+    current_folder_path_names = await get_folder_path_names(user_id, folder_id)
 
-    folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, ROOT_FOLDER_ID)
+    folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, folder_id)
 
     await bot.send_message(user_id, f"🗂️", reply_markup=markup)
     folders_message: Message
@@ -202,6 +204,14 @@ async def show_storage(message: Message, state: FSMContext):
         folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
 
+    if folder_id != ROOT_FOLDER_ID:
+        folders_inline_markup.inline_keyboard.append(
+            [
+                back_to_up_level_folder_button,
+                up_to_root_level_folder_button
+            ]
+        )
+
     print(f"len {len(folders_inline_markup.inline_keyboard)}\n{folders_inline_markup.inline_keyboard}")
 
     folders_message = await send_storage_with_items(
@@ -211,6 +221,7 @@ async def show_storage(message: Message, state: FSMContext):
         max_attempts=1
     )
     # await asyncio.sleep(0.3)
+    data['current_folder_id'] = folder_id
     data['folders_message'] = folders_message
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)

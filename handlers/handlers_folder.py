@@ -38,6 +38,7 @@ from utils.utils_parse_mode_converter import escape_markdown
 
 cancel_enter_folder_name_button = InlineKeyboardButton(text="Отмена", callback_data=f"cancel_enter_folder_name")
 back_to_up_level_folder_button = InlineKeyboardButton(text="↩️ Назад", callback_data="back_to_up_level_folder")
+up_to_root_level_folder_button = InlineKeyboardButton(text="⬆️ 🗂️ Хранилище", callback_data="up_to_root_level_folder") #⤴️
 
 router = Router()
 dp.include_router(router)
@@ -99,7 +100,12 @@ async def do_show_folders(user_id, current_folder_id=None, page_folder=None, pag
             folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup,
                                                                          items_inline_markup)
         if current_folder_id != ROOT_FOLDER_ID:
-            folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
+            folders_inline_markup.inline_keyboard.append(
+                [
+                    back_to_up_level_folder_button,
+                    up_to_root_level_folder_button
+                ]
+            )
 
     if await is_only_folders_mode_keyboard(user_id) and current_folder_page > 0:
         need_to_resend = True
@@ -155,7 +161,12 @@ async def show_all_folders(user_id, current_folder_id=None, need_resend=False):
 
     folders_inline_markup = await get_inline_markup_folders(user_id, current_folder_id, current_folder_page)
     if current_folder_id != ROOT_FOLDER_ID:
-        folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
+        folders_inline_markup.inline_keyboard.append(
+            [
+                back_to_up_level_folder_button,
+                up_to_root_level_folder_button
+            ]
+        )
 
     if not await is_only_folders_mode_keyboard(user_id):
         need_resend = True
@@ -228,7 +239,15 @@ async def back_to_folders(callback_query: CallbackQuery):
     user_id = callback_query.from_user.id
     folder_id = await get_current_folder_id(user_id)
     back_to_folder_id = get_parent_folder_id(folder_id)
+    print(f'test {folder_id} {back_to_folder_id}')
     await show_folders(user_id, back_to_folder_id)
+    await callback_query.answer()
+
+
+@router.callback_query(lambda callback_query: callback_query.data == 'up_to_root_level_folder')
+async def up_to_root_folder(callback_query: CallbackQuery):
+    user_id = callback_query.from_user.id
+    await show_folders(user_id, ROOT_FOLDER_ID)
     await callback_query.answer()
 
 
@@ -501,7 +520,12 @@ async def go_to_page_folders(call: CallbackQuery):
                 if 'item' in row[-1].callback_data:  # and 'page_items' not in button.callback_data):
                     folders_inline_markup.inline_keyboard.append(row)
         if current_folder_id != ROOT_FOLDER_ID:
-            folders_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
+            folders_inline_markup.inline_keyboard.append(
+                [
+                    back_to_up_level_folder_button,
+                    up_to_root_level_folder_button
+                ]
+            )
 
         folders_message = await folders_message.edit_text(
             folders_message.text,
@@ -542,7 +566,12 @@ async def go_to_page_items(call: CallbackQuery):
         for row in items_inline_markup.inline_keyboard:
             new_inline_markup.inline_keyboard.append(row)
         if current_folder_id != ROOT_FOLDER_ID:
-            new_inline_markup.inline_keyboard.append([back_to_up_level_folder_button])
+            new_inline_markup.inline_keyboard.append(
+                [
+                    back_to_up_level_folder_button,
+                    up_to_root_level_folder_button
+                ]
+            )
 
         folders_message = await folders_message.edit_text(
             folders_message.text,
