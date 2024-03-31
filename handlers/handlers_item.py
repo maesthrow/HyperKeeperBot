@@ -184,7 +184,7 @@ async def cancel_add_mode_on_new_item(message: Message, state: FSMContext):
     add_item_messages.append(
         await bot.send_message(
             chat_id=message.chat.id,
-            text="Напишите заголовок или выберите действие на клавиатуре:",
+            text="<i>Напишите заголовок или выберите действие на клавиатуре:</i>",
             reply_markup=markup
         )
     )
@@ -205,7 +205,7 @@ async def add_to_new_item_handler(message: Message, state: FSMContext):
     markup = create_general_reply_markup(general_add_to_new_item_mode_buttons)
     await bot.send_message(
         chat_id=message.chat.id,
-        text="Отправьте в сообщении то, чем хотите дополнить новую запись:",
+        text="<i>Отправьте в сообщении то, чем хотите дополнить новую запись:</i>",
         reply_markup=markup
     )
     await state.update_data(file_messages=[], text_messages=[])

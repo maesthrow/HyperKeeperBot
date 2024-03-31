@@ -8,7 +8,7 @@ from handlers.dialog.folder_control_handler import pin_code_handler, access_menu
     delete_all_items_handler, rename_folder_handler, delete_folder_handler, search_in_folder_handler, \
     close_menu_handler, access_delete_all_items_handler, info_message_ok_handler, cancel_delete_handler, \
     access_delete_handler, access_choose_users_handler, access_user_expand_handler, access_user_decrease_handler, \
-    access_user_stop_handler
+    access_user_stop_handler, info_message_access_user_selected_handler
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 
@@ -137,12 +137,17 @@ def folder_control_delete() -> widgets:
 
 
 def folder_control_info_message() -> widgets:
-    keyboard = [Row(Button(Const("OK"), id="info_ok", on_click=info_message_ok_handler))]
+    keyboard = [Row(Button(Const("Ok"), id="info_ok", on_click=info_message_ok_handler))]
+    return keyboard
+
+
+def folder_control_info_message_access_user_selected() -> widgets:
+    keyboard = [Row(Button(Const("Ok"), id="info_ok", on_click=info_message_access_user_selected_handler))]
     return keyboard
 
 
 def folder_control_after_delete_message() -> widgets:
-    keyboard = [Row(Button(Const("OK"), id="after_delete_ok", on_click=close_menu_handler))]
+    keyboard = [Row(Button(Const("Ok"), id="after_delete_ok", on_click=close_menu_handler))]
     return keyboard
 
 

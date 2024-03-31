@@ -10,6 +10,8 @@ from handlers.states import FolderControlStates
 from load_all import bot
 from models.folder_model import Folder
 from utils.utils_ import smile_folder
+from utils.utils_access import get_user_info
+from utils.utils_accesses_folders_db import util_access_delete_from_user_folder
 from utils.utils_button_manager import get_pin_control_inline_markup, get_folder_pin_inline_markup
 from utils.utils_data import get_current_folder_id
 from utils.utils_folders import invalid_chars, get_parent_folder_id
@@ -188,11 +190,12 @@ async def access_choose_users_handler(callback: CallbackQuery, button: Button, d
 
 async def access_user_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, user_id):
     data = dialog_manager.current_context().dialog_data
+    folder_id = data.get('folder_id', None)
     folder_name = data.get('folder_name', None)
     users = data.get('users')
     user = next(filter(lambda _user: _user['user_id'] == user_id, users), None)
     dialog_manager.current_context().dialog_data = {
-        'user': user, 'folder_name': folder_name
+        'user': user, 'folder_name': folder_name, 'folder_id': folder_id
     }
     await dialog_manager.switch_to(FolderControlStates.AccessUserSelected)
 
@@ -206,7 +209,31 @@ async def access_user_decrease_handler(callback: CallbackQuery, button: Button, 
 
 
 async def access_user_stop_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    pass
+    data = dialog_manager.current_context().dialog_data
+    user = data.get('user')
+    accessing_user_id = user.get('user_id')
+    folder_id = data.get('folder_id')
+    folder_name = data.get('folder_name')
+    from_user_id = dialog_manager.event.from_user.id
+
+    print(f'{accessing_user_id} {from_user_id} {folder_id}')
+    access_from_user_deleted = await util_access_delete_from_user_folder(accessing_user_id, from_user_id, folder_id)
+    if access_from_user_deleted:
+        folder: Folder = await get_folder(from_user_id, folder_id)
+        user_from_access_deleted = await h_a.delete_user_from_folder_access(accessing_user_id, folder)
+    else:
+        user_from_access_deleted = False
+    if access_from_user_deleted and user_from_access_deleted:
+        user_name = await get_user_info(user.get('user_id', None))
+        message_text = f"Доступ к папке {smile_folder} {folder_name} приостановлен для пользователя {user_name}"
+    else:
+        message_text = "Что то пошло не так."
+    dialog_manager.current_context().dialog_data["message_text"] = message_text
+    await dialog_manager.switch_to(FolderControlStates.InfoMessageAccessUserSelected)
+
+
+async def info_message_access_user_selected_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    await dialog_manager.switch_to(FolderControlStates.AccessMenu)
 
 
 async def on_back_click_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):

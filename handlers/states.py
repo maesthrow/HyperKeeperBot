@@ -39,4 +39,6 @@ class FolderControlStates(StatesGroup):
     AccessConfirm = State()
     AccessChooseUsers = State()
     AccessUserSelected = State()
+    InfoMessageAccessUserSelected = State()
+
 

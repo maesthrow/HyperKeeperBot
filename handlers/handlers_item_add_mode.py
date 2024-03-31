@@ -56,7 +56,7 @@ async def add_to_item_handler(call: CallbackQuery, state: FSMContext):
     markup = create_general_reply_markup(general_buttons_add_mode)
     await bot.send_message(
         chat_id=call.from_user.id,
-        text="Отправьте в сообщении то, чем хотите дополнить запись:",
+        text="<i>Отправьте в сообщении то, чем хотите дополнить запись:</i>",
         reply_markup=markup
     )
     await state.set_state(states.ItemState.AddTo)
@@ -89,7 +89,7 @@ async def message_on_choose_type_handler(message: Message, state: FSMContext):
 
     info_message = await bot.send_message(
         chat_id=user_id,
-        text='❗ Выберите один из вариантов ⬆️\n\nИли отмените дополнение записи ⬇️',
+        text='❗ <i>Выберите один из вариантов ⬆️\n\nИли отмените дополнение записи ⬇️</i>',
     )
     await asyncio.sleep(2.7)
     await bot.delete_message(user_id, info_message.message_id)

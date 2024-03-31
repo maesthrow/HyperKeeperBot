@@ -223,52 +223,57 @@ async def get_texts_access_folder_confirm_reject(accessing_user_id, from_user_id
     return message_text, accessing_user_message_text
 
 
-async def get_access_confirm_ok_messages(from_user_id):
-    data = await get_data(from_user_id)
-    access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
-    if access_folder_confirm:
-        from_user_message_text, accessing_user_message_text = await get_texts_access_folder_confirm_ok(
-            access_folder_confirm.user_id,
-            access_folder_confirm.from_user_id,
-            access_folder_confirm.folder_id,
-            access_folder_confirm.get_access_type()
-        )
-        return from_user_message_text, accessing_user_message_text
-    return None
-
-
-async def get_access_confirm_reject_messages(from_user_id):
-    data = await get_data(from_user_id)
-    access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
-    if access_folder_confirm:
-        from_user_message_text, accessing_user_message_text = await get_texts_access_folder_confirm_reject(
-            access_folder_confirm.user_id,
-            access_folder_confirm.from_user_id,
-            access_folder_confirm.folder_id,
-            access_folder_confirm.get_access_type()
-        )
-        return from_user_message_text, accessing_user_message_text
-    return None
-
-
-@router.callback_query(AccessConfirmOkCallback.filter())
-async def access_confirm_ok_handler(call: CallbackQuery, state: FSMContext):
-    user_id = call.from_user.id
-    from_user_message_text, accessing_user_message_text = await get_access_confirm_ok_messages(user_id)
-    await call.answer()
-    await MessageBox.show(user_id, from_user_message_text, edit_message_id=call.message.message_id)
-
-
-@router.callback_query(AccessConfirmRejectCallback.filter())
-async def access_confirm_reject_handler(call: CallbackQuery, state: FSMContext):
-    user_id = call.from_user.id
-    from_user_message_text, accessing_user_message_text = await get_access_confirm_reject_messages(user_id)
-    await call.answer()
-    await MessageBox.show(user_id, from_user_message_text, edit_message_id=call.message.message_id)
+# async def get_access_confirm_ok_messages(from_user_id):
+#     data = await get_data(from_user_id)
+#     access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
+#     if access_folder_confirm:
+#         from_user_message_text, accessing_user_message_text = await get_texts_access_folder_confirm_ok(
+#             access_folder_confirm.user_id,
+#             access_folder_confirm.from_user_id,
+#             access_folder_confirm.folder_id,
+#             access_folder_confirm.get_access_type()
+#         )
+#         return from_user_message_text, accessing_user_message_text
+#     return None
+#
+#
+# async def get_access_confirm_reject_messages(from_user_id):
+#     data = await get_data(from_user_id)
+#     access_folder_confirm: AccessFolder = data.get('access_folder_confirm', None)
+#     if access_folder_confirm:
+#         from_user_message_text, accessing_user_message_text = await get_texts_access_folder_confirm_reject(
+#             access_folder_confirm.user_id,
+#             access_folder_confirm.from_user_id,
+#             access_folder_confirm.folder_id,
+#             access_folder_confirm.get_access_type()
+#         )
+#         return from_user_message_text, accessing_user_message_text
+#     return None
+#
+#
+# @router.callback_query(AccessConfirmOkCallback.filter())
+# async def access_confirm_ok_handler(call: CallbackQuery, state: FSMContext):
+#     user_id = call.from_user.id
+#     from_user_message_text, accessing_user_message_text = await get_access_confirm_ok_messages(user_id)
+#     await call.answer()
+#     await MessageBox.show(user_id, from_user_message_text, edit_message_id=call.message.message_id)
+#
+#
+# @router.callback_query(AccessConfirmRejectCallback.filter())
+# async def access_confirm_reject_handler(call: CallbackQuery, state: FSMContext):
+#     user_id = call.from_user.id
+#     from_user_message_text, accessing_user_message_text = await get_access_confirm_reject_messages(user_id)
+#     await call.answer()
+#     await MessageBox.show(user_id, from_user_message_text, edit_message_id=call.message.message_id)
 
 
 async def add_user_to_folder_access(user_id, folder: Folder, access_type: AccessType) -> bool:
     folder.add_access_user(user_id, access_type)
+    return await edit_folder(folder.author_user_id, folder)
+
+
+async def delete_user_from_folder_access(user_id, folder: Folder) -> bool:
+    folder.delete_access_user(user_id)
     return await edit_folder(folder.author_user_id, folder)
 
 

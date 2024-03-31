@@ -143,6 +143,7 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
                 )
 
     data['users'] = users_data
+    data['folder_id'] = folder_id
     data['folder_name'] = folder.name
     data['folder_has_access_users'] = folder.has_access_users()
     data['switch_inline_query'] = switch_inline_query
@@ -155,15 +156,18 @@ async def get_user_selected_data(dialog_manager: DialogManager, **kwargs):
     data = {}
     dialog_data = dialog_manager.current_context().dialog_data
     user = dialog_data.get('user', None)
-    data['user'] = user
     user_name = await get_user_info(user.get('user_id', None))
     folder_name = dialog_data.get('folder_name', '')
+
+    dialog_manager.current_context().dialog_data = dialog_data
+
     access_srt = get_access_str_by_type(AccessType(user.get('access_type', '')))
     message_text = f'👤 {user_name}' \
                    f'\n\nИмеет доступ {access_srt} папки:' \
                    f'\n\n{smile_folder} {folder_name}'
                  # f'\n\n<i>Выберите действие:</i>')
 
+    data['user'] = user
     data['message_text'] = message_text
     return data
 
@@ -266,6 +270,13 @@ folder_control_access_user_selected_window = Window(
     getter=get_user_selected_data
 )
 
+folder_control_info_message_access_user_selected_window = Window(
+    Format("{message_text}"),
+    *keyboards.folder_control_info_message_access_user_selected(),
+    state=FolderControlStates.InfoMessageAccessUserSelected,
+    getter=get_message_text
+)
+
 dialog_folder_control_main_menu = Dialog(
     folder_control_main_window,
     folder_control_info_message_window,
@@ -277,4 +288,5 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_access_menu_window,
     folder_control_access_confirm_window,
     folder_control_access_user_selected_window,
+    folder_control_info_message_access_user_selected_window,
 )

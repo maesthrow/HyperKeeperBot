@@ -93,6 +93,11 @@ class Folder:
             "access_type": access_type.value
         }
 
+    def delete_access_user(self, user_id):
+        user_id = str(user_id)
+        users = self.get_access_users()
+        users.pop(user_id)
+
     def get_access_tokens(self) -> list:
         tokens = list()
         if self.access:
