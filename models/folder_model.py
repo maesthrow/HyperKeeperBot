@@ -105,6 +105,9 @@ class Folder:
         users = self.get_access_users()
         users.pop(user_id)
 
+    def delete_access_all_users(self):
+        self.access['users'] = {}
+
     def get_access_tokens(self) -> list:
         tokens = list()
         if self.access:

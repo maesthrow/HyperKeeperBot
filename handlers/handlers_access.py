@@ -285,6 +285,11 @@ async def delete_user_from_folder_access(user_id, folder: Folder) -> bool:
     return await edit_folder(folder.author_user_id, folder)
 
 
+async def delete_all_users_from_folder_access(folder: Folder) -> bool:
+    folder.delete_access_all_users()
+    return await edit_folder(folder.author_user_id, folder)
+
+
 
 
 

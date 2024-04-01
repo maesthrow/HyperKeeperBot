@@ -250,6 +250,23 @@ async def edit_access_for_user(dialog_manager: DialogManager, access_type: Acces
     await dialog_manager.switch_to(FolderControlStates.InfoMessageAccessUserSelected)
 
 
+async def get_result_full_delete_access(from_user_id, accessing_users: list, folder):
+    result_accessing_users = []
+    for user in accessing_users:
+        user_id = user.get('user_id', None)
+        access_from_user_changed = await util_access_delete_from_user_folder(user_id, from_user_id, folder.folder_id)
+        if access_from_user_changed:
+            result_accessing_users.append(user)
+
+    if len(result_accessing_users) == len(accessing_users):
+        user_from_access_changed = await h_a.delete_all_users_from_folder_access(folder)
+    else:
+        for user in result_accessing_users:
+            user_id = user.get('user_id', None)
+            await h_a.delete_user_from_folder_access(user_id, folder)
+    return result_accessing_users
+
+
 async def get_result_delete_access(from_user_id, accessing_user_id, folder):
     access_from_user_changed = await util_access_delete_from_user_folder(
         accessing_user_id, from_user_id, folder.folder_id
@@ -283,7 +300,13 @@ async def stop_all_users_access_handler(callback: CallbackQuery, button: Button,
 
 
 async def confirm_stop_all_users_access_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    pass
+    from_user_id = dialog_manager.event.from_user.id
+    data = dialog_manager.current_context().dialog_data
+    users = data.get('users')
+    folder_id = data.get('folder_id')
+    folder: Folder = await get_folder(from_user_id, folder_id)
+    result_accessing_users_ids = await get_result_full_delete_access(from_user_id, users, folder)
+    print(f'result_accessing_users {result_accessing_users_ids}')
 
 
 async def cancel_stop_all_users_access_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
