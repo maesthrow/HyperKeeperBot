@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
@@ -305,8 +307,24 @@ async def confirm_stop_all_users_access_handler(callback: CallbackQuery, button:
     users = data.get('users')
     folder_id = data.get('folder_id')
     folder: Folder = await get_folder(from_user_id, folder_id)
-    result_accessing_users_ids = await get_result_full_delete_access(from_user_id, users, folder)
-    print(f'result_accessing_users {result_accessing_users_ids}')
+    result_accessing_users = await get_result_full_delete_access(from_user_id, users, folder)
+
+    from_user_name = await get_user_info(str(from_user_id))
+    folder_full_name = await folder.get_full_name()
+    tasks = []
+    for user in result_accessing_users:
+        accessing_user_message_text = f'Пользователь {from_user_name} приостановил для вас доступ к его папке:'\
+                                      f'\n\n{folder_full_name}'
+        tasks.append(h_a.sent_message_to_accessing_user(user['user_id'], accessing_user_message_text))
+    await asyncio.gather(*tasks)
+
+    if len(result_accessing_users) == len(users):
+        message_text = f'Доступ к папке {smile_folder} {folder.name}\nприостановлен для всех пользователей.'
+    else:
+        message_text = (f'Что то пошло не так при попытке приостановить доступ к папке '
+                        f'{smile_folder} {folder.name} для некоторых пользователей.\nПопробуйте повторить еще раз.')
+    dialog_manager.current_context().dialog_data["message_text"] = message_text
+    await dialog_manager.switch_to(FolderControlStates.AfterStopAllUsersAccess)
 
 
 async def cancel_stop_all_users_access_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):

@@ -40,5 +40,6 @@ class FolderControlStates(StatesGroup):
     AccessUserSelected = State()
     InfoMessageAccessUserSelected = State()
     StopAllUsersAccess = State()
+    AfterStopAllUsersAccess = State()
 
 

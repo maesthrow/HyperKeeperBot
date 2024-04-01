@@ -295,6 +295,13 @@ folder_control_stop_all_users_access_window = Window(
     getter=get_stop_all_users_access_data
 )
 
+folder_control_after_stop_all_users_access_window = Window(
+    Format("{message_text}"),
+    Button(id='after_stop_access', text=Const('Ok'), on_click=access_confirm_message_handler),
+    state=FolderControlStates.AfterStopAllUsersAccess,
+    getter=get_message_text
+)
+
 dialog_folder_control_main_menu = Dialog(
     folder_control_main_window,
     folder_control_info_message_window,
@@ -308,4 +315,5 @@ dialog_folder_control_main_menu = Dialog(
     folder_control_access_user_selected_window,
     folder_control_info_message_access_user_selected_window,
     folder_control_stop_all_users_access_window,
+    folder_control_after_stop_all_users_access_window
 )
