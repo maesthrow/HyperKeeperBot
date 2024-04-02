@@ -10,11 +10,15 @@ from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram_dialog import DialogManager
+from aiogram_dialog.setup import DialogRegistry, setup_dialogs
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
+from dialogs.folder_control_dialog import dialog_folder_control_main_menu
 from handlers import states
-from handlers.filters import NewItemValidateFilter
-from handlers.handlers_folder import show_all_folders, show_folders
+from handlers.filters import NewItemValidateFilter, FromUserChatConfirmMessageFilter
+from handlers.handlers_folder import show_all_folders, show_folders, back_to_up_level_folder_button, \
+    up_to_root_level_folder_button, finalized_inline_markup
 from handlers.handlers_item_add_mode import add_files_to_message_handler
 from handlers.handlers_read_voice import read_voice_offer
 from handlers.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
@@ -44,23 +48,34 @@ import handlers.handlers_item
 
 router = Router()
 dp.include_router(router)
+dp.include_router(dialog_folder_control_main_menu)
+setup_dialogs(dp)
 
 
 @router.message(CommandStart())
-async def start(message: Message, state: FSMContext):
+async def start(message: Message, dialog_manager: DialogManager, state: FSMContext):
+    print(f'start {dialog_manager}')
     tg_user = message.from_user
     url_data = from_url_data(message.text).split()
-    await start_init(tg_user, message, state, url_data)
+    await start_init(tg_user, message, state, url_data, dialog_manager)
 
 
-async def start_init(tg_user, message, state, url_data: List[str]):
+# @router.message(FromUserChatConfirmMessageFilter())
+# async def from_user_chat_message(message: Message, dialog_manager: DialogManager, state: FSMContext):
+#     current_state = await state.get_state()
+#     print(f'current_state = {current_state}')
+#     if current_state == states.FolderControlStates.AccessMenu.state:
+#         await dialog_manager.switch_to(states.FolderControlStates.MainMenu)
+
+
+async def start_init(tg_user, message, state, url_data: List[str], dialog_manager: DialogManager):
     if len(url_data) == 1:
         await start_handler(state, tg_user)
     else:
         url_data_args = url_data[1].split('_')
         print(f'url_data_args = {url_data_args}')
         if url_data_args[0].startswith('ap'):
-            await start_url_data_access_provide_handler(message, tg_user)
+            await start_url_data_access_provide_handler(message, tg_user, state, dialog_manager)
         elif len(url_data_args) == 2:
             await start_url_data_folder_handler(message, tg_user)
         elif 2 < len(url_data_args) <= 4:
@@ -128,7 +143,8 @@ async def search_item_handler(message: aiogram.types.Message):
 async def storage(message: Message, state: FSMContext):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         user_id = message.from_user.id
-        folder: Folder = await get_folder(user_id)
+        folder_id = await get_current_folder_id(user_id)
+        folder: Folder = await get_folder(user_id, folder_id)
         pin = folder.get_pin() if folder else None
         if pin:
             inline_markup = get_folder_pin_inline_markup(user_id, pin=pin)
@@ -139,11 +155,11 @@ async def storage(message: Message, state: FSMContext):
                 reply_markup=inline_markup
             )
         else:
-            future = executor.submit(functools.partial(show_storage, message, state))
+            future = executor.submit(functools.partial(show_storage, message, state, folder_id))
             result = await future.result(timeout=5)
 
 
-async def show_storage(message: Message, state: FSMContext):
+async def show_storage(message: Message, state: FSMContext, folder_id=ROOT_FOLDER_ID):
     await state.clear()
 
     user_id = message.from_user.id
@@ -157,16 +173,16 @@ async def show_storage(message: Message, state: FSMContext):
 
     if movement_item_id:
         general_buttons = general_buttons_movement_item[:]
-        if movement_item_initial_folder_id != ROOT_FOLDER_ID:
+        if movement_item_initial_folder_id != folder_id:
             general_buttons.insert(0, [KeyboardButton(text="🔀 Переместить в текущую папку")])
     else:
         general_buttons = new_general_buttons_folder[:]
 
     markup = create_general_reply_markup(general_buttons)
 
-    current_folder_path_names = await get_folder_path_names(user_id)
+    current_folder_path_names = await get_folder_path_names(user_id, folder_id)
 
-    folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, ROOT_FOLDER_ID)
+    folders_inline_markup, items_inline_markup = await get_folders_and_items(user_id, folder_id)
 
     await bot.send_message(user_id, f"🗂️", reply_markup=markup)
     folders_message: Message
@@ -187,6 +203,7 @@ async def show_storage(message: Message, state: FSMContext):
     if items_inline_markup.inline_keyboard:
         folders_inline_markup = get_folders_with_items_inline_markup(folders_inline_markup, items_inline_markup)
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
+    folders_inline_markup = finalized_inline_markup(folders_inline_markup, folder_id)
 
     print(f"len {len(folders_inline_markup.inline_keyboard)}\n{folders_inline_markup.inline_keyboard}")
 
@@ -197,6 +214,7 @@ async def show_storage(message: Message, state: FSMContext):
         max_attempts=1
     )
     # await asyncio.sleep(0.3)
+    data['current_folder_id'] = folder_id
     data['folders_message'] = folders_message
     data['current_keyboard'] = markup
     data['page_folders'] = str(1)
@@ -263,6 +281,9 @@ async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
     ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
 ))
 async def media_files_handler(message: Message, state: FSMContext):
+    if message.content_type == 'audio':
+        print(f'audio {message.audio}')
+
     IS_PREMIUM = True
     if (IS_PREMIUM and
             (message.content_type == 'voice' or message.content_type == 'video_note')):
@@ -285,5 +306,7 @@ async def media_files_handler(message: Message, state: FSMContext):
 
 
 @router.callback_query(MessageBoxCallback.filter())
-async def message_box_show_handler(call: CallbackQuery):
+async def message_box_show_handler(call: CallbackQuery, state: FSMContext):
     await bot.delete_message(call.from_user.id, call.message.message_id)
+    await state.set_state(state=None)
+

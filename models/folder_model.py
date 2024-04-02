@@ -93,6 +93,21 @@ class Folder:
             "access_type": access_type.value
         }
 
+    def edit_access_user(self, user_id, access_type: AccessType):
+        user_id = str(user_id)
+        users = self.get_access_users()
+        users[user_id] = {
+            "access_type": access_type.value
+        }
+
+    def delete_access_user(self, user_id):
+        user_id = str(user_id)
+        users = self.get_access_users()
+        users.pop(user_id)
+
+    def delete_access_all_users(self):
+        self.access['users'] = {}
+
     def get_access_tokens(self) -> list:
         tokens = list()
         if self.access:

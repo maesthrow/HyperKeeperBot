@@ -5,12 +5,14 @@ from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram_dialog import DialogManager
 
 from callbacks.callbackdata import EditFolderCallback, StatisticFolderCallback, MessageBoxCallback, \
     SearchInFolderCallback, PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, \
     NewPinCodeButtonCallback, EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback
 from handlers import states
 from handlers.handlers_folder import show_folders
+from handlers.states import FolderControlStates
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
@@ -169,7 +171,7 @@ async def search_in_folder(user_id, state):
 
 
 @router.callback_query(PinFolderCallback.filter())
-async def pin_folder_handler(call: CallbackQuery, state: FSMContext):
+async def pin_folder_handler(call: CallbackQuery, state: FSMContext = None):
     user_id = call.from_user.id
     call_data = PinFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
@@ -408,12 +410,18 @@ async def show_enter_pin_result(call, user_id, inline_markup, pin_code_button, p
 
 
 @router.callback_query(PinKeyboardButtonCallback.filter())
-async def button_pin_folder_handler(call: CallbackQuery):
+async def button_pin_folder_handler(call: CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
     user_id = call.from_user.id
     call_data = PinKeyboardButtonCallback.unpack(call.data)
     action = call_data.action
     if action == 'close':
-        await bot.delete_message(user_id, call.message.message_id)
+        # print(f'state {state}')
+        # print(f'state.get_state() = {state.get_state()}')
+        if await state.get_state() == states.FolderState.EnterPin.state:
+            await bot.delete_message(user_id, call.message.message_id)
+            await state.set_state(state=None)
+        else:
+            await dialog_manager.start(FolderControlStates.MainMenu)
     elif action == 'backspace':
         inline_markup = call.message.reply_markup
         pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]
@@ -432,9 +440,9 @@ async def button_pin_folder_handler(call: CallbackQuery):
 
         pin_code_button.callback_data = pin_code_data.pack()
         if pin_code_data.visible:
-            numbers = numbers_ico.values()
+            pin_numbers = numbers_ico.values()
             text_reversed = pin_code_button.text[::-1]
-            pattern_reversed = r'|'.join(map(lambda x: re.escape(x[::-1]), numbers))
+            pattern_reversed = r'|'.join(map(lambda x: re.escape(x[::-1]), pin_numbers))
             text_reversed_modified = re.sub(pattern_reversed, '❔'[::-1], text_reversed, 1)
             pin_code_button.text = text_reversed_modified[::-1]
         else:
@@ -511,8 +519,10 @@ async def access_folder_handler(call: CallbackQuery):
     call_data = AccessFolderCallback.unpack(call.data)
     folder_id = call_data.folder_id
     folder: Folder = await get_folder(user_id, folder_id)
-    users_access_info = await get_access_users_info(folder) or 'Ничего не найдено.'
-    users_access_info = escape_markdown(users_access_info)
+
+    users_access_info_str, users_access_info_entities = await get_access_users_info(folder)
+    users_access_info = users_access_info_str or 'Ничего не найдено.'
+    users_access_info = escape_markdown(users_access_info_str)
     folder_name = escape_markdown(f'{smile_folder} {folder.name}')
     message_text = (f'🔐 *Управление доступом к папке*'
                     f'\n\n{folder_name}'

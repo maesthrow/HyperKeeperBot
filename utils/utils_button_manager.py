@@ -140,7 +140,7 @@ item_inline_buttons = [
     # text_pages_buttons,
     [
         InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
-        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+        InlineKeyboardButton(text="✖️ Закрыть", callback_data="close_item"),
 
     ],
     [
@@ -184,7 +184,7 @@ item_inline_buttons_with_files = [
     # text_pages_buttons,
     [
         InlineKeyboardButton(text="Поделиться", switch_inline_query="none"),
-        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_item"),
+        InlineKeyboardButton(text="✖️ Закрыть", callback_data="close_item"),
     ],
     [
         InlineKeyboardButton(text="❇️", callback_data="add_to_item"),
@@ -213,14 +213,14 @@ item_edit_buttons = [
 save_file_buttons = [
     [
         InlineKeyboardButton(text="💾 Сохранить", callback_data="save_file"),
-        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_entity"),
+        InlineKeyboardButton(text="✖️ Закрыть", callback_data="close_entity"),
     ]
 ]
 
 save_page_buttons = [
     [
         InlineKeyboardButton(text="💾 Сохранить", callback_data="save_text_page"),
-        InlineKeyboardButton(text="❌ Закрыть", callback_data="close_entity"),
+        InlineKeyboardButton(text="✖️ Закрыть", callback_data="close_entity"),
     ]
 ]
 
@@ -622,15 +622,13 @@ def get_access_confirm_inline_markup(accessing_user_id: str, folder_id: str, acc
     builder = InlineKeyboardBuilder()
     builder.button(
         text='✔️ Подтвердить',
-        callback_data=AccessConfirmCallback(
-            acc_user_id=accessing_user_id, folder_id=folder_id, type=access_type.value, res=True
-        ).pack()
+        callback_data=AccessConfirmCallback(acc_user_id=accessing_user_id, folder_id=folder_id, type=access_type.value, res=True).pack()
+        #callback_data='access_confirm_ok'
     )
     builder.button(
         text='✖️ Отклонить',
-        callback_data=AccessConfirmCallback(
-            acc_user_id=accessing_user_id, folder_id=folder_id, type=access_type.value, res=False
-        ).pack()
+        callback_data=AccessConfirmCallback(acc_user_id=accessing_user_id, folder_id=folder_id, type=access_type.value, res=False).pack()
+        #callback_data='access_confirm_reject'
     )
     builder.adjust(2)
     return builder.as_markup()

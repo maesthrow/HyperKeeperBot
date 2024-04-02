@@ -73,8 +73,10 @@ async def set_to_user_collection(user_id, collection_name: str, collection=None)
 
 
 async def get_accesses_collection(user_id):
+    user_id = str(user_id)
     data = await get_data(user_id)
     accesses_collection = data.get('accesses_collection', None)
+    print(f'get_accesses_collection {accesses_collection}')
     if not accesses_collection:
         accesses_collection = await get_user_accesses_collection(user_id)
         await set_accesses_collection(user_id, accesses_collection)
@@ -83,6 +85,7 @@ async def get_accesses_collection(user_id):
 
 
 async def set_accesses_collection(user_id, accesses_collection=None):
+    user_id = str(user_id)
     if not accesses_collection:
         accesses_collection = await get_user_accesses_collection(user_id)
 
@@ -92,6 +95,7 @@ async def set_accesses_collection(user_id, accesses_collection=None):
 
 
 async def get_accesses_from_user_collection(user_id, from_user_id):
+    user_id = str(user_id)
     accesses_collection = await get_accesses_collection(user_id)
     print(f'accesses_collection {accesses_collection}')
     if accesses_collection:
@@ -102,10 +106,12 @@ async def get_accesses_from_user_collection(user_id, from_user_id):
 
 
 async def set_accesses_from_user_collection(user_id, from_user_id, from_user_collection=None):
+    user_id = str(user_id)
     accesses_collection = await get_accesses_collection(user_id)
     if not from_user_collection:
         from_user_collection = {}
     accesses_collection[from_user_id] = from_user_collection
+    print(f'test {user_id} accesses_collection {accesses_collection}')
     await set_accesses_collection(user_id, accesses_collection)
     return accesses_collection[from_user_id]
 

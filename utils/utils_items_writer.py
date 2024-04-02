@@ -27,6 +27,9 @@ async def add_item_to_folder(user_id, folder_id, item: Item):
     if target_folder:
         # Преобразуем объект Item в словарь перед добавлением
         item_dict = item.to_dict()
+        print(f'item_dict = {item_dict}')
+        if not item_dict:
+            return None
 
         max_child_number = max(
             [int(child_item_id.split('/')[-1]) for child_item_id in target_folder["items"].keys()] + [0])
@@ -35,10 +38,10 @@ async def add_item_to_folder(user_id, folder_id, item: Item):
         target_folder["items"][new_item_id] = item_dict
 
         # Обновляем данные пользователя
-        await set_user_folders_data(user_id, {"folders": folders_collection})
-        return new_item_id  # Успешно добавлено
-    else:
-        return None  # Папка не найдена
+        result = await set_user_folders_data(user_id, {"folders": folders_collection})
+        if result:
+            return new_item_id  # Успешно добавлена запись
+    return None  # Не удалось добавить запись
 
 
 async def delete_item(user_id, item_id):

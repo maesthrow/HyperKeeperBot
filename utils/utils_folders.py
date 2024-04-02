@@ -6,7 +6,7 @@ from utils.utils_statistic import util_get_items_count, util_get_items_deep_coun
 invalid_chars = r'/\:,.*?"<>|'
 
 
-def is_valid_folder_name(name):
+def is_valid_folder_name(name: str) -> bool:
     return all(char not in invalid_chars for char in name)
 
 

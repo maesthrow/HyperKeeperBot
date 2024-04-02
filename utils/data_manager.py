@@ -1,4 +1,5 @@
 from aiogram.fsm.storage.base import StorageKey
+
 from load_all import bot, dp
 
 
@@ -11,3 +12,4 @@ async def get_data(user_id):
 async def set_data(user_id, data):
     storage_key = StorageKey(bot.id, user_id, user_id)
     await dp.storage.update_data(storage_key, data)
+

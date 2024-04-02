@@ -80,7 +80,7 @@ async def save_text_to_new_item_and_set_title(
     item.add_text(texts, on_new_page=is_new_page)
 
     add_item_messages.append(
-        await bot.send_message(messages[0].chat.id, "Напишите заголовок или выберите действие на клавиатуре:")
+        await bot.send_message(messages[0].chat.id, "<i>Напишите заголовок или выберите действие на клавиатуре:</i>")
     )
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
@@ -106,7 +106,7 @@ async def files_to_message_handler(messages: List[Message], state: FSMContext):
     )
     await asyncio.sleep(0.5)
     add_item_messages.append(
-        await bot.send_message(messages[0].chat.id, "Добавьте заголовок или выберите действие на клавиатуре:")
+        await bot.send_message(messages[0].chat.id, "<i>Добавьте заголовок или выберите действие на клавиатуре:</i>")
     )
 
     for message in messages:
@@ -122,7 +122,6 @@ async def files_to_message_handler(messages: List[Message], state: FSMContext):
 
     await state.update_data(item=item, add_item_messages=add_item_messages)
     await state.set_state(states.ItemState.NewStepTitle)
-    print('await state.set_state(states.Item.NewStepTitle)')
 
 
 async def get_new_item_from_state_data(message: Message, state: FSMContext):
@@ -153,7 +152,7 @@ async def is_message_allowed_new_item(message: Message):
 
     dict_search_data = data.get('dict_search_data', None)
     if dict_search_data:
-        await message.reply('Завершите режим поиска 🔍 для добавления новой записи.')
+        await message.reply('Сначала завершите режим поиска 🔍, чтобы добавить новую запись')
         return False
 
     return True

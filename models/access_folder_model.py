@@ -16,6 +16,9 @@ class AccessFolder:
         self.access_type = access_type.value
         self.pin = pin
 
+    def get_access_type(self) -> AccessType:
+        return AccessType(self.access_type)
+
     def to_dict(self) -> dict:
         return {
             "access_type": self.access_type,
@@ -28,3 +31,4 @@ class AccessFolder:
             "access_type": access_type.value,
             "pin": pin
         }
+

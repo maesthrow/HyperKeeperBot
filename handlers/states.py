@@ -5,6 +5,7 @@ class FolderState(StatesGroup):
     NewName = State()
     EditName = State()
     Delete = State()
+    EnterPin = State()
 
 
 class ItemState(StatesGroup):
@@ -24,3 +25,21 @@ class ItemState(StatesGroup):
 
 class FileProcess(State):
     pass
+
+
+class FolderControlStates(StatesGroup):
+    MainMenu = State()
+    InfoMessage = State()
+    StatisticMenu = State()
+    DeleteAllItemsQuestion = State()
+    Rename = State()
+    Delete = State()
+    AfterDelete = State()
+    AccessMenu = State()
+    AccessConfirm = State()
+    AccessUserSelected = State()
+    InfoMessageAccessUserSelected = State()
+    StopAllUsersAccess = State()
+    AfterStopAllUsersAccess = State()
+
+

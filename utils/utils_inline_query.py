@@ -6,6 +6,7 @@ from aiogram.types import InlineQueryResult, InlineQueryResultDocument, InlineQu
     InlineQueryResultAudio, InlineQueryResultVoice, InlineQueryResultVideo, InlineQueryResultCachedSticker, Location, \
     InlineQueryResultLocation, Contact, InlineQueryResultContact
 
+from config import BOT_TOKEN
 from load_all import bot
 from utils.utils_files import dict_to_location, dict_to_contact
 from utils.utils_parse_mode_converter import escape_markdown, full_escape_markdown, clear_code_braces
@@ -31,7 +32,7 @@ async def get_inline_query_result(
         description = SearchFragmentator.get_search_file_caption_fragment(temp_caption, text_search)
     else:
         description = full_escape_markdown(temp_caption)
-    print(f'description = {description}')
+    #print(f'description = {description}')
     caption = escape_markdown(file_info['caption'])
 
     if file_type == 'document':
@@ -62,12 +63,17 @@ async def get_inline_query_result(
             reply_markup=inline_markup_media
         )
     elif file_type == 'audio':
-        file: InputMediaAudio = await bot.get_file(file_id)
+        try:
+            file: InputMediaAudio = await bot.get_file(file_id)
+            title = file.file_path
+        except:
+            title = file_info['fields']['title']
+
         result_id = get_result_id(file_type, file_id)
         result = InlineQueryResultAudio(
             id=result_id,
             audio_url=file_id,
-            title=file.file_path,
+            title=title,
             caption=caption,
             parse_mode=ParseMode.MARKDOWN_V2,
             reply_markup=inline_markup_media

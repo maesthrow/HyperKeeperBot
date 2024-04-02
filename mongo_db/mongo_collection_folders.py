@@ -60,13 +60,16 @@ async def get_user_folders_data(tg_user_id):
     return user_document
 
 
-async def set_user_folders_data(tg_user_id, data):
+async def set_user_folders_data(tg_user_id, data) -> bool:
     """Обновляет данные пользователя."""
     user_folders_collection = db["folders"]
     try:
         user_folders_collection.update_one({"_id": tg_user_id}, {"$set": data}, upsert=True)
+        return True
     except Exception as e:
         print(f"Ошибка записи в бд -> set_user_folders_data:\n{e}")
+        return False
+
 
 
 async def get_user_folders_collection(tg_user_id):

@@ -1,3 +1,5 @@
+import re
+
 from enums.enums import AccessType
 from load_all import bot
 from models.folder_model import Folder
@@ -8,20 +10,20 @@ from utils.utils_folders_reader import get_folder
 
 async def get_user_info(tg_user_id: str):
     chat = await bot.get_chat(chat_id=tg_user_id)
-    info = []
+    info = [chat.full_name]
     if chat.username:
         info.append(f'@{chat.username}')
-    info.append(chat.full_name)
     user_info = ' '.join(info)
     return user_info
 
 
 def get_access_str_by_type(access_type: AccessType):
-    access_str = 'к просмотру'
+    access_str = ''
     if access_type == AccessType.READ:
-        access_str += ' содержимого'
+        access_str += 'к просмотру'
     elif access_type == AccessType.WRITE:
-        access_str += ' и изменению содержимого'
+        access_str += 'к редактированию'
+    access_str += ' содержимого'
     return access_str
 
 
@@ -39,18 +41,35 @@ async def get_folder_users_accesses(folder: Folder, users_accesses: dict) -> dic
     return users_accesses
 
 
-async def get_access_users_info(folder: Folder) -> str:
-    users_access_info = []
+async def get_access_users_info(folder: Folder) -> tuple:
+    access_users_info_str = []
+    access_users_info_entities = []
     folder_users_accesses = await get_folder_users_accesses(folder, {})
     if folder_users_accesses:
+        number = 0
         for user_id, access_type in folder_users_accesses.items():
             access_str = ''
             if folder_users_accesses[user_id] == AccessType.READ.value:
                 access_str = '👁️ просмотр содержимого' # 👓
             elif folder_users_accesses[user_id] == AccessType.WRITE.value:
-                access_str = '👁️🖊️ просмотр и изменение содержимого' # 👓
+                access_str = '✏️ редактирование содержимого' # 👓 🖊️
             user_info = await get_user_info(user_id)
             if access_str:
-                users_access_info.append(f'{user_info} - {access_str}')
+                number += 1
+                access_users_info_str.append(f'👤 {number}. {user_info} - {access_str}')
+                access_users_info_entities.append(
+                    {
+                        "user_id": user_id,
+                        "number": number,
+                        "user_name": get_user_name_from_user_info(user_info),
+                        "access_type": access_type,
+                    }
+                )
 
-    return '\n\n'.join(users_access_info)
+    return '\n\n'.join(access_users_info_str), access_users_info_entities
+
+
+def get_user_name_from_user_info(user_info: str):
+    pattern = r'(.*?)( @\S+)'
+    replaced = re.sub(pattern, r'\1', user_info, count=1, flags=re.DOTALL)
+    return replaced

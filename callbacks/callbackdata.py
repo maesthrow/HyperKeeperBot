@@ -185,3 +185,9 @@ class AccessConfirmCallback(CallbackData, prefix='access_confirm'):
     res: bool
 
 
+class AccessConfirmOkCallback(CallbackData, prefix='access_confirm_ok'):
+    pass
+
+
+class AccessConfirmRejectCallback(CallbackData, prefix='access_confirm_reject'):
+    pass
