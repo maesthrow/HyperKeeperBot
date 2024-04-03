@@ -80,7 +80,7 @@ async def get_delete_all_items_data(dialog_manager: DialogManager, **kwargs):
         message_text = f"Действительно хотите удалить все записи ({items_count}) в папке " \
                        f"{smile_folder} {folder_name} ?"
     else:
-        message_text = "В этой папке нет записей."
+        message_text = "В этой папке нет записей 🤷‍♂️"
     data['folder_id'] = folder_id
     data['items_count'] = items_count
     data['message_text'] = message_text

@@ -113,7 +113,7 @@ _folder_control_delete_all_items_buttons = [
            when=_folder_has_items),
     Button(Const("✖️ Не удалять"), id="not_delete_all_items", on_click=cancel_delete_handler,
            when=_folder_has_items),
-    Button(Const("✖️ Закрыть"), id="ok_has_not_items", on_click=cancel_delete_handler, when=_folder_has_not_items),
+    Button(Const("Ясно"), id="ok_has_not_items", on_click=cancel_delete_handler, when=_folder_has_not_items),
 ]
 
 _folder_control_delete_buttons = [
