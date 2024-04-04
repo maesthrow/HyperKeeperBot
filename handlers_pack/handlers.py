@@ -103,6 +103,7 @@ async def start_handler(state: FSMContext, tg_user):
 
 @router.message(Command(commands=["access"]))
 async def accesses_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
+    await bot.send_message(message.from_user.id, '🔐', reply_markup=ReplyKeyboardRemove())
     await dialog_manager.start(AccessesStates.UsersMenu)
 
 

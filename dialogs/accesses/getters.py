@@ -1,6 +1,8 @@
 from aiogram_dialog import DialogManager
 
+from models.access_folder_model import AccessFolder
 from utils.utils_access import get_user_name_from_user_info, get_user_info
+from utils.utils_access_folders_reader import get_access_folders
 from utils.utils_data import get_accesses_collection
 
 
@@ -45,7 +47,8 @@ async def get_users_menu_data(dialog_manager: DialogManager, **kwargs):
     # data['switch_inline_query'] = switch_inline_query
     # data['message_text'] = message_text
     # dialog_manager.current_context().dialog_data = data
-    data['message_text'] = '<b>🔐 Доступы от других пользователей</b>'
+    data['message_text'] = '🔐 <b>Доступы от других пользователей</b>' # 🔐
+    dialog_manager.current_context().dialog_data = data
     return data
 
 
@@ -55,3 +58,26 @@ async def get_from_user_dict(from_user_id) -> dict:
         'from_user_id': from_user_id,
         'name': f'👤 {name}'
     }
+
+
+async def get_from_user_folders_data(dialog_manager: DialogManager, **kwargs):
+    user_id = dialog_manager.event.from_user.id
+    data = {}
+    dialog_data = dialog_manager.current_context().dialog_data
+    from_user = dialog_data.get('user', None)
+    print(f'from_user {from_user}')
+    user_folders = await get_access_folders(user_id, from_user.get('from_user_id', None))
+    user_name = await get_user_info(from_user.get('from_user_id', None))
+
+    dialog_manager.current_context().dialog_data = dialog_data
+
+    message_text = f'👤 {user_name}'
+
+    data['user'] = from_user
+    data['user_folders'] = user_folders
+    data['message_text'] = message_text
+    return data
+
+
+def get_from_user_id(access_folder: AccessFolder):
+    return access_folder.from_user_id

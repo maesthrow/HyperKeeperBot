@@ -28,6 +28,30 @@ async def get_access_folder(user_id, from_user_id, folder_id):
     return None
 
 
+async def get_access_folders(user_id, from_user_id):
+    try:
+        user_id = int(user_id)
+        from_user_id = int(from_user_id)
+    except:
+        return None
+
+    access_folders = []
+
+    accesses_from_user_collection = await get_accesses_from_user_collection(user_id, from_user_id)
+    if accesses_from_user_collection:
+        for folder_id in accesses_from_user_collection:
+            access_folder = AccessFolder(
+                user_id=user_id,
+                from_user_id=from_user_id,
+                folder_id=folder_id,
+                access_type=AccessType(accesses_from_user_collection[folder_id]['access_type']),
+                pin=accesses_from_user_collection[folder_id]['pin']
+            )
+            access_folders.append(access_folder)
+
+    return access_folders
+
+
 async def get_current_access_type_from_user_folder(user_id, from_user_id, folder_id) -> AccessType:
     from_user_id = str(from_user_id)
     current_access_type = AccessType.ABSENSE
