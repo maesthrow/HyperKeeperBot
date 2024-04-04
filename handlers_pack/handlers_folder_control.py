@@ -10,9 +10,9 @@ from aiogram_dialog import DialogManager
 from callbacks.callbackdata import EditFolderCallback, StatisticFolderCallback, MessageBoxCallback, \
     SearchInFolderCallback, PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, \
     NewPinCodeButtonCallback, EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback
-from handlers import states
-from handlers.handlers_folder import show_folders
-from handlers.states import FolderControlStates
+from handlers_pack import states
+from handlers_pack.handlers_folder import show_folders
+from handlers_pack.states import FolderControlStates
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR

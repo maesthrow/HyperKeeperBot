@@ -8,7 +8,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from callbacks.callbackdata import TextPagesCallback, SaveItemCallback
-from handlers.handlers_folder import show_folders
+from handlers_pack.handlers_folder import show_folders
 from load_all import bot, dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
@@ -17,9 +17,8 @@ from utils.utils_data import get_current_folder_id
 from utils.utils_item_show_files import show_item_files
 from utils.utils_items_db import util_delete_item
 from utils.utils_items_reader import get_folder_id, get_item
-from utils.utils_parse_mode_converter import to_markdown_text
 
-# import handlers.handlers_item_edit_inline_buttons
+# import handlers_pack.handlers_item_edit_inline_buttons
 
 
 delete_question = f"\n\n_*Хотите удалить запись?*_"

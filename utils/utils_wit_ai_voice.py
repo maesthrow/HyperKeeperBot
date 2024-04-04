@@ -3,10 +3,8 @@ import os
 from aiogram.enums import ContentType
 from aiogram.types import Voice, Message, VideoNote
 from pydub import AudioSegment
-from wit import Wit
 
-from config import WIT_AI_TOKEN
-from load_all import bot
+from load_all import bot, wit_client
 
 start_read_notify = {
     ContentType.VOICE: '🎧 Слушаю ваше голосовое...',
@@ -24,21 +22,30 @@ notifies = (
 
 TEMP_FOLDER = "temp_media/"
 
+
 def get_start_read_notify(content_type: ContentType):
     return start_read_notify.get(content_type, '🎧')
 
 
-async def get_voice_text(voice: Voice, message: Message = None):
-    voice_text = await get_media_text(voice, f"{TEMP_FOLDER}voice_message.ogg", message)
+async def get_voice_text(voice: Voice, message: Message):
+    user_id = message.from_user.id
+    voice_text = await get_media_text(
+        voice,
+        f"{TEMP_FOLDER}{user_id}voice_message.ogg", message
+    )
     return voice_text
 
 
-async def get_video_note_text(video_note: VideoNote, message: Message = None):
-    video_note_text = await get_media_text(video_note, f"{TEMP_FOLDER}video_note_message.mp4", message)
+async def get_video_note_text(video_note: VideoNote, message: Message):
+    user_id = message.from_user.id
+    video_note_text = await get_media_text(
+        video_note,
+        f"{TEMP_FOLDER}{user_id}video_note_message.mp4", message
+    )
     return video_note_text
 
 
-async def get_media_text(audio: Voice | VideoNote, temp_source_path: str, message: Message = None) -> str:
+async def get_media_text(audio: Voice | VideoNote, temp_source_path: str, message: Message) -> str:
     temp_mp3_path = f"{temp_source_path.split('.')[0]}_converted.mp3"
     media_text = ''
     audio = await get_audio_from_media(audio, temp_source_path)
@@ -70,7 +77,7 @@ async def get_audio_from_media(media: Voice | VideoNote, temp_source_path: str):
 async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, message: Message):
     voice_text = ""
 
-    wit_client = Wit(WIT_AI_TOKEN)
+    user_id = message.from_user.id
 
     await bot.send_chat_action(message.chat.id, "typing")
 
@@ -84,8 +91,8 @@ async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, mess
             end = (i + 1) * max_duration if (i + 1) * max_duration < len(audio) else len(audio)
             part = audio[start:end]
             try:
-                part.export(f"{TEMP_FOLDER}part_{i}.mp3", format="mp3")
-                with open(f"{TEMP_FOLDER}part_{i}.mp3", "rb") as part_file:
+                part.export(f"{TEMP_FOLDER}{user_id}_part_{i}.mp3", format="mp3")
+                with open(f"{TEMP_FOLDER}{user_id}_part_{i}.mp3", "rb") as part_file:
                     response = wit_client.speech(part_file, headers={"Content-Type": "audio/mpeg"})
                     # Обработка ответа для каждой части
                     if response is not None:
@@ -93,10 +100,10 @@ async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, mess
                         voice_text += part_text + " "
                     else:
                         print(f"No response for part {i + 1}")
-                remove_temp_file(f"{TEMP_FOLDER}part_{i}.mp3")
+                remove_temp_file(f"{TEMP_FOLDER}{user_id}_part_{i}.mp3")
             except:
                 part_file.close()
-                remove_temp_file(f"{TEMP_FOLDER}part_{i}.mp3")
+                remove_temp_file(f"{TEMP_FOLDER}{user_id}_part_{i}.mp3")
                 if i == parts_count - 1:
                     break
 

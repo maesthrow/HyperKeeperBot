@@ -3,8 +3,8 @@ from datetime import datetime
 
 from aiogram.fsm.context import FSMContext
 
-from handlers import states
-from handlers.handlers_item_inline_buttons import close_item_handler
+from handlers_pack import states
+from handlers_pack.handlers_item_inline_buttons import close_item_handler
 from load_all import bot
 from models.item_model import Item
 from utils.data_manager import get_data

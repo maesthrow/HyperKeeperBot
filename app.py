@@ -23,18 +23,18 @@ async def main():
 
 
 if __name__ == '__main__':
-    import handlers.handlers_
-    import handlers.handlers_search_end
-    import handlers.handlers_item_entities
-    import handlers.handlers_item_edit_inline_buttons
-    import handlers.handlers_item_add_mode
-    import handlers.handlers_inline_query_share
-    import handlers.handlers_inline_query_search
-    import handlers.handlers_inline_query_access
-    import handlers.handlers_item_text_pages
-    import handlers.handlers_edit_item_files
-    import handlers.handlers_folder_control
-    import handlers.handlers_access
+    import handlers_pack.handlers
+    import handlers_pack.handlers_search_end
+    import handlers_pack.handlers_item_entities
+    import handlers_pack.handlers_item_edit_inline_buttons
+    import handlers_pack.handlers_item_add_mode
+    import handlers_pack.handlers_inline_query_share
+    import handlers_pack.handlers_inline_query_search
+    import handlers_pack.handlers_inline_query_access
+    import handlers_pack.handlers_item_text_pages
+    import handlers_pack.handlers_edit_item_files
+    import handlers_pack.handlers_folder_control
+    import handlers_pack.handlers_access
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

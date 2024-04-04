@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 
 from enums.enums import Language
-from handlers.handlers_folder import show_folders
+from handlers_pack.handlers_folder import show_folders
 from load_all import bot, dp
 from utils.utils_data import get_from_user_collection, set_to_user_collection
 

@@ -8,11 +8,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
 
 from callbacks.callbackdata import SendItemCallback, ItemShowCallback, MarkFileCallback, BackToStandardFolderView
-from handlers import states
-from handlers.filters import NotInButtonsFilter, InButtonsFilter
-from handlers.handlers_edit_item_title_text import edit_item
-from handlers.handlers_folder import show_folders
-from handlers.handlers_search import show_search_results
+from handlers_pack import states
+from handlers_pack.filters import NotInButtonsFilter, InButtonsFilter
+from handlers_pack.handlers_edit_item_title_text import edit_item
+from handlers_pack.handlers_folder import show_folders
+from handlers_pack.handlers_search import show_search_results
 from load_all import dp, bot
 from models.item_model import Item
 from utils.data_manager import get_data, set_data

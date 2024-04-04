@@ -6,8 +6,8 @@ from aiogram.types import InlineKeyboardMarkup, Location, Contact
 from aiogram_dialog import DialogManager
 
 from enums.enums import AccessType
-from handlers.handlers_folder import show_folders
-from handlers.handlers_item import show_item
+from handlers_pack.handlers_folder import show_folders
+from handlers_pack.handlers_item import show_item
 from load_all import bot
 from models.access_folder_model import AccessFolder
 from models.folder_model import Folder

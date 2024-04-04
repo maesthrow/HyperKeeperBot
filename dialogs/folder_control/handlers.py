@@ -8,8 +8,8 @@ from aiogram_dialog.widgets.kbd import Button, Select
 
 from callbacks.callbackdata import FolderCallback
 from enums.enums import AccessType
-from handlers.handlers_folder import show_folders, to_folder
-from handlers.states import FolderControlStates
+from handlers_pack.handlers_folder import show_folders, to_folder
+from handlers_pack.states import FolderControlStates
 from load_all import bot
 from models.access_folder_model import AccessFolder
 from models.folder_model import Folder
@@ -24,8 +24,8 @@ from utils.utils_folders_reader import get_folder_name, get_folder
 from utils.utils_items_db import util_delete_all_items_in_folder
 
 ### НЕЛЬЗЯ УБИРАТЬ! ###
-import handlers.handlers_access
-h_a = handlers.handlers_access
+import handlers_pack.handlers_access
+h_a = handlers_pack.handlers_access
 #################################
 
 

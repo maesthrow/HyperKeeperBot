@@ -4,24 +4,19 @@ import copy
 from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, Message
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, Message
 
 from callbacks.callbackdata import TextPagesCallback, RemoveTextPageCallback
-from handlers import states
-from handlers.handlers_folder import show_folders
-from handlers.handlers_item import show_item
-from handlers.handlers_item_inline_buttons import get_item_body_and_current_markup
+from handlers_pack import states
+from handlers_pack.handlers_item_inline_buttons import get_item_body_and_current_markup
 from load_all import bot, dp
 from models.item_model import Item, INVISIBLE_CHAR
 from utils.data_manager import get_data, set_data
-from utils.utils_ import invisible_char
 from utils.utils_button_manager import item_edit_buttons, create_general_reply_markup, \
-    get_edit_item_title_keyboard, get_edit_item_text_keyboard, get_text_pages_buttons, get_edit_page_buttons, \
-    general_buttons_edit_item_files, get_edit_item_files_keyboard
+    get_edit_item_title_keyboard, get_edit_item_text_keyboard, get_text_pages_buttons, get_edit_page_buttons
 from utils.utils_items_db import util_edit_item
 from utils.utils_items_reader import get_item
-from utils.utils_parse_mode_converter import to_markdown_text, preformat_text, full_escape_markdown, \
-    markdown_without_code
+from utils.utils_parse_mode_converter import markdown_without_code
 
 edit_question = 'Что будете редактировать?'
 edit_question_text = f"\n\n_*{edit_question}*_"

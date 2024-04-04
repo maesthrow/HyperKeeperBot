@@ -1,21 +1,21 @@
 import copy
 
-from aiogram import Router, F
+from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from callbacks.callbackdata import TextPagesCallback
-from handlers.handlers_item import get_item_inline_markup
-from handlers.handlers_item_edit_inline_buttons import edit_question, edit_question_text, get_instruction_copy_edit_text
+from handlers_pack.handlers_item import get_item_inline_markup
+from handlers_pack.handlers_item_edit_inline_buttons import edit_question, edit_question_text, \
+    get_instruction_copy_edit_text
 from load_all import dp
 from models.item_model import Item
 from utils.data_manager import get_data, set_data
-from utils.utils_button_manager import get_text_pages_buttons, get_repost_button_in_markup, item_edit_buttons, \
-    delete_page_inline_button, get_edit_page_buttons
+from utils.utils_button_manager import get_text_pages_buttons, item_edit_buttons, \
+    get_edit_page_buttons
 from utils.utils_constants import numbers_ico
 from utils.utils_items_reader import get_item
-from utils.utils_parse_mode_converter import markdown_without_code
 
 router = Router()
 dp.include_router(router)

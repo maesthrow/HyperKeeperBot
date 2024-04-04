@@ -1,15 +1,9 @@
 from aiogram_dialog import widgets
-from aiogram_dialog.widgets.kbd import Button, Row, Column
+from aiogram_dialog.widgets.kbd import Row, Column
 from aiogram_dialog.widgets.text import Const, Format
 
+from dialogs.folder_control.handlers import *
 from dialogs.widgets import InlineQueryButton
-from enums.enums import AccessType
-from handlers.dialog.folder_control_handler import pin_code_handler, access_menu_handler, statistic_handler, \
-    delete_all_items_handler, rename_folder_handler, delete_folder_handler, search_in_folder_handler, \
-    close_menu_handler, confirm_delete_all_items_handler, info_message_ok_handler, cancel_delete_handler, \
-    confirm_delete_handler, access_user_expand_handler, access_user_decrease_handler, \
-    access_user_stop_handler, info_message_access_user_selected_handler, stop_all_users_access_handler, \
-    cancel_stop_all_users_access_handler, confirm_stop_all_users_access_handler
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 
@@ -69,13 +63,6 @@ _folder_control_access_user_selected_buttons = [
            when=_is_write_access_type),
     Button(Const("🚫 Приостановить доступ"), id="access_user_stop", on_click=access_user_stop_handler),
 ]
-
-# _folder_control_access_confirm_buttons = [
-#     Button(text=Const("✔️ Подтвердить"), id="access_confirm_ok", on_click=access_confirm_ok_handler,
-#            when=_is_visible_always_false),
-#     Button(text=Const("✖️ Отклонить"), id="access_confirm_reject", on_click=access_confirm_reject_handler,
-#            when=_is_visible_always_false)
-# ]
 
 
 def folder_control_main_menu() -> widgets:
@@ -177,12 +164,3 @@ def folder_control_user_selected() -> widgets:
 def folder_control_access_users() -> widgets:
     return None
 
-
-# def folder_control_access_confirm() -> widgets:
-#     keyboard = [
-#         Row(
-#             _folder_control_access_confirm_buttons[0],
-#             _folder_control_access_confirm_buttons[1]
-#         ),
-#     ]
-#     return keyboard

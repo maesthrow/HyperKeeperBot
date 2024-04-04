@@ -11,21 +11,22 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_dialog import DialogManager
-from aiogram_dialog.setup import DialogRegistry, setup_dialogs
+from aiogram_dialog.setup import setup_dialogs
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
-from dialogs.folder_control_dialog import dialog_folder_control_main_menu
-from handlers import states
-from handlers.filters import NewItemValidateFilter, FromUserChatConfirmMessageFilter
-from handlers.handlers_folder import show_all_folders, show_folders, back_to_up_level_folder_button, \
-    up_to_root_level_folder_button, finalized_inline_markup
-from handlers.handlers_item_add_mode import add_files_to_message_handler
-from handlers.handlers_read_voice import read_voice_offer
-from handlers.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
+from dialogs.accesses.windows import dialog_accesses
+from dialogs.folder_control.windows import dialog_folder_control
+from handlers_pack import states
+from handlers_pack.filters import NewItemValidateFilter
+from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
+from handlers_pack.handlers_item_add_mode import add_files_to_message_handler
+from handlers_pack.handlers_read_voice import read_voice_offer
+from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
     text_to_message_handler
-from handlers.handlers_settings import settings_buttons
-from handlers.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
+from handlers_pack.handlers_settings import settings_buttons
+from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
+from handlers_pack.states import AccessesStates
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import Item
@@ -44,11 +45,10 @@ from utils.utils_items import show_all_items
 from utils.utils_items_reader import get_folder_id
 from utils.utils_sender_message_loop import send_storage_folders, send_storage_with_items
 
-import handlers.handlers_item
-
 router = Router()
 dp.include_router(router)
-dp.include_router(dialog_folder_control_main_menu)
+dp.include_router(dialog_folder_control)
+dp.include_router(dialog_accesses)
 setup_dialogs(dp)
 
 
@@ -99,6 +99,11 @@ async def start_handler(state: FSMContext, tg_user):
             f"Для доступа ко всем функциям бота жмите на кнопку 'Меню' рядом с полем ввода сообщения ↙️\n\n"
             f"Приятного использования! ☺️")
     await bot.send_message(tg_user.id, text, reply_markup=ReplyKeyboardRemove())
+
+
+@router.message(Command(commands=["access"]))
+async def accesses_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
+    await dialog_manager.start(AccessesStates.UsersMenu)
 
 
 @router.message(Command(commands=["search"]))

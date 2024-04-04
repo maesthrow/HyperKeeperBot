@@ -6,10 +6,9 @@ from aiogram.types import InlineQuery, InputTextMessageContent, InlineQueryResul
     InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from handlers.handlers_inline_query_share import update_markup_for_content_mode
 from load_all import dp, bot
 from models.file_model import File
-from models.item_model import Item, INVISIBLE_CHAR
+from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_ import smile_item, smile_folder
 from utils.utils_bot import get_bot_name, get_bot_link, to_url_data

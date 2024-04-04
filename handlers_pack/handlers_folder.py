@@ -13,8 +13,8 @@ from aiogram_dialog import DialogManager
 from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 
 from callbacks.callbackdata import FolderCallback
-from handlers import states
-from handlers.states import FolderControlStates
+from handlers_pack import states
+from handlers_pack.states import FolderControlStates
 from load_all import bot, dp
 from models.folder_model import Folder
 from utils.data_manager import get_data, set_data
@@ -565,7 +565,6 @@ async def go_to_page_items(call: CallbackQuery):
 @router.message(F.text == current_folder_control_button.text)
 async def folder_control_menu_handler(message: Message, dialog_manager: DialogManager):
     await dialog_manager.start(FolderControlStates.MainMenu)
-    #await DialogData.set_manager(message.from_user.id, dialog_manager)
     await bot.delete_message(message.chat.id, message.message_id)
 
 

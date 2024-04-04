@@ -91,16 +91,16 @@ general_buttons_add_mode = [
     ],
 ]
 
-without_title_button = KeyboardButton(text="💾 Без заголовка")
+without_title_button = KeyboardButton(text="💾 Сохранить без заголовка")
 add_to_item_button = KeyboardButton(text="❇️ Дополнить")
-cancel_save_new_item_button = KeyboardButton(text="❌ Не сохранять запись")
+cancel_save_new_item_button = KeyboardButton(text="✖️ Не сохранять запись") # ✖️ ❌
 
 general_new_item_buttons = [
     [
         without_title_button,
-        add_to_item_button,
     ],
     [
+        add_to_item_button,
         cancel_save_new_item_button
     ],
 ]

@@ -5,9 +5,9 @@ from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton, CallbackQuery, Message
 
-from handlers import states
-from handlers.handlers_folder import show_folders
-from handlers.handlers_folder_control import search_in_folder
+from handlers_pack import states
+from handlers_pack.handlers_folder import show_folders
+from handlers_pack.handlers_folder_control import search_in_folder
 from load_all import bot, dp
 from utils.data_manager import get_data, set_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_search_items

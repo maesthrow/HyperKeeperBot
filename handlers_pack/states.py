@@ -43,3 +43,9 @@ class FolderControlStates(StatesGroup):
     AfterStopAllUsersAccess = State()
 
 
+class AccessesStates(StatesGroup):
+    UsersMenu = State()
+    ShowUserFolders = State()
+
+
+
