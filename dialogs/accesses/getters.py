@@ -67,6 +67,7 @@ async def get_from_user_folders_data(dialog_manager: DialogManager, **kwargs):
     from_user = dialog_data.get('user', None)
     print(f'from_user {from_user}')
     user_folders = await get_access_folders(user_id, from_user.get('from_user_id', None))
+    user_folders = [await folder.to_dict_with_folder_name_and_smile_folder() for folder in user_folders]
     user_name = await get_user_info(from_user.get('from_user_id', None))
 
     dialog_manager.current_context().dialog_data = dialog_data
@@ -78,6 +79,3 @@ async def get_from_user_folders_data(dialog_manager: DialogManager, **kwargs):
     data['message_text'] = message_text
     return data
 
-
-def get_from_user_id(access_folder: AccessFolder):
-    return access_folder.from_user_id
