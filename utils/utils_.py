@@ -78,9 +78,14 @@ def sort_folders_func(item):
         return True, name
 
 
-async def get_inline_markup_folders(user_id, current_folder_id, current_page):
+async def get_sorted_folders(user_id, current_folder_id):
     user_folders: dict = await get_folders_in_folder(user_id, current_folder_id)
     sorted_folders = sorted(user_folders.items(), key=sort_folders_func)
+    return sorted_folders
+
+
+async def get_inline_markup_folders(user_id, current_folder_id, current_page):
+    sorted_folders = await get_sorted_folders(user_id, current_folder_id)
 
     settings = await get_from_user_collection(user_id, 'settings')
     folders_on_page_count = settings.get('folders_on_page_count', 6)

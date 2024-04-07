@@ -29,7 +29,7 @@ async def get_user_accesses_data(tg_user_id):
     """Возвращает данные доступов пользователя по его идентификатору."""
     user_accesses_collection = db["accesses"]
     print(f'db["accesses"] {user_accesses_collection}')
-    user_accesses_document = user_accesses_collection.find_one({"_id": int(tg_user_id)})
+    user_accesses_document = user_accesses_collection.find_one({"_id": tg_user_id})
     print(f'user_accesses_document {user_accesses_document}')
     return user_accesses_document
 
@@ -38,7 +38,7 @@ async def set_user_accesses_data(tg_user_id, data):
     """Обновляет данные доступов пользователя."""
     user_accesses_collection = db["accesses"]
     print(f'data = {data}')
-    user_accesses_collection.update_one({"_id": int(tg_user_id)}, {"$set": data})
+    user_accesses_collection.update_one({"_id": tg_user_id}, {"$set": data})
 
 
 async def get_user_accesses_collection(tg_user_id):

@@ -46,6 +46,7 @@ class FolderControlStates(StatesGroup):
 class AccessesStates(StatesGroup):
     UsersMenu = State()
     ShowUserFolders = State()
+    ShowSelectedUserFolder = State()
 
 
 

@@ -79,7 +79,6 @@ async def search_in_folder_handler(callback: CallbackQuery, button: Button, dial
 
 async def close_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.done()
-    #await DialogData.clear_manager(callback.from_user.id)
     await callback.message.delete()
 
 
