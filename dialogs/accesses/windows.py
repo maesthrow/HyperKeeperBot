@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs.accesses.getters import get_users_menu_data, get_from_user_folders_data, get_from_user_folder_data
 from dialogs.accesses.handlers import user_selected_handler, access_folder_selected_handler, folder_selected_handler, \
-    close_users_menu_handler
+    close_users_menu_handler, on_back_folder_click_handler
 from handlers_pack.states import AccessesStates
 
 users_menu_window = Window(
@@ -77,7 +77,7 @@ show_selected_user_folder_window = Window(
         width=2,
         hide_on_single_page=True
     ),
-    Back(Const("↩️ Назад")),
+    Button(Const("↩️ Назад"), id='back_folder', on_click=on_back_folder_click_handler),
     state=AccessesStates.ShowSelectedUserFolder,
     getter=get_from_user_folder_data
 )

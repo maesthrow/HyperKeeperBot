@@ -1,9 +1,13 @@
-from aiogram.types import CallbackQuery
+import asyncio
+import copy
+
+from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
 
 from handlers_pack.handlers_folder import show_folders
 from handlers_pack.states import AccessesStates
+from load_all import bot
 
 
 async def user_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, user_id):
@@ -17,29 +21,58 @@ async def user_selected_handler(callback: CallbackQuery, widget: Select, dialog_
 
 
 async def close_users_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.done()
-    await callback.message.delete()
+    start_data = dialog_manager.current_context().start_data
+    start_message: Message = start_data.get('start_message', None)
+    tasks = [
+        dialog_manager.done(),
+        try_delete_message(callback.message)
+    ]
+    if start_message:
+        tasks.append(try_delete_message(start_message))
+    await asyncio.gather(*tasks)
+
+
+async def try_delete_message(delete_message: Message):
+    try:
+        await bot.delete_message(delete_message.chat.id, delete_message.message_id)
+    except:
+        pass
 
 
 async def access_folder_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, folder_id):
     data = dialog_manager.current_context().dialog_data
     folders = data.get('user_folders')
-    print(f'folders {folders}')
     folder_dict = next(filter(lambda _folder: _folder['folder_id'] == folder_id, folders), None)
-    dialog_manager.current_context().dialog_data = {
+    dialog_data = {
         'user': data['user'],
-        'access_folder_dict': folder_dict,
+        'folder_dict': folder_dict,
     }
+    dialog_manager.current_context().dialog_data = dialog_data
     await dialog_manager.switch_to(AccessesStates.ShowSelectedUserFolder)
 
 
 async def folder_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, folder_id):
     data = dialog_manager.current_context().dialog_data
     folders = data.get('user_folders')
-    print(f'folders {folders}')
     folder_dict = next(filter(lambda _folder: _folder['folder_id'] == folder_id, folders), None)
-    dialog_manager.current_context().dialog_data = {
+    dialog_data = {
         'user': data['user'],
         'folder_dict': folder_dict,
+        'back_data': data.get('back_data', None)
     }
+    dialog_manager.current_context().dialog_data = dialog_data
     await dialog_manager.switch_to(AccessesStates.ShowSelectedUserFolder)
+
+
+async def on_back_folder_click_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    data = dialog_manager.current_context().dialog_data
+    back_data = data.get('back_data', None)
+    if back_data:
+        back_data = back_data.get('back_data', None)
+        if back_data:
+            dialog_manager.current_context().dialog_data = back_data
+            await dialog_manager.switch_to(AccessesStates.ShowSelectedUserFolder)
+        else:
+            await dialog_manager.back()
+    else:
+        await dialog_manager.back()
