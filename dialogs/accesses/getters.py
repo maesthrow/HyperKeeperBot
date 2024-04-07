@@ -55,14 +55,20 @@ async def get_from_user_folder_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     data = {}
     dialog_data = dialog_manager.current_context().dialog_data
+    print(f'dialog_data {dialog_data}')
     access_folder_dict = dialog_data.get('access_folder_dict', None)
     if access_folder_dict:
         from_user_id = access_folder_dict['from_user_id']
         folder_id = access_folder_dict['folder_id']
     else:
         folder_dict = dialog_data.get('folder_dict', None)
+        if not folder_dict:
+            back_data = dialog_data.get('back_data', None)
+            if back_data:
+                folder_dict = back_data.get('folder_dict', None)
         from_user_id = folder_dict['from_user_id']
         folder_id = folder_dict['folder_id']
+
     user_sorted_folders = await get_sorted_folders(from_user_id, folder_id)
     user_folders = []
     for folder in user_sorted_folders:
