@@ -8,6 +8,8 @@ from aiogram_dialog.widgets.kbd import Select, Button
 from handlers_pack.handlers_folder import show_folders
 from handlers_pack.states import AccessesStates
 from load_all import bot
+from utils.utils_ import get_level_folders, smile_folder
+from utils.utils_folders_reader import get_folder_name
 
 
 async def user_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, user_id):
@@ -43,9 +45,14 @@ async def access_folder_selected_handler(callback: CallbackQuery, widget: Select
     data = dialog_manager.current_context().dialog_data
     folders = data.get('user_folders')
     folder_dict = next(filter(lambda _folder: _folder['folder_id'] == folder_id, folders), None)
+    folder_name = await get_folder_name(folder_dict['from_user_id'], folder_id)
+    folder_path = f'{smile_folder} {folder_name} /'
+    if get_level_folders(folder_id) > 0:
+        folder_path = f'.. / {folder_path}'
     dialog_data = {
         'user': data['user'],
         'folder_dict': folder_dict,
+        'folder_path': folder_path,
     }
     dialog_manager.current_context().dialog_data = dialog_data
     await dialog_manager.switch_to(AccessesStates.ShowSelectedUserFolder)
@@ -55,9 +62,13 @@ async def folder_selected_handler(callback: CallbackQuery, widget: Select, dialo
     data = dialog_manager.current_context().dialog_data
     folders = data.get('user_folders')
     folder_dict = next(filter(lambda _folder: _folder['folder_id'] == folder_id, folders), None)
+    folder_name = await get_folder_name(folder_dict['from_user_id'], folder_id)
+    folder_path = data['folder_path']
+    folder_path += f' {smile_folder} {folder_name} /'
     dialog_data = {
         'user': data['user'],
         'folder_dict': folder_dict,
+        'folder_path': folder_path,
         'back_data': data.get('back_data', None)
     }
     dialog_manager.current_context().dialog_data = dialog_data

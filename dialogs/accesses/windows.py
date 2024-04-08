@@ -57,11 +57,12 @@ show_selected_user_folder_window = Window(
             id='user_folders_scroll',
             item_id_getter=operator.itemgetter('folder_id'),
             items='user_folders',
-            on_click=folder_selected_handler
+            on_click=folder_selected_handler,
         ),
         id='folders_in_selected_user_folder',
         height=5,
         width=2,
+        on_page_changed=None,
         hide_on_single_page=True
     ),
     ScrollingGroup(

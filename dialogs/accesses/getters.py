@@ -3,7 +3,7 @@ import copy
 from aiogram_dialog import DialogManager
 
 from models.item_model import Item
-from utils.utils_ import get_sorted_folders, smile_folder, smile_item
+from utils.utils_ import get_sorted_folders, smile_folder, smile_item, get_level_folders
 from utils.utils_access import get_user_name_from_user_info, get_user_info
 from utils.utils_access_folders_reader import get_access_folders
 from utils.utils_data import get_accesses_collection
@@ -33,7 +33,6 @@ async def get_from_user_dict(from_user_id) -> dict:
 
 async def get_from_user_folders_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
-    data = {}
     dialog_data = dialog_manager.current_context().dialog_data
     from_user = dialog_data.get('user', None)
     user_folders = await get_access_folders(user_id, from_user.get('from_user_id', None))
@@ -43,6 +42,7 @@ async def get_from_user_folders_data(dialog_manager: DialogManager, **kwargs):
     message_text = (f'🔐 <b>Доступы от других пользователей</b>'
                     f'\n\n👤 {user_name}')
 
+    data = {}
     data['user'] = from_user
     data['user_folders'] = user_folders
     data['message_text'] = message_text
@@ -53,9 +53,10 @@ async def get_from_user_folders_data(dialog_manager: DialogManager, **kwargs):
 
 async def get_from_user_folder_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
-    data = {}
     dialog_data = dialog_manager.current_context().dialog_data
     print(f'dialog_data {dialog_data}')
+    back_data = dialog_data.get('back_data', None)
+    folder_dict = {}
     access_folder_dict = dialog_data.get('access_folder_dict', None)
     if access_folder_dict:
         from_user_id = access_folder_dict['from_user_id']
@@ -63,7 +64,6 @@ async def get_from_user_folder_data(dialog_manager: DialogManager, **kwargs):
     else:
         folder_dict = dialog_data.get('folder_dict', None)
         if not folder_dict:
-            back_data = dialog_data.get('back_data', None)
             if back_data:
                 folder_dict = back_data.get('folder_dict', None)
         from_user_id = folder_dict['from_user_id']
@@ -95,15 +95,31 @@ async def get_from_user_folder_data(dialog_manager: DialogManager, **kwargs):
             }
         )
 
-    message_text = f'🔐 <b>Доступы от других пользователей</b>'
-                     #f'\n\n👤 {user_name}')
+    user_name = await get_user_info(from_user_id)
+    folder_path = dialog_data.get('folder_path', None)
+    message_text = f'🔐 <b>Доступы от других пользователей</b>' \
+                   f'\n\n👤 {user_name}' \
+                   f'\n\n<b>{folder_path}</b>'
     #
+    data = {}
     from_user = dialog_data.get('user', None)
     data['user'] = from_user
+    data['folder_id'] = folder_id
+    data['folder_path'] = folder_path
+    data['access_folder_dict'] = access_folder_dict
+    data['folder_dict'] = folder_dict
     data['user_folders'] = user_folders
     data['user_folder_items'] = user_folder_items
     data['message_text'] = message_text
-    data['back_data'] = copy.deepcopy(dialog_data)
+
+    should_update_back_data = (
+            not back_data or
+            not dialog_data.get('folder_id') or
+            get_level_folders(folder_id) > get_level_folders(dialog_data.get('folder_id', 0))
+    )
+
+    data['back_data'] = copy.deepcopy(dialog_data) if should_update_back_data else back_data
+
     dialog_manager.current_context().dialog_data = data
     return data
 
