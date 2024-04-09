@@ -60,14 +60,6 @@ async def start(message: Message, dialog_manager: DialogManager, state: FSMConte
     await start_init(tg_user, message, state, url_data, dialog_manager)
 
 
-# @router.message(FromUserChatConfirmMessageFilter())
-# async def from_user_chat_message(message: Message, dialog_manager: DialogManager, state: FSMContext):
-#     current_state = await state.get_state()
-#     print(f'current_state = {current_state}')
-#     if current_state == states.FolderControlStates.AccessMenu.state:
-#         await dialog_manager.switch_to(states.FolderControlStates.MainMenu)
-
-
 async def start_init(tg_user, message, state, url_data: List[str], dialog_manager: DialogManager):
     if len(url_data) == 1:
         await start_handler(state, tg_user)
