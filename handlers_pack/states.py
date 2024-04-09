@@ -4,6 +4,7 @@ from aiogram.filters.state import StatesGroup, State
 class MainMenuState(StatesGroup):
     Start = State()
     Menu = State()
+    LiveSearch = State()
 
 
 class StorageState(StatesGroup):

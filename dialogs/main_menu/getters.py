@@ -1,13 +1,13 @@
 from aiogram_dialog import DialogManager
 
-from models.item_model import INVISIBLE_CHAR
+from utils.utils_ import smile_folder, smile_item, smile_file
 
 
 async def get_start_data(dialog_manager: DialogManager, **kwargs):
     data = {}
     user = dialog_manager.event.from_user
     start_data = dialog_manager.current_context().start_data
-    is_first_connect = start_data['is_first_connect']
+    is_first_connect = start_data.get('is_first_connect', False) if start_data else False
     if is_first_connect:
         start_text = (f"👋 Привет, {user.first_name}, давайте начнем! 🚀️"
                       f"\n\nДля вас создано персональное хранилище. Чтобы открыть его - используйте команду /storage"
@@ -33,7 +33,23 @@ async def get_start_data(dialog_manager: DialogManager, **kwargs):
 
 
 async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
-    data = {}
-    #data['message_text'] = f'{INVISIBLE_CHAR}\n<b>☰ Меню</b> {INVISIBLE_CHAR * 32}'
-    data['message_text'] = f'<b>☰ Меню</b> {INVISIBLE_CHAR * 32}'
-    return data
+    return {
+        'message_text': f'<b>☰ Меню</b>' # {INVISIBLE_CHAR * 40}'
+    }
+
+
+async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
+    bot_username = (await dialog_manager.event.bot.get_me()).username
+    prompt_text = "\n<b>Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим:</b>" \
+                  "\n\nГлобальный поиск 🌐" \
+                  f"\n'@{bot_username} <i>ваш_запрос'</i>" \
+                  f"\n\nПоиск папок {smile_folder}" \
+                  f"\n'@{bot_username} folders/<i>ваш_запрос</i>'" \
+                  f"\n\nПоиск записей {smile_item}" \
+                  f"\n'@{bot_username} items/<i>ваш_запрос</i>'" \
+                  f"\n\nПоиск файлов {smile_file}" \
+                  f"\n'@{bot_username} files/<i>ваш_запрос</i>'" \
+                  "\n\nЛибо используйте кнопки ⬇️"
+    return {
+        'message_text': prompt_text
+    }

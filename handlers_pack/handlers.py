@@ -86,8 +86,15 @@ async def start_handler(tg_user: User, state: FSMContext, dialog_manager: Dialog
     if is_first_connect:
         await add_user_collections(tg_user)
 
-    await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
-    await dialog_manager.start(MainMenuState.Start, data={'is_first_connect': is_first_connect})
+    start_message = await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
+
+    await dialog_manager.start(
+        MainMenuState.Start,
+        data={
+            'start_message': start_message,
+            'is_first_connect': is_first_connect,
+        }
+    )
 
 
 @router.message(Command(commands=["access"]))
