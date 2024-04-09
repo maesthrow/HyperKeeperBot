@@ -24,7 +24,7 @@ users_menu_window = Window(
         width=1,
         hide_on_single_page=True
     ),
-    Button(Const("✖️ Закрыть"), id="close_users_menu", on_click=close_users_menu_handler),
+    Button(Const("✖️ Закрыть меню"), id="close_users_menu", on_click=close_users_menu_handler),
     state=AccessesStates.UsersMenu,
     getter=get_users_menu_data
 )
