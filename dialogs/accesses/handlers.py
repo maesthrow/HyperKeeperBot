@@ -27,7 +27,7 @@ async def close_users_menu_handler(callback: CallbackQuery, button: Button, dial
     start_message: Message = start_data.get('start_message', None)
     tasks = [
         dialog_manager.done(),
-        try_delete_message(callback.message)
+        try_delete_message(callback.message),
     ]
     if start_message:
         tasks.append(try_delete_message(start_message))
