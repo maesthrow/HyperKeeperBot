@@ -1,6 +1,12 @@
 from aiogram.filters.state import StatesGroup, State
 
 
+class MainMenuState(StatesGroup):
+    Start = State()
+    Menu = State()
+    OpenStorage = State()
+
+
 class FolderState(StatesGroup):
     NewName = State()
     EditName = State()

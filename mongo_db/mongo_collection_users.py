@@ -4,6 +4,11 @@ from mongo_db.mongo import db
 from utils.utils_user import get_user_full_str
 
 
+async def has_user(tg_user: User) -> bool:
+    user_document = await get_user_data(tg_user.id)
+    return user_document is not None
+
+
 async def add_user(tg_user: User):
     """Добавляет пользователя в базу данных, если его не существует."""
     user_collection = db["users"]

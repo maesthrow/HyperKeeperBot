@@ -8,7 +8,7 @@ from aiogram import Router, F
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup
+from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup, User
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_dialog import DialogManager
 from aiogram_dialog.setup import setup_dialogs
@@ -16,6 +16,7 @@ from aiogram_dialog.setup import setup_dialogs
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
 from dialogs.accesses.windows import dialog_accesses
 from dialogs.folder_control.windows import dialog_folder_control
+from dialogs.main_menu.windows import dialog_main_menu
 from handlers_pack import states
 from handlers_pack.filters import NewItemValidateFilter
 from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
@@ -26,11 +27,12 @@ from handlers_pack.handlers_save_item_content import files_to_message_handler, s
 from handlers_pack.handlers_settings import settings_buttons
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
-from handlers_pack.states import AccessesStates
+from handlers_pack.states import AccessesStates, MainMenuState
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
+from mongo_db.mongo_collection_users import has_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
     smile_item, smile_folder, smile_file
@@ -47,6 +49,7 @@ from utils.utils_sender_message_loop import send_storage_folders, send_storage_w
 
 router = Router()
 dp.include_router(router)
+dp.include_router(dialog_main_menu)
 dp.include_router(dialog_folder_control)
 dp.include_router(dialog_accesses)
 setup_dialogs(dp)
@@ -54,7 +57,6 @@ setup_dialogs(dp)
 
 @router.message(CommandStart())
 async def start(message: Message, dialog_manager: DialogManager, state: FSMContext):
-    print(f'start {dialog_manager}')
     tg_user = message.from_user
     url_data = from_url_data(message.text).split()
     await start_init(tg_user, message, state, url_data, dialog_manager)
@@ -62,7 +64,7 @@ async def start(message: Message, dialog_manager: DialogManager, state: FSMConte
 
 async def start_init(tg_user, message, state, url_data: List[str], dialog_manager: DialogManager):
     if len(url_data) == 1:
-        await start_handler(state, tg_user)
+        await start_handler(tg_user, state, dialog_manager)
     else:
         url_data_args = url_data[1].split('_')
         print(f'url_data_args = {url_data_args}')
@@ -76,22 +78,16 @@ async def start_init(tg_user, message, state, url_data: List[str], dialog_manage
             await start_url_data_file_handler(message, state, tg_user)
 
 
-async def start_handler(state: FSMContext, tg_user):
+async def start_handler(tg_user: User, state: FSMContext, dialog_manager: DialogManager):
     await state.clear()
 
-    # Добавляем пользователя и все его коллекции в базу данных, если их еще нет
-    await add_user_collections(tg_user)
+    is_first_connect = not await has_user(tg_user)
+    #Добавляем пользователя и все его коллекции в базу данных, если их еще нет
+    if is_first_connect:
+        await add_user_collections(tg_user)
 
-    # me = await bot.me()
-    # bot_username = me.username
-    text = (f"👋 Привет, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
-            f"которое доступно с помощью команды /storage\n\n"
-            f"Управляйте вашими данными 💼:"
-            f"\n\n✅ Создавайте папки 🗂️ и записи 📄"
-            f"\n\n✅ Сохраняйте любые файлы 🗃️"
-            f"\n\n✅ Делитесь с друзьями своими записями или предоставляйте им доступ сразу к целым папкам!"                        
-            f"\n\nПриятного использования! ☺️")
-    await bot.send_message(tg_user.id, text, reply_markup=ReplyKeyboardRemove())
+    await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
+    await dialog_manager.start(MainMenuState.Start, data={'is_first_connect': is_first_connect})
 
 
 @router.message(Command(commands=["access"]))
