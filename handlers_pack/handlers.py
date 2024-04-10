@@ -11,12 +11,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup, User
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram_dialog import DialogManager
-from aiogram_dialog.setup import setup_dialogs
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
-from dialogs.accesses.windows import dialog_accesses
-from dialogs.folder_control.windows import dialog_folder_control
-from dialogs.main_menu.windows import dialog_main_menu
 from handlers_pack import states
 from handlers_pack.filters import NewItemValidateFilter
 from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
@@ -28,7 +24,7 @@ from handlers_pack.handlers_settings import settings_buttons
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
 from handlers_pack.states import AccessesStates, MainMenuState
-from load_all import dp, bot
+from load_all import bot, dp
 from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
@@ -49,10 +45,10 @@ from utils.utils_sender_message_loop import send_storage_folders, send_storage_w
 
 router = Router()
 dp.include_router(router)
-dp.include_router(dialog_main_menu)
-dp.include_router(dialog_folder_control)
-dp.include_router(dialog_accesses)
-setup_dialogs(dp)
+# dp.include_router(dialog_main_menu)
+# dp.include_router(dialog_folder_control)
+# dp.include_router(dialog_accesses)
+# setup_dialogs(dp)
 
 
 @router.message(CommandStart())
@@ -157,14 +153,18 @@ async def storage(message: Message, state: FSMContext):
                 reply_markup=inline_markup
             )
         else:
-            future = executor.submit(functools.partial(show_storage, message, state, folder_id))
+            future = executor.submit(functools.partial(show_storage, message=message, state=state, folder_id=folder_id))
             result = await future.result(timeout=5)
 
 
-async def show_storage(message: Message, state: FSMContext, folder_id=ROOT_FOLDER_ID):
-    await state.clear()
+async def show_storage(user_id=None, message: Message = None, state: FSMContext = None, folder_id=ROOT_FOLDER_ID):
+    if state:
+        await state.clear()
 
-    user_id = message.from_user.id
+    if not user_id and message:
+        user_id = message.from_user.id
+    if not user_id:
+        return
 
     data = await get_data(user_id)
     await set_current_folder_id(user_id)

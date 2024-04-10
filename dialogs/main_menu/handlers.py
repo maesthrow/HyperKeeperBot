@@ -5,6 +5,7 @@ from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.widgets.kbd import Button
 
 from dialogs.handlers import try_delete_message
+from handlers_pack.handlers import show_storage
 from handlers_pack.states import MainMenuState, AccessesStates
 from load_all import bot
 
@@ -25,7 +26,8 @@ async def close_main_menu_handler(callback: CallbackQuery, button: Button, dialo
 
 
 async def open_storage_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    pass
+    user_id = dialog_manager.event.from_user.id
+    await show_storage(user_id=user_id)
 
 
 async def accesses_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):

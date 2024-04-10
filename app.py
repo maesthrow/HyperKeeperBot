@@ -1,8 +1,13 @@
 import asyncio
 
+from aiogram import Router
 from aiogram.methods import DeleteWebhook
 from aiogram.types import BotCommand
+from aiogram_dialog import setup_dialogs
 
+from dialogs.accesses.windows import dialog_accesses
+from dialogs.folder_control.windows import dialog_folder_control
+from dialogs.main_menu.windows import dialog_main_menu
 from load_all import bot, dp
 from mongo_db.mongo import close_client
 
@@ -35,6 +40,14 @@ if __name__ == '__main__':
     import handlers_pack.handlers_edit_item_files
     import handlers_pack.handlers_folder_control
     import handlers_pack.handlers_access
+
+    router = Router()
+    dp.include_router(router)
+    dp.include_router(dialog_main_menu)
+    dp.include_router(dialog_folder_control)
+    dp.include_router(dialog_accesses)
+    setup_dialogs(dp)
+
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
