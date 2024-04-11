@@ -8,6 +8,7 @@ from aiogram_dialog import setup_dialogs
 from dialogs.accesses.windows import dialog_accesses
 from dialogs.folder_control.windows import dialog_folder_control
 from dialogs.main_menu.windows import dialog_main_menu
+from dialogs.settings.windows import dialog_settings_menu
 from load_all import bot, dp
 from mongo_db.mongo import close_client
 
@@ -46,6 +47,7 @@ if __name__ == '__main__':
     dp.include_router(dialog_main_menu)
     dp.include_router(dialog_folder_control)
     dp.include_router(dialog_accesses)
+    dp.include_router(dialog_settings_menu)
     setup_dialogs(dp)
 
     try:

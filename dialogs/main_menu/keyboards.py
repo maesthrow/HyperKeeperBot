@@ -60,7 +60,3 @@ def live_search() -> widgets:
 #     ]
 #     return keyboard
 
-
-def to_main_menu_button():
-    return Button(text=Const("☰ Меню"), id="main_menu", on_click=open_main_menu_handler)
-

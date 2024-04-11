@@ -7,6 +7,10 @@ class MainMenuState(StatesGroup):
     LiveSearch = State()
 
 
+class SettingsMenuState(StatesGroup):
+    Menu = State()
+
+
 class StorageState(StatesGroup):
     OpenStorage = State()
 

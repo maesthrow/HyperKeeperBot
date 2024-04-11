@@ -4,7 +4,7 @@ from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
 
-from dialogs.handlers import try_delete_message
+from dialogs.general_handlers import try_delete_message
 from handlers_pack.states import AccessesStates, MainMenuState
 from utils.utils_ import get_level_folders, smile_folder
 from utils.utils_folders_reader import get_folder_name

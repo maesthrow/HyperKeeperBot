@@ -4,20 +4,10 @@ from aiogram.types import CallbackQuery, ReplyKeyboardRemove, Message
 from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.widgets.kbd import Button
 
-from dialogs.handlers import try_delete_message
+from dialogs.general_handlers import try_delete_message
 from handlers_pack.handlers import show_storage
-from handlers_pack.states import MainMenuState, AccessesStates
+from handlers_pack.states import MainMenuState, AccessesStates, SettingsMenuState
 from load_all import bot
-
-
-async def open_main_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    start_data = dialog_manager.current_context().start_data
-    start_message: Message = start_data.get('start_message', None) if start_data else None
-    tasks = [
-        dialog_manager.start(MainMenuState.Menu),  # , show_mode=ShowMode.EDIT)
-        try_delete_message(start_message)
-    ]
-    await asyncio.gather(*tasks)
 
 
 async def close_main_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -50,7 +40,7 @@ async def user_profile_handler(callback: CallbackQuery, button: Button, dialog_m
 
 
 async def settings_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    pass
+    await dialog_manager.start(SettingsMenuState.Menu)
 
 
 async def help_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
