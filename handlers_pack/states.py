@@ -9,6 +9,7 @@ class MainMenuState(StatesGroup):
 
 class SettingsMenuState(StatesGroup):
     Menu = State()
+    Language = State()
 
 
 class StorageState(StatesGroup):
