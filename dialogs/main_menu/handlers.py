@@ -8,6 +8,7 @@ from dialogs.general_handlers import try_delete_message
 from handlers_pack.handlers import show_storage
 from handlers_pack.states import MainMenuState, AccessesStates, SettingsMenuState
 from load_all import bot
+from utils.utils_data import get_current_folder_id
 
 
 async def close_main_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -17,7 +18,8 @@ async def close_main_menu_handler(callback: CallbackQuery, button: Button, dialo
 
 async def open_storage_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     user_id = dialog_manager.event.from_user.id
-    await show_storage(user_id=user_id)
+    current_folder_id = await get_current_folder_id(user_id)
+    await show_storage(user_id=user_id, folder_id=current_folder_id)
 
 
 async def accesses_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):

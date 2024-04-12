@@ -100,31 +100,8 @@ async def accesses_handler(message: Message, state: FSMContext, dialog_manager: 
 
 
 @router.message(Command(commands=["search"]))
-async def inline_search(message: Message, state: FSMContext):
-    bot_username = (await message.bot.get_me()).username
-    prompt_text = "\n*Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\\:*" \
-                  "\n\nГлобальный поиск 🌐" \
-                  f"\n'@{bot_username} _ваш\\_запрос'_" \
-                  f"\n\nПоиск папок {smile_folder} \\(только в чате с ботом\\)" \
-                  f"\n'@{bot_username} folders/_ваш\\_запрос_'" \
-                  f"\n\nПоиск записей {smile_item}" \
-                  f"\n'@{bot_username} items/_ваш\\_запрос_'" \
-                  f"\n\nПоиск файлов {smile_file}" \
-                  f"\n'@{bot_username} files/_ваш\\_запрос_'" \
-                  "\n\nЛибо используйте кнопки ⬇️"
-
-    builder = InlineKeyboardBuilder()
-    builder.button(text=f"🔍 Глобальный поиск 🌐", switch_inline_query_current_chat="")
-    builder.button(text=f"🔍 Поиск папок {smile_folder}", switch_inline_query_current_chat="folders/")
-    builder.button(text=f"🔍 Поиск записей {smile_item}", switch_inline_query_current_chat="items/")
-    builder.button(text=f"🔍 Поиск файлов {smile_file}", switch_inline_query_current_chat="files/")
-    builder.button(text="✖️ Закрыть", callback_data=MessageBoxCallback(result='cancel').pack())
-    builder.adjust(1)
-    await message.answer(
-        text=prompt_text,
-        parse_mode=ParseMode.MARKDOWN_V2,
-        reply_markup=builder.as_markup())
-    await bot.delete_message(message.from_user.id, message.message_id)
+async def inline_search(message: Message, state: FSMContext, dialog_manager: DialogManager):
+    await dialog_manager.start(MainMenuState.LiveSearch)
 
 
 @router.message(Command(commands=["settings"]))

@@ -1,5 +1,6 @@
 from aiogram_dialog import DialogManager
 
+from models.item_model import INVISIBLE_CHAR
 from utils.utils_ import smile_folder, smile_item, smile_file
 
 
@@ -39,17 +40,23 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
 
 
 async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
-    bot_username = (await dialog_manager.event.bot.get_me()).username
-    prompt_text = "\n<b>Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим:</b>" \
-                  "\n\nГлобальный поиск 🌐" \
-                  f"\n'@{bot_username} <i>ваш_запрос'</i>" \
-                  f"\n\nПоиск папок {smile_folder}" \
-                  f"\n'@{bot_username} folders/<i>ваш_запрос</i>'" \
-                  f"\n\nПоиск записей {smile_item}" \
-                  f"\n'@{bot_username} items/<i>ваш_запрос</i>'" \
-                  f"\n\nПоиск файлов {smile_file}" \
-                  f"\n'@{bot_username} files/<i>ваш_запрос</i>'" \
-                  "\n\nЛибо используйте кнопки ⬇️"
-    return {
-        'message_text': prompt_text
-    }
+    data = dialog_manager.current_context().dialog_data
+    live_search_title = f"🔍 <b>Live-поиск</b>"
+    if not data:
+        bot_username = (await dialog_manager.event.bot.get_me()).username
+        prompt_text = f"{live_search_title}" \
+                      "\n\n<i>Вводите поисковый запрос из любого чата, упоминая бота:</i>" \
+                      "\n\nГлобальный поиск 🌐" \
+                      f"\n'@{bot_username} <i>ваш_запрос'</i>" \
+                      f"\n\nПоиск папок {smile_folder}" \
+                      f"\n'@{bot_username} folders/<i>ваш_запрос</i>'" \
+                      f"\n\nПоиск записей {smile_item}" \
+                      f"\n'@{bot_username} items/<i>ваш_запрос</i>'" \
+                      f"\n\nПоиск файлов {smile_file}" \
+                      f"\n'@{bot_username} files/<i>ваш_запрос</i>'" \
+                      "\n\n<i>Либо используйте кнопки</i> ⬇️"
+    else:
+        prompt_text = f"{live_search_title}{INVISIBLE_CHAR*20}"
+    data = {'message_text': prompt_text}
+    dialog_manager.current_context().dialog_data = data
+    return data
