@@ -1,6 +1,6 @@
 import logging
 
-from aiogram import Bot
+from aiogram import Bot, Router
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from wit import Wit

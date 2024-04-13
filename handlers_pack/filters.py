@@ -3,9 +3,10 @@ from typing import Union, List
 from aiogram.filters import Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
+from aiogram_dialog import DialogManager
 
 from handlers_pack import states
-from handlers_pack.states import ItemState
+from handlers_pack.states import ItemState, FolderControlStates
 
 
 class InButtonsFilter(Filter):
@@ -37,6 +38,7 @@ class NotAddToFilter(Filter):
 class NewItemValidateFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         current_state = await state.get_state()
+        print(f'current_state = {current_state}')
         return (
                 current_state != ItemState.EditFileCaption.state
                 and current_state != ItemState.Search.state

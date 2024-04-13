@@ -248,7 +248,9 @@ async def on_create_new_item(state: FSMContext, item: Item, message: Message = N
         await asyncio.sleep(0.2)
         await show_item(user_id, new_item_id)
         await asyncio.sleep(0.2)
-        await MessageBox.show(user_id, "Новая запись успешно добавлена ✅")
+        if call:
+            await call.answer("Новая запись успешно добавлена ✅")
+        #await MessageBox.show(user_id, "Новая запись успешно добавлена ✅")
     else:
         await show_folders(user_id, current_folder_id=current_folder_id, need_to_resend=True)
         await asyncio.sleep(0.2)

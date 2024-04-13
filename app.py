@@ -1,6 +1,5 @@
 import asyncio
 
-from aiogram import Router
 from aiogram.methods import DeleteWebhook
 from aiogram.types import BotCommand
 from aiogram_dialog import setup_dialogs
@@ -11,6 +10,7 @@ from dialogs.main_menu.windows import dialog_main_menu
 from dialogs.settings.windows import dialog_settings_menu
 from load_all import bot, dp
 from mongo_db.mongo import close_client
+
 
 
 async def on_shutdown():
@@ -39,16 +39,15 @@ if __name__ == '__main__':
     import handlers_pack.handlers_inline_query_access
     import handlers_pack.handlers_item_text_pages
     import handlers_pack.handlers_edit_item_files
-    import handlers_pack.handlers_folder_control
+    import handlers_pack.handlers_pin_folder_control
     import handlers_pack.handlers_access
 
-    router = Router()
-    dp.include_router(router)
     dp.include_router(dialog_main_menu)
     dp.include_router(dialog_folder_control)
     dp.include_router(dialog_accesses)
     dp.include_router(dialog_settings_menu)
     setup_dialogs(dp)
+    dp.include_router(handlers_pack.handlers.router)
 
     try:
         asyncio.run(main())

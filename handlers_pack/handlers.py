@@ -4,12 +4,12 @@ import functools
 from typing import List
 
 import aiogram
-from aiogram import Router, F
+import load_all
+from aiogram import F, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup, User
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, User
 from aiogram_dialog import DialogManager
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
@@ -20,7 +20,6 @@ from handlers_pack.handlers_item_add_mode import add_files_to_message_handler
 from handlers_pack.handlers_read_voice import read_voice_offer
 from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
     text_to_message_handler
-from handlers_pack.handlers_settings import settings_buttons
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
 from handlers_pack.states import AccessesStates, MainMenuState, SettingsMenuState
@@ -31,7 +30,7 @@ from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import has_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
-    smile_item, smile_folder, smile_file
+    smile_folder
 from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_movement_item, \
     get_folders_with_items_inline_markup, new_general_buttons_folder, \
@@ -44,11 +43,6 @@ from utils.utils_items_reader import get_folder_id
 from utils.utils_sender_message_loop import send_storage_folders, send_storage_with_items
 
 router = Router()
-dp.include_router(router)
-# dp.include_router(dialog_main_menu)
-# dp.include_router(dialog_folder_control)
-# dp.include_router(dialog_accesses)
-# setup_dialogs(dp)
 
 
 @router.message(CommandStart())
@@ -227,7 +221,7 @@ async def back_to_folder(message: aiogram.types.Message):
 
 
 @router.message(NewItemValidateFilter(), F.via_bot == None, F.content_type == 'text')
-async def any_message(message: Message, state: FSMContext):
+async def any_message(message: Message, state: FSMContext, dialog_manager: DialogManager):
     await text_to_message_handler(message, state)
 
 
