@@ -1,11 +1,9 @@
 from aiogram_dialog import Window, Dialog
-from aiogram_dialog.widgets.kbd import Back, Checkbox, Column, Button
 from aiogram_dialog.widgets.text import Const
 
 from dialogs import general_keyboards
 from dialogs.settings import keyboards
-from dialogs.settings.getters import get_language_data
-from dialogs.settings.handlers import language_changed, on_back_settings_click_handler
+from dialogs.settings.getters import get_language_data, get_folders_on_page_count_data, get_items_on_page_count_data
 from handlers_pack.states import SettingsMenuState
 
 settings_menu_window = Window(
@@ -24,15 +22,24 @@ language_menu_window = Window(
 )
 
 
-folders_count_menu_window = Window(
+folders_on_page_count_menu_window = Window(
     Const("<b>⚙️ Настройки > 🗂️ Количество папок на странице</b>"),
     *keyboards.folders_count_buttons(),
     state=SettingsMenuState.FoldersOnPageCount,
-    getter=get_language_data
+    getter=get_folders_on_page_count_data
+)
+
+
+items_on_page_count_menu_window = Window(
+    Const("<b>⚙️ Настройки > 📄 Количество записей на странице</b>"),
+    *keyboards.items_count_buttons(),
+    state=SettingsMenuState.ItemsOnPagesCount,
+    getter=get_items_on_page_count_data
 )
 
 dialog_settings_menu = Dialog(
     settings_menu_window,
     language_menu_window,
-    folders_count_menu_window
+    folders_on_page_count_menu_window,
+    items_on_page_count_menu_window,
 )
