@@ -1,11 +1,11 @@
 from aiogram_dialog import Window, Dialog
-from aiogram_dialog.widgets.kbd import Back, Checkbox, Column
+from aiogram_dialog.widgets.kbd import Back, Checkbox, Column, Button
 from aiogram_dialog.widgets.text import Const
 
 from dialogs import general_keyboards
 from dialogs.settings import keyboards
 from dialogs.settings.getters import get_language_data
-from dialogs.settings.handlers import language_changed
+from dialogs.settings.handlers import language_changed, on_back_settings_click_handler
 from handlers_pack.states import SettingsMenuState
 
 settings_menu_window = Window(
@@ -17,23 +17,22 @@ settings_menu_window = Window(
 )
 
 language_menu_window = Window(
-    Const("<b>🌐 Выберите язык интерфейса</b>"),
-    Column(
-        Checkbox(Const("✓ 🇷🇺 Русский"), Const("🇷🇺 Русский"),
-                 id='ru', on_state_changed=language_changed),  # , on_click=language_selected_handler),
-        Checkbox(Const("✓ 🇺🇸 English"), Const("🇺🇸 English"),
-                 id='en', on_state_changed=language_changed),  # , on_click=language_selected_handler),
-        Checkbox(Const("✓ 🇪🇸 Español"), Const("🇪🇸 Español"),
-                 id='es', on_state_changed=language_changed),  # , on_click=language_selected_handler),
-        Checkbox(Const("✓ 🇫🇷 Français"), Const("🇫🇷 Français"),
-                 id='fr', on_state_changed=language_changed),  # , on_click=language_selected_handler),
-        Back(Const("↩️ Назад")),
-    ),
+    Const("<b>⚙️ Настройки > 🌐 Язык интерфейса</b>"),
+    keyboards.languages_buttons(),
     state=SettingsMenuState.Language,
+    getter=get_language_data
+)
+
+
+folders_count_menu_window = Window(
+    Const("<b>⚙️ Настройки > 🗂️ Количество папок на странице</b>"),
+    *keyboards.folders_count_buttons(),
+    state=SettingsMenuState.FoldersOnPageCount,
     getter=get_language_data
 )
 
 dialog_settings_menu = Dialog(
     settings_menu_window,
     language_menu_window,
+    folders_count_menu_window
 )

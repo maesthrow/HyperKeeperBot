@@ -52,16 +52,16 @@ for row in range(START_ITEM_COUNT_RANGE, END_ITEM_COUNT_RANGE + 1):
 settings_count_items_buttons[ROWS_COUNT_FOR_COUNT_ON_PAGE_SETTINGS].append(back_to_settings_button)
 
 # Создаем кнопки для каждого языка
-settings_languages_buttons = []
-
-for lang in Language:
-    key, value = list(lang.value.items())[0]
-    row = InlineKeyboardButton(text=value, callback_data=f"settings_language_{key}")
-    settings_languages_buttons.append(row)
-
-# Группируем по две кнопки в каждой строке
-settings_languages_buttons = [settings_languages_buttons[i:i + 2] for i in range(0, len(settings_languages_buttons), 2)]
-settings_languages_buttons.append([back_to_settings_button])
+# settings_languages_buttons = []
+#
+# for lang in Language:
+#     key, value = list(lang.value.items())[0]
+#     row = InlineKeyboardButton(text=value, callback_data=f"settings_language_{key}")
+#     settings_languages_buttons.append(row)
+#
+# # Группируем по две кнопки в каждой строке
+# settings_languages_buttons = [settings_languages_buttons[i:i + 2] for i in range(0, len(settings_languages_buttons), 2)]
+# settings_languages_buttons.append([back_to_settings_button])
 
 router = Router()
 dp.include_router(router)

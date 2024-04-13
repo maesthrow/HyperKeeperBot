@@ -10,6 +10,8 @@ class MainMenuState(StatesGroup):
 class SettingsMenuState(StatesGroup):
     Menu = State()
     Language = State()
+    FoldersOnPageCount = State()
+    ItemsOnPagesCount = State()
 
 
 class StorageState(StatesGroup):

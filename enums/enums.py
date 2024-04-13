@@ -7,14 +7,14 @@ class Environment(Enum):
 
 
 class Language(Enum):
-    RUSSIAN = {"russian": "🇷🇺 Русский"}
-    GERMAN = {"german": "🇩🇪 Deutsch"}
-    ENGLISH = {"english": "🇬🇧 English"}
-    SPAIN = {"spain": "🇪🇸 Español"}
-    FRENCH = {"french": "🇫🇷 Français"}
-    ITALIAN = {"italian": "🇮🇹 Italiano"}
-    KAZAKH = {"kazakh": "🇰🇿 қазақ"}
-    CHINESE = {"chinese": "🇨🇳 中國人"}
+    RUSSIAN = "russian"
+    GERMAN = "german"
+    ENGLISH = "english"
+    SPAIN = "spain"
+    FRENCH = "french"
+    ITALIAN = "italian"
+    KAZAKH = "kazakh"
+    CHINESE = "chinese"
 
 
 class AccessType(Enum):
