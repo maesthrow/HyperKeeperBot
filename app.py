@@ -30,6 +30,7 @@ async def main():
 
 if __name__ == '__main__':
     import handlers_pack.handlers
+    import handlers_pack.handlers_any_message
     import handlers_pack.handlers_search_end
     import handlers_pack.handlers_item_entities
     import handlers_pack.handlers_item_edit_inline_buttons
@@ -47,7 +48,8 @@ if __name__ == '__main__':
     dp.include_router(dialog_accesses)
     dp.include_router(dialog_settings_menu)
     setup_dialogs(dp)
-    dp.include_router(handlers_pack.handlers.router)
+
+
 
     try:
         asyncio.run(main())

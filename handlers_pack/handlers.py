@@ -4,7 +4,6 @@ import functools
 from typing import List
 
 import aiogram
-import load_all
 from aiogram import F, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
@@ -14,12 +13,10 @@ from aiogram_dialog import DialogManager
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
 from handlers_pack import states
-from handlers_pack.filters import NewItemValidateFilter
 from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
 from handlers_pack.handlers_item_add_mode import add_files_to_message_handler
 from handlers_pack.handlers_read_voice import read_voice_offer
-from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
-    text_to_message_handler
+from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
 from handlers_pack.states import AccessesStates, MainMenuState, SettingsMenuState
@@ -43,6 +40,7 @@ from utils.utils_items_reader import get_folder_id
 from utils.utils_sender_message_loop import send_storage_folders, send_storage_with_items
 
 router = Router()
+dp.include_router(router)
 
 
 @router.message(CommandStart())
@@ -219,10 +217,6 @@ async def back_to_folder(message: aiogram.types.Message):
     folder_id = await get_current_folder_id(message.from_user.id)
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
-
-@router.message(NewItemValidateFilter(), F.via_bot == None, F.content_type == 'text')
-async def any_message(message: Message, state: FSMContext, dialog_manager: DialogManager):
-    await text_to_message_handler(message, state)
 
 
 # @router.message(NotEditFileCaptionFilter(), F.via_bot, F.text.startswith('folders/'))  # NotAddToFilter(),
