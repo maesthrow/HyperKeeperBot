@@ -1,7 +1,10 @@
+from enum import Enum
+
 from aiogram_dialog import widgets
 from aiogram_dialog.widgets.kbd import Button, Column, Checkbox, Row
 from aiogram_dialog.widgets.text import Const
 
+from dialogs.settings.getters import counts
 from dialogs.settings.handlers import language_menu_handler, folders_on_page_count_menu_handler, \
     on_back_settings_click_handler, language_changed, folders_on_page_count_changed, items_on_page_count_changed, \
     items_on_page_count_menu_handler
@@ -11,6 +14,11 @@ _settings_menu_buttons = [
     Button(Const("📄 Количество записей на странице"), id="accesses_menu", on_click=items_on_page_count_menu_handler),
     Button(Const("🌐 Язык интерфейса"), id="search_menu", on_click=language_menu_handler),
 ]
+
+
+class Entities(Enum):
+    FOLDERS = 'f'
+    ITEMS = 'i'
 
 
 def settings_menu() -> widgets:
@@ -39,36 +47,32 @@ def languages_buttons():
 
 
 def folders_count_buttons():
-    return (
-        Row(
-            Checkbox(Const("✓ 6"), Const("6"), id='f_6', on_state_changed=folders_on_page_count_changed),
-            Checkbox(Const("✓ 8"), Const("8"), id='f_8', on_state_changed=folders_on_page_count_changed),
-            Checkbox(Const("✓ 10"), Const("10"), id='f_10', on_state_changed=folders_on_page_count_changed),
-            Checkbox(Const("✓ 12"), Const("12"), id='f_12', on_state_changed=folders_on_page_count_changed),
-        ),
-        Row(
-            Checkbox(Const("✓ 14"), Const("14"), id='f_14', on_state_changed=folders_on_page_count_changed),
-            Checkbox(Const("✓ 16"), Const("16"), id='f_16', on_state_changed=folders_on_page_count_changed),
-            Checkbox(Const("✓ 18"), Const("18"), id='f_18', on_state_changed=folders_on_page_count_changed),
-            Checkbox(Const("✓ 20"), Const("20"), id='f_20', on_state_changed=folders_on_page_count_changed),
-        ),
-        back_to_settings_menu_button()
-    )
+    return _get_count_buttons(Entities.FOLDERS)
 
 
 def items_count_buttons():
+    return _get_count_buttons(Entities.ITEMS)
+
+
+def _get_count_buttons(entities: Entities):
+    on_state_changed = folders_on_page_count_changed if entities == Entities.FOLDERS else items_on_page_count_changed
+    rows = []
+    row = []
+    for count in counts:
+        if len(row) == 4:
+            rows.append(Row(*row[:]))
+            row = []
+        check_text_btn = f'✓ {count}'
+        id_btn = f'{entities.value}_{count}'
+        row.append(
+            Checkbox(
+                Const(check_text_btn), Const(str(count)), id=id_btn, on_state_changed=on_state_changed
+            )
+        )
+    if len(row) > 0:
+        rows.append(Row(*row))
     return (
-        Row(
-            Checkbox(Const("✓ 6"), Const("6"), id='i_6', on_state_changed=items_on_page_count_changed),
-            Checkbox(Const("✓ 8"), Const("8"), id='i_8', on_state_changed=items_on_page_count_changed),
-            Checkbox(Const("✓ 10"), Const("10"), id='i_10', on_state_changed=items_on_page_count_changed),
-            Checkbox(Const("✓ 12"), Const("12"), id='i_12', on_state_changed=items_on_page_count_changed),
-        ),
-        Row(
-            Checkbox(Const("✓ 14"), Const("14"), id='i_14', on_state_changed=items_on_page_count_changed),
-            Checkbox(Const("✓ 16"), Const("16"), id='i_16', on_state_changed=items_on_page_count_changed),
-            Checkbox(Const("✓ 18"), Const("18"), id='i_18', on_state_changed=items_on_page_count_changed),
-            Checkbox(Const("✓ 20"), Const("20"), id='i_20', on_state_changed=items_on_page_count_changed),
-        ),
+        *rows,
         back_to_settings_menu_button()
     )
+

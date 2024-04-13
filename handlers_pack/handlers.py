@@ -23,7 +23,7 @@ from handlers_pack.handlers_save_item_content import files_to_message_handler, s
 from handlers_pack.handlers_settings import settings_buttons
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
-from handlers_pack.states import AccessesStates, MainMenuState
+from handlers_pack.states import AccessesStates, MainMenuState, SettingsMenuState
 from load_all import bot, dp
 from models.folder_model import Folder
 from models.item_model import Item
@@ -105,13 +105,8 @@ async def inline_search(message: Message, state: FSMContext, dialog_manager: Dia
 
 
 @router.message(Command(commands=["settings"]))
-async def search_item_handler(message: aiogram.types.Message):
-    await bot.delete_message(
-        chat_id=message.chat.id,
-        message_id=message.message_id,
-    )
-    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=settings_buttons)
-    await bot.send_message(message.chat.id, "<b>⚙️ Настройки:</b>", reply_markup=inline_markup)
+async def settings_handler(message: aiogram.types.Message, dialog_manager: DialogManager):
+    await dialog_manager.start(SettingsMenuState.Menu)
 
 
 @router.message(Command(commands=["storage"]))
