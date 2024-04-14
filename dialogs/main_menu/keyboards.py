@@ -1,20 +1,38 @@
 from aiogram_dialog import widgets
-from aiogram_dialog.widgets.kbd import Button, Column, Row
+from aiogram_dialog.widgets.kbd import Column
 from aiogram_dialog.widgets.text import Const
 
-from dialogs.main_menu.handlers import *
 from dialogs.widgets import InlineQueryButton
+from enums.enums import Language
 from utils.utils_ import smile_folder, smile_item, smile_file
 
-_main_menu_buttons = [
-    Button(Const("🗂️ Открыть хранилище"), id="open_storage", on_click=open_storage_handler),
-    Button(Const("🔐 Доступы от других пользователей"), id="accesses_menu", on_click=accesses_menu_handler),
-    Button(Const("🔍️ Live-поиск"), id="search_menu", on_click=search_menu_handler),
-    Button(Const("👤 Мой профиль"), id="user_profile", on_click=user_profile_handler),
-    Button(Const("⚙️ Настройки"), id="settings_menu", on_click=settings_menu_handler),
-    Button(Const("❔ Помощь"), id="help_menu", on_click=help_menu_handler),
-    #Button(Const("✖️ Закрыть меню"), id="close_main_menu", on_click=close_main_menu_handler),
-]
+BUTTONS = {
+    'storage': {
+        Language.RUSSIAN: "🗂️ Открыть хранилище",
+        Language.ENGLISH: "🗂️ Open storage",
+    },
+    'accesses': {
+        Language.RUSSIAN: "🔐 Доступы от других пользователей",
+        Language.ENGLISH: "🔐 Access from other users",
+    },
+    'search': {
+        Language.RUSSIAN: "🔍️ Live-поиск",
+        Language.ENGLISH: "🔍️ Live search",
+    },
+    'profile': {
+        Language.RUSSIAN: "👤 Мой профиль",
+        Language.ENGLISH: "👤 My profile",
+    },
+    'settings': {
+        Language.RUSSIAN: "⚙️ Настройки",
+        Language.ENGLISH: "⚙️ Settings",
+    },
+    'help': {
+        Language.RUSSIAN: "❔ Помощь",
+        Language.ENGLISH: "❔ Help",
+    },
+}
+
 
 _live_search_buttons = [
     InlineQueryButton(
@@ -40,23 +58,10 @@ _live_search_buttons = [
 ]
 
 
-def main_menu() -> widgets:
-    keyboard = [
-        Column(*_main_menu_buttons)
-    ]
-    return keyboard
-
-
 def live_search() -> widgets:
     keyboard = [
         Column(*_live_search_buttons)
     ]
     return keyboard
 
-
-# def to_main_menu_button() -> widgets:
-#     keyboard = [
-#         Row(Button(text=Const("☰ Меню"), id="main_menu", on_click=open_main_menu_handler))
-#     ]
-#     return keyboard
 

@@ -1,5 +1,6 @@
 from aiogram.types import User
 
+from enums.enums import Language
 from mongo_db.mongo_collection_accesses import add_user_accesses, get_user_accesses_collection
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection, add_user_folders
 from mongo_db.mongo_collection_users import get_user_collection, set_user_collection, add_user
@@ -116,3 +117,7 @@ async def set_accesses_from_user_collection(user_id, from_user_id, from_user_col
     return accesses_collection[from_user_id]
 
 
+async def get_current_lang(user_id):
+    settings = await get_from_user_collection(user_id, 'settings')
+    current_language = Language(settings.get('language', Language.ENGLISH.value))
+    return current_language

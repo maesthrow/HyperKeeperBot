@@ -1,17 +1,20 @@
 from aiogram_dialog import Window, Dialog
-from aiogram_dialog.widgets.text import Const
+from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs import general_keyboards
+from dialogs.general_handlers import open_main_menu_handler
 from dialogs.settings import keyboards
-from dialogs.settings.getters import get_language_data, get_folders_on_page_count_data, get_items_on_page_count_data
+from dialogs.settings.getters import get_language_data, get_folders_on_page_count_data, get_items_on_page_count_data, \
+    get_settings_menu_data
 from handlers_pack.states import SettingsMenuState
 
 settings_menu_window = Window(
-    Const("⚙️ <b>Настройки</b>"),
+    Format("{message_text}"),
     *keyboards.settings_menu(),
-    general_keyboards.to_main_menu_button(),
+    Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=SettingsMenuState.Menu,
-    # getter=get_main_menu_data
+    getter=get_settings_menu_data
 )
 
 language_menu_window = Window(

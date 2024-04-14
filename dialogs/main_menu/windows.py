@@ -2,6 +2,7 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs import general_keyboards
+from dialogs.general_handlers import open_main_menu_handler
 from dialogs.main_menu import keyboards
 from dialogs.main_menu.getters import get_start_data, get_main_menu_data, get_live_search_data
 from dialogs.main_menu.handlers import *
@@ -9,14 +10,19 @@ from handlers_pack.states import MainMenuState
 
 start_window = Window(
     Format("{start_text}"),
-    general_keyboards.to_main_menu_button(),
+    Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=MainMenuState.Start,
     getter=get_start_data
 )
 
 main_menu_window = Window(
     Format("{message_text}"),
-    *keyboards.main_menu(),
+    Button(Format('{btn_storage}'), id="open_storage", on_click=open_storage_handler),
+    Button(Format('{btn_accesses}'), id="accesses_menu", on_click=accesses_menu_handler),
+    Button(Format('{btn_search}'), id="search_menu", on_click=search_menu_handler),
+    Button(Format('{btn_profile}'), id="user_profile", on_click=user_profile_handler),
+    Button(Format('{btn_settings}'), id="settings_menu", on_click=settings_menu_handler),
+    Button(Format('{btn_help}'), id="help_menu", on_click=help_menu_handler),
     state=MainMenuState.Menu,
     getter=get_main_menu_data
 )
@@ -24,7 +30,7 @@ main_menu_window = Window(
 live_search_window = Window(
     Format("{message_text}"),
     *keyboards.live_search(),
-    general_keyboards.to_main_menu_button(),
+    Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=MainMenuState.LiveSearch,
     getter=get_live_search_data
 )

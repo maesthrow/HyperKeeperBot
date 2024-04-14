@@ -1,45 +1,47 @@
 from aiogram_dialog import DialogManager
 
+import dialogs.main_menu.keyboards as keyboards
+import dialogs.general_keyboards as general_keyboards
 from models.item_model import INVISIBLE_CHAR
+from resources.text_getter import get_start_first_text, get_start_text, get_text
 from utils.utils_ import smile_folder, smile_item, smile_file
+from utils.utils_data import get_current_lang
 
 
 async def get_start_data(dialog_manager: DialogManager, **kwargs):
     data = {}
     user = dialog_manager.event.from_user
+    language = await get_current_lang(user.id)
     start_data = dialog_manager.current_context().start_data
     is_first_connect = start_data.get('is_first_connect', False) if start_data else False
     if is_first_connect:
-        start_text = (f"👋 Привет, {user.first_name}, давайте начнем! 🚀️"
-                      f"\n\nДля вас создано персональное хранилище. Чтобы открыть его - используйте команду /storage"
-                      f"\n\nУправляйте вашими данными 💼:"
-                      f"\n\n✅ Создавайте папки 🗂️ и записи 📄"
-                      f"\n\n✅ Сохраняйте любые файлы 🗃️"
-                      f"\n\n✅ Делитесь с друзьями своими записями и файлами или предоставляйте им доступ сразу к целым папкам!"
-                      f"\n\nВсе основные команды вы найдете в главном <b>Меню</b>"
-                      f"\n\nПриятного использования! ☺️")
+        start_text = await get_start_first_text(user)
     else:
-        start_text = (f"👋 Привет, {user.first_name}, давайте начнем! 🚀️"
-                      f"\n\nЧтобы открыть ваше персональное хранилище, используйте команду "
-                      f"\n/storage"
-                      f"\n\nУправляйте вашими данными 💼:"
-                      f"\n\n✅ Создавайте папки 🗂️ и записи 📄"
-                      f"\n\n✅ Сохраняйте любые файлы 🗃️"
-                      f"\n\n✅ Делитесь с друзьями своими записями и файлами или предоставляйте им доступ сразу к целым папкам!"
-                      f"\n\nВсе основные команды вы найдете в главном <b>Меню</b>"
-                      f"\n\nПриятного использования! ☺️")
+        start_text = await get_start_text(user)
 
-    data['start_text'] = start_text
-    return data
+    return {
+        'start_text': start_text,
+        'btn_menu': general_keyboards.BUTTONS['menu'].get(language),
+    }
 
 
 async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
+    user_id = dialog_manager.event.from_user.id
+    language = await get_current_lang(user_id)
+    menu_text = await get_text(user_id, 'Menu')
     return {
-        'message_text': f'<b>☰ Меню</b>' # {INVISIBLE_CHAR * 40}'
+        'message_text': f'<b>☰ {menu_text}</b>', # {INVISIBLE_CHAR * 40}'
+        'btn_storage': keyboards.BUTTONS['storage'].get(language),
+        'btn_accesses': keyboards.BUTTONS['accesses'].get(language),
+        'btn_search': keyboards.BUTTONS['search'].get(language),
+        'btn_profile': keyboards.BUTTONS['profile'].get(language),
+        'btn_settings': keyboards.BUTTONS['settings'].get(language),
+        'btn_help': keyboards.BUTTONS['help'].get(language),
     }
 
 
 async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
+    language = await get_current_lang(dialog_manager.event.from_user.id)
     data = dialog_manager.current_context().dialog_data
     live_search_title = f"🔍 <b>Live-поиск</b>"
     if not data:
@@ -57,6 +59,11 @@ async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
                       "\n\n<i>Либо используйте кнопки</i> ⬇️"
     else:
         prompt_text = f"{live_search_title}{INVISIBLE_CHAR*20}"
-    data = {'message_text': prompt_text}
+
+    data = {
+        'message_text': prompt_text,
+        'btn_menu': (general_keyboards.BUTTONS['menu'].get(language),)
+    }
     dialog_manager.current_context().dialog_data = data
     return data
+

@@ -3,9 +3,10 @@ from enum import Enum
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Checkbox, ManagedCheckbox
 
+from dialogs import general_keyboards
 from enums.enums import Language
-from utils.utils_data import get_from_user_collection
-
+from resources.text_getter import get_text
+from utils.utils_data import get_from_user_collection, get_current_lang
 
 languages = (
     Language.RUSSIAN,
@@ -17,16 +18,25 @@ languages = (
 counts = (6, 8, 10, 12, 14, 16, 18, 20)
 
 
+async def get_settings_menu_data(dialog_manager: DialogManager, **kwargs):
+    user_id = dialog_manager.event.from_user.id
+    language = await get_current_lang(user_id)
+    settings_text = await get_text(user_id, 'Settings')
+    return {
+        'message_text': f'<b>⚙️ {settings_text}</b>',
+        'btn_menu': (general_keyboards.BUTTONS['menu'].get(language))
+    }
+
+
 async def get_language_data(dialog_manager: DialogManager, **kwargs):
-    settings = await get_from_user_collection(dialog_manager.event.from_user.id, 'settings')
-    current_language = Language(settings.get('language', "russian"))
+    language = await get_current_lang(dialog_manager.event.from_user.id)
 
-    for language in languages:
-        checkbox: ManagedCheckbox = dialog_manager.find(language.value)
+    for lang in languages:
+        checkbox: ManagedCheckbox = dialog_manager.find(lang.value)
         if checkbox:
-            await checkbox.set_checked(language == current_language)
+            await checkbox.set_checked(lang == language)
 
-    return {'language': current_language}
+    return {'language': language}
 
 
 async def get_folders_on_page_count_data(dialog_manager: DialogManager, **kwargs):
