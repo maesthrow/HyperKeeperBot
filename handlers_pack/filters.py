@@ -3,9 +3,11 @@ from typing import Union, List
 from aiogram.filters import Filter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import KeyboardButton, Message
+from aiogram_dialog import DialogManager
 
 from handlers_pack import states
-from handlers_pack.states import ItemState
+from handlers_pack.states import ItemState, FolderControlStates
+from utils.data_manager import get_data, set_data
 
 
 class InButtonsFilter(Filter):
@@ -36,12 +38,20 @@ class NotAddToFilter(Filter):
 
 class NewItemValidateFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
+        user_id = message.from_user.id
         current_state = await state.get_state()
-        return (
-                current_state != ItemState.EditFileCaption.state
+        print(f'current_state = {current_state}')
+        data = await get_data(user_id)
+        any_message_ignore = data.get('any_message_ignore', False)
+        result = (
+                not any_message_ignore
+                and current_state != ItemState.EditFileCaption.state
                 and current_state != ItemState.Search.state
                 and current_state != ItemState.SearchResults.state
-                )
+        )
+        data['any_message_ignore'] = False
+        await set_data(user_id, data)
+        return result
 
 
 class OnlyAddTextToItemFilter(Filter):

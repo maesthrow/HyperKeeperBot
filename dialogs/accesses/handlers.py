@@ -1,13 +1,11 @@
 import asyncio
-import copy
 
 from aiogram.types import CallbackQuery, Message
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
 
-from handlers_pack.handlers_folder import show_folders
-from handlers_pack.states import AccessesStates
-from load_all import bot
+from dialogs.general_handlers import try_delete_message
+from handlers_pack.states import AccessesStates, MainMenuState
 from utils.utils_ import get_level_folders, smile_folder
 from utils.utils_folders_reader import get_folder_name
 
@@ -22,23 +20,23 @@ async def user_selected_handler(callback: CallbackQuery, widget: Select, dialog_
     await dialog_manager.switch_to(AccessesStates.ShowUserFolders)
 
 
-async def close_users_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+async def back_main_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    start_data = dialog_manager.current_context().start_data
+    start_message: Message = start_data.get('start_message', None)
+    await dialog_manager.start(MainMenuState.Menu)
+    await try_delete_message(start_message)
+
+
+async def to_main_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     start_data = dialog_manager.current_context().start_data
     start_message: Message = start_data.get('start_message', None)
     tasks = [
-        dialog_manager.done(),
-        try_delete_message(callback.message)
+        dialog_manager.start(MainMenuState.Menu),
+        #try_delete_message(callback.message),
     ]
     if start_message:
         tasks.append(try_delete_message(start_message))
     await asyncio.gather(*tasks)
-
-
-async def try_delete_message(delete_message: Message):
-    try:
-        await bot.delete_message(delete_message.chat.id, delete_message.message_id)
-    except:
-        pass
 
 
 async def access_folder_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, folder_id):

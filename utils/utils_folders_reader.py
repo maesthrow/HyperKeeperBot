@@ -1,5 +1,5 @@
-from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
 from models.folder_model import Folder
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_data import get_folders_collection
 
 

@@ -116,7 +116,7 @@ async def get_access_menu_data(dialog_manager: DialogManager, **kwargs):
 
     users_data = []
     if users_access_info_entities:
-        for i in range(30):
+        for i in range(1):
             for user_data in users_access_info_entities:
                 access_icon = '✏️' if user_data['access_type'] == AccessType.WRITE.value else '👁️'
                 users_data.append(

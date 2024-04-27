@@ -1,4 +1,4 @@
-from firebase_pack.firebase_collection_folders import ROOT_FOLDER_ID
+from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_folders_reader import get_folders_in_folder
 from utils.utils_items_reader import get_folder_items
 

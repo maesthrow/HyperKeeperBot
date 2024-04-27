@@ -6,7 +6,6 @@ from aiogram.types import InlineQueryResult, InlineQueryResultDocument, InlineQu
     InlineQueryResultAudio, InlineQueryResultVoice, InlineQueryResultVideo, InlineQueryResultCachedSticker, Location, \
     InlineQueryResultLocation, Contact, InlineQueryResultContact
 
-from config import BOT_TOKEN
 from load_all import bot
 from utils.utils_files import dict_to_location, dict_to_contact
 from utils.utils_parse_mode_converter import escape_markdown, full_escape_markdown, clear_code_braces

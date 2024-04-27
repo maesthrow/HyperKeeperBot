@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.text import Format, Const
 
 from dialogs.accesses.getters import get_users_menu_data, get_from_user_folders_data, get_from_user_folder_data
 from dialogs.accesses.handlers import user_selected_handler, access_folder_selected_handler, folder_selected_handler, \
-    close_users_menu_handler, on_back_folder_click_handler
+    on_back_folder_click_handler, to_main_menu_handler
 from handlers_pack.states import AccessesStates
 
 users_menu_window = Window(
@@ -24,7 +24,11 @@ users_menu_window = Window(
         width=1,
         hide_on_single_page=True
     ),
-    Button(Const("✖️ Закрыть меню"), id="close_users_menu", on_click=close_users_menu_handler),
+    Button(
+        Const("☰ Меню"),
+        id="main_menu",
+        on_click=to_main_menu_handler,
+    ),
     state=AccessesStates.UsersMenu,
     getter=get_users_menu_data
 )

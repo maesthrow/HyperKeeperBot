@@ -49,6 +49,7 @@ async def get_media_text(audio: Voice | VideoNote, temp_source_path: str, messag
     temp_mp3_path = f"{temp_source_path.split('.')[0]}_converted.mp3"
     media_text = ''
     audio = await get_audio_from_media(audio, temp_source_path)
+    print(f'TEST {temp_mp3_path}')
     if audio:
         media_text = await get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, message)
     return media_text

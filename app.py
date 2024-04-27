@@ -2,9 +2,15 @@ import asyncio
 
 from aiogram.methods import DeleteWebhook
 from aiogram.types import BotCommand
+from aiogram_dialog import setup_dialogs
 
+from dialogs.accesses.windows import dialog_accesses
+from dialogs.folder_control.windows import dialog_folder_control
+from dialogs.main_menu.windows import dialog_main_menu
+from dialogs.settings.windows import dialog_settings_menu
 from load_all import bot, dp
 from mongo_db.mongo import close_client
+
 
 
 async def on_shutdown():
@@ -24,6 +30,7 @@ async def main():
 
 if __name__ == '__main__':
     import handlers_pack.handlers
+    import handlers_pack.handlers_any_message
     import handlers_pack.handlers_search_end
     import handlers_pack.handlers_item_entities
     import handlers_pack.handlers_item_edit_inline_buttons
@@ -33,8 +40,17 @@ if __name__ == '__main__':
     import handlers_pack.handlers_inline_query_access
     import handlers_pack.handlers_item_text_pages
     import handlers_pack.handlers_edit_item_files
-    import handlers_pack.handlers_folder_control
+    import handlers_pack.handlers_pin_folder_control
     import handlers_pack.handlers_access
+
+    dp.include_router(dialog_main_menu)
+    dp.include_router(dialog_folder_control)
+    dp.include_router(dialog_accesses)
+    dp.include_router(dialog_settings_menu)
+    setup_dialogs(dp)
+
+
+
     try:
         asyncio.run(main())
     except KeyboardInterrupt:

@@ -21,24 +21,24 @@ async def add_user_folders(tg_user: User):
                 "0": {
                     "name": "Хранилище",
                     "folders": {
-                        "0/1-1": {
-                            "name": "Заметки 📒",
-                            "access": {
-                                "pin": None,
-                                "users": {}
-                            },
-                            "folders": {},
-                            "items": {}
-                        },
-                        "0/1-2": {
-                            "name": "Полезные ссылки 🔗",
-                            "access": {
-                                "pin": None,
-                                "users": {}
-                            },
-                            "folders": {},
-                            "items": {}
-                        },
+                        # "0/1-1": {
+                        #     "name": "Заметки 📒",
+                        #     "access": {
+                        #         "pin": None,
+                        #         "users": {}
+                        #     },
+                        #     "folders": {},
+                        #     "items": {}
+                        # },
+                        # "0/1-2": {
+                        #     "name": "Полезные ссылки 🔗",
+                        #     "access": {
+                        #         "pin": None,
+                        #         "users": {}
+                        #     },
+                        #     "folders": {},
+                        #     "items": {}
+                        # },
                     },
                     "items": {}
                 }

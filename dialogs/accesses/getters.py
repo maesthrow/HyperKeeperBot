@@ -19,6 +19,7 @@ async def get_users_menu_data(dialog_manager: DialogManager, **kwargs):
     data['users'] = users
     data['message_text'] = '🔐 <b>Доступы от других пользователей</b>' # 🔐
     data['back_data'] = dialog_manager.current_context().dialog_data
+    data['is_main_menu_owner'] = dialog_manager.current_context().start_data.get('is_main_menu_owner', False)
     dialog_manager.current_context().dialog_data = data
     return data
 

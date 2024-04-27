@@ -1,11 +1,15 @@
 import logging
+import os
 
-from aiogram import Bot
+from dotenv import load_dotenv
+from aiogram import Bot, Router
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from wit import Wit
 
-from config import BOT_TOKEN, WIT_AI_TOKEN
+load_dotenv()
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+WIT_AI_TOKEN = os.getenv('WIT_AI_TOKEN')
 
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG)

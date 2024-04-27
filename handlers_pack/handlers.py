@@ -4,36 +4,30 @@ import functools
 from typing import List
 
 import aiogram
-from aiogram import Router, F
+from aiogram import F, Router
 from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, InlineKeyboardMarkup
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, User
 from aiogram_dialog import DialogManager
-from aiogram_dialog.setup import setup_dialogs
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
-from dialogs.accesses.windows import dialog_accesses
-from dialogs.folder_control.windows import dialog_folder_control
 from handlers_pack import states
-from handlers_pack.filters import NewItemValidateFilter
 from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
 from handlers_pack.handlers_item_add_mode import add_files_to_message_handler
 from handlers_pack.handlers_read_voice import read_voice_offer
-from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title, \
-    text_to_message_handler
-from handlers_pack.handlers_settings import settings_buttons
+from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
-from handlers_pack.states import AccessesStates
-from load_all import dp, bot
+from handlers_pack.states import AccessesStates, MainMenuState, SettingsMenuState
+from load_all import bot, dp
 from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
+from mongo_db.mongo_collection_users import has_user
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
-    smile_item, smile_folder, smile_file
+    smile_folder
 from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_movement_item, \
     get_folders_with_items_inline_markup, new_general_buttons_folder, \
@@ -47,30 +41,18 @@ from utils.utils_sender_message_loop import send_storage_folders, send_storage_w
 
 router = Router()
 dp.include_router(router)
-dp.include_router(dialog_folder_control)
-dp.include_router(dialog_accesses)
-setup_dialogs(dp)
 
 
 @router.message(CommandStart())
 async def start(message: Message, dialog_manager: DialogManager, state: FSMContext):
-    print(f'start {dialog_manager}')
     tg_user = message.from_user
     url_data = from_url_data(message.text).split()
     await start_init(tg_user, message, state, url_data, dialog_manager)
 
 
-# @router.message(FromUserChatConfirmMessageFilter())
-# async def from_user_chat_message(message: Message, dialog_manager: DialogManager, state: FSMContext):
-#     current_state = await state.get_state()
-#     print(f'current_state = {current_state}')
-#     if current_state == states.FolderControlStates.AccessMenu.state:
-#         await dialog_manager.switch_to(states.FolderControlStates.MainMenu)
-
-
 async def start_init(tg_user, message, state, url_data: List[str], dialog_manager: DialogManager):
     if len(url_data) == 1:
-        await start_handler(state, tg_user)
+        await start_handler(tg_user, state, dialog_manager)
     else:
         url_data_args = url_data[1].split('_')
         print(f'url_data_args = {url_data_args}')
@@ -84,21 +66,23 @@ async def start_init(tg_user, message, state, url_data: List[str], dialog_manage
             await start_url_data_file_handler(message, state, tg_user)
 
 
-async def start_handler(state: FSMContext, tg_user):
+async def start_handler(tg_user: User, state: FSMContext, dialog_manager: DialogManager):
     await state.clear()
 
-    # Добавляем пользователя и все его коллекции в базу данных, если их еще нет
-    await add_user_collections(tg_user)
+    is_first_connect = not await has_user(tg_user)
+    #Добавляем пользователя и все его коллекции в базу данных, если их еще нет
+    if is_first_connect:
+        await add_user_collections(tg_user)
 
-    # me = await bot.me()
-    # bot_username = me.username
-    text = (f"👋 Привет, {tg_user.first_name}, давайте начнем! 🚀️\n\nДля вас создано персональное хранилище, "
-            f"которое доступно с помощью команды /storage\n\n"
-            f"Управляйте вашими данными 🗃️, создавайте папки 🗂️ и записи 📄, сохраняйте медиафайлы 📸, "
-            f"используя кнопки и подсказки на клавиатуре📱\n\n"
-            f"Для доступа ко всем функциям бота жмите на кнопку 'Меню' рядом с полем ввода сообщения ↙️\n\n"
-            f"Приятного использования! ☺️")
-    await bot.send_message(tg_user.id, text, reply_markup=ReplyKeyboardRemove())
+    start_message = await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
+
+    await dialog_manager.start(
+        MainMenuState.Start,
+        data={
+            'start_message': start_message,
+            'is_first_connect': is_first_connect,
+        }
+    )
 
 
 @router.message(Command(commands=["access"]))
@@ -108,41 +92,13 @@ async def accesses_handler(message: Message, state: FSMContext, dialog_manager: 
 
 
 @router.message(Command(commands=["search"]))
-async def inline_search(message: Message, state: FSMContext):
-    bot_username = (await message.bot.get_me()).username
-    prompt_text = "\n*Вводите запрос для поиска по хранилищу из любого чата, используя инлайн режим\\:*" \
-                  "\n\nГлобальный поиск 🌐" \
-                  f"\n'@{bot_username} _ваш\\_запрос'_" \
-                  f"\n\nПоиск папок {smile_folder} \\(только в чате с ботом\\)" \
-                  f"\n'@{bot_username} folders/_ваш\\_запрос_'" \
-                  f"\n\nПоиск записей {smile_item}" \
-                  f"\n'@{bot_username} items/_ваш\\_запрос_'" \
-                  f"\n\nПоиск файлов {smile_file}" \
-                  f"\n'@{bot_username} files/_ваш\\_запрос_'" \
-                  "\n\nЛибо используйте кнопки ⬇️"
-
-    builder = InlineKeyboardBuilder()
-    builder.button(text=f"🔍 Глобальный поиск 🌐", switch_inline_query_current_chat="")
-    builder.button(text=f"🔍 Поиск папок {smile_folder}", switch_inline_query_current_chat="folders/")
-    builder.button(text=f"🔍 Поиск записей {smile_item}", switch_inline_query_current_chat="items/")
-    builder.button(text=f"🔍 Поиск файлов {smile_file}", switch_inline_query_current_chat="files/")
-    builder.button(text="✖️ Закрыть", callback_data=MessageBoxCallback(result='cancel').pack())
-    builder.adjust(1)
-    await message.answer(
-        text=prompt_text,
-        parse_mode=ParseMode.MARKDOWN_V2,
-        reply_markup=builder.as_markup())
-    await bot.delete_message(message.from_user.id, message.message_id)
+async def inline_search(message: Message, state: FSMContext, dialog_manager: DialogManager):
+    await dialog_manager.start(MainMenuState.LiveSearch)
 
 
 @router.message(Command(commands=["settings"]))
-async def search_item_handler(message: aiogram.types.Message):
-    await bot.delete_message(
-        chat_id=message.chat.id,
-        message_id=message.message_id,
-    )
-    inline_markup = InlineKeyboardMarkup(row_width=1, inline_keyboard=settings_buttons)
-    await bot.send_message(message.chat.id, "<b>⚙️ Настройки:</b>", reply_markup=inline_markup)
+async def settings_handler(message: aiogram.types.Message, dialog_manager: DialogManager):
+    await dialog_manager.start(SettingsMenuState.Menu)
 
 
 @router.message(Command(commands=["storage"]))
@@ -161,14 +117,18 @@ async def storage(message: Message, state: FSMContext):
                 reply_markup=inline_markup
             )
         else:
-            future = executor.submit(functools.partial(show_storage, message, state, folder_id))
+            future = executor.submit(functools.partial(show_storage, message=message, state=state, folder_id=folder_id))
             result = await future.result(timeout=5)
 
 
-async def show_storage(message: Message, state: FSMContext, folder_id=ROOT_FOLDER_ID):
-    await state.clear()
+async def show_storage(user_id=None, message: Message = None, state: FSMContext = None, folder_id=ROOT_FOLDER_ID):
+    if state:
+        await state.clear()
 
-    user_id = message.from_user.id
+    if not user_id and message:
+        user_id = message.from_user.id
+    if not user_id:
+        return
 
     data = await get_data(user_id)
     await set_current_folder_id(user_id)
@@ -257,10 +217,6 @@ async def back_to_folder(message: aiogram.types.Message):
     folder_id = await get_current_folder_id(message.from_user.id)
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
-
-@router.message(NewItemValidateFilter(), F.via_bot == None, F.content_type == 'text')
-async def any_message(message: Message, state: FSMContext):
-    await text_to_message_handler(message, state)
 
 
 # @router.message(NotEditFileCaptionFilter(), F.via_bot, F.text.startswith('folders/'))  # NotAddToFilter(),

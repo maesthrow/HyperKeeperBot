@@ -1,6 +1,23 @@
 from aiogram.filters.state import StatesGroup, State
 
 
+class MainMenuState(StatesGroup):
+    Start = State()
+    Menu = State()
+    LiveSearch = State()
+
+
+class SettingsMenuState(StatesGroup):
+    Menu = State()
+    Language = State()
+    FoldersOnPageCount = State()
+    ItemsOnPagesCount = State()
+
+
+class StorageState(StatesGroup):
+    OpenStorage = State()
+
+
 class FolderState(StatesGroup):
     NewName = State()
     EditName = State()

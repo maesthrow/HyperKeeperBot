@@ -2,29 +2,21 @@ import copy
 import hashlib
 from typing import Union
 
-import aiogram
 from aiogram import types, Router
 from aiogram.enums import ParseMode, ContentType
-from aiogram.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto, InlineQueryResultAudio, \
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InlineQueryResultAudio, \
     InlineQueryResultVideo, InlineQueryResultPhoto, InputTextMessageContent, InputMediaAudio, InlineQueryResultArticle, \
-    InlineQueryResultVoice, InlineQueryResultDocument, InputMediaDocument, InlineQueryResultCachedSticker, \
-    InlineQueryResultLocation, Location, Contact, InlineQueryResultContact, CallbackQuery, InlineQueryResult
+    InlineQueryResultVoice, InlineQueryResultDocument, InlineQueryResultCachedSticker, \
+    InlineQueryResultLocation, Location, Contact, InlineQueryResultContact
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-import load_all
-from callbacks.callbackdata import InlineQueryCallback, SendItemCallback, SwitchInlineQueryCallback, ItemShowCallback
-from config import BOT_TOKEN
 from load_all import bot, dp
 from models.item_model import Item
-from mongo_db.mongo_collection_folders import get_user_folders_data
-from utils.data_manager import get_data
 from utils.utils_ import smile_item
 from utils.utils_bot import get_bot_link, get_bot_name, to_url_data
 from utils.utils_file_finder import FileFinder
-from utils.utils_files import dict_to_sticker, dict_to_location, dict_to_contact
+from utils.utils_files import dict_to_location, dict_to_contact
 from utils.utils_inline_query import get_inline_query_result
-from utils.utils_item_show_files import show_item_files
 from utils.utils_items_reader import get_item
 from utils.utils_parse_mode_converter import escape_markdown
 
