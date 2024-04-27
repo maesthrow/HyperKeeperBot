@@ -51,8 +51,14 @@ async def start(message: Message, dialog_manager: DialogManager, state: FSMConte
 
 
 async def start_init(tg_user, message, state, url_data: List[str], dialog_manager: DialogManager):
+
+    is_first_connect = not await has_user(tg_user)
+    # Добавляем пользователя и все его коллекции в базу данных, если их еще нет
+    if is_first_connect:
+        await add_user_collections(tg_user)
+
     if len(url_data) == 1:
-        await start_handler(tg_user, state, dialog_manager)
+        await start_handler(tg_user, state, dialog_manager, is_first_connect)
     else:
         url_data_args = url_data[1].split('_')
         print(f'url_data_args = {url_data_args}')
@@ -66,13 +72,8 @@ async def start_init(tg_user, message, state, url_data: List[str], dialog_manage
             await start_url_data_file_handler(message, state, tg_user)
 
 
-async def start_handler(tg_user: User, state: FSMContext, dialog_manager: DialogManager):
+async def start_handler(tg_user: User, state: FSMContext, dialog_manager: DialogManager, is_first_connect: bool):
     await state.clear()
-
-    is_first_connect = not await has_user(tg_user)
-    #Добавляем пользователя и все его коллекции в базу данных, если их еще нет
-    if is_first_connect:
-        await add_user_collections(tg_user)
 
     start_message = await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
 
