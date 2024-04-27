@@ -9,4 +9,3 @@ build:
 run:
   persistenceMount: /data
   containerPort: 80
-  image: docker-compose.yml
