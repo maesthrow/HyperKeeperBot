@@ -5,7 +5,8 @@ meta:
     name: docker
     version: latest
 build:
-  dockerfile: docker-compose.yml
+  dockerfile: Dockerfile
 run:
   persistenceMount: /data
   containerPort: 80
+  image: docker-compose.yml
