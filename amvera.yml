@@ -6,7 +6,6 @@ meta:
     version: latest
 build:
   dockerfile: docker-compose.yml
-  skip: true
 run:
   persistenceMount: /data
   containerPort: 80
