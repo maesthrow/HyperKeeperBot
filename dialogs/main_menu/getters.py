@@ -62,7 +62,7 @@ async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
 
     data = {
         'message_text': prompt_text,
-        'btn_menu': (general_keyboards.BUTTONS['menu'].get(language),)
+        'btn_menu': general_keyboards.BUTTONS['menu'].get(language)
     }
     dialog_manager.current_context().dialog_data = data
     return data

@@ -15,7 +15,7 @@ uri = f"mongodb://{mongo_username}:{mongo_password}@amvera-maesthrow-run-hk-mong
 # https://hk-mongo-express-maesthrow.amvera.io/
 
 # local:
-# uri = "mongodb://localhost:27017"
+uri = "mongodb://localhost:27017"
 
 client = MongoClient(uri)
 
