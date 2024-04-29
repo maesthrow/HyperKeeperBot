@@ -21,7 +21,7 @@ counts = (6, 8, 10, 12, 14, 16, 18, 20)
 async def get_settings_menu_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     language = await get_current_lang(user_id)
-    settings_text = await get_text(user_id, 'Settings')
+    settings_text = await get_text(user_id, 'settings')
     return {
         'message_text': f'<b>⚙️ {settings_text}</b>',
         'btn_menu': (general_keyboards.BUTTONS['menu'].get(language))

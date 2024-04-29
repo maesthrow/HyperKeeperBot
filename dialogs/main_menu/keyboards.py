@@ -34,34 +34,21 @@ BUTTONS = {
 }
 
 
-_live_search_buttons = [
-    InlineQueryButton(
-        Const(f"🔍 Глобальный поиск 🌐"),
-        id="global_search",
-        switch_inline_query_current_chat=Const("")
-    ),
-    InlineQueryButton(
-        Const(f"🔍 Поиск папок {smile_folder}"),
-        id="folders_search",
-        switch_inline_query_current_chat=Const("folders/")
-    ),
-    InlineQueryButton(
-        Const(f"🔍 Поиск записей {smile_item}"),
-        id="items_search",
-        switch_inline_query_current_chat=Const("items/")
-    ),
-    InlineQueryButton(
-        Const(f"🔍 Поиск файлов {smile_file}"),
-        id="files_search",
-        switch_inline_query_current_chat=Const("files/")
-    ),
-]
-
-
-def live_search() -> widgets:
-    keyboard = [
-        Column(*_live_search_buttons)
-    ]
-    return keyboard
-
-
+SEARCH_BUTTONS = {
+    'global': {
+        Language.RUSSIAN: "🔍 Глобальный поиск 🌐",
+        Language.ENGLISH: "🔍 Global Search 🌐",
+    },
+    'folders': {
+        Language.RUSSIAN: f"🔍 Поиск папок {smile_folder}",
+        Language.ENGLISH: f"🔍 Folder Search {smile_folder}",
+    },
+    'items': {
+        Language.RUSSIAN: f"🔍 Поиск записей {smile_item}",
+        Language.ENGLISH: f"🔍 Record Search {smile_item}",
+    },
+    'files': {
+        Language.RUSSIAN: f"🔍 Поиск файлов {smile_file}",
+        Language.ENGLISH: f"🔍 Search Files {smile_file}",
+    },
+}

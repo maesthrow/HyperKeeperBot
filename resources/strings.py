@@ -5,7 +5,7 @@ STRINGS = {
         Language.RUSSIAN: "empty_param",
         Language.ENGLISH: "empty_param",
     },
-    'Hello': {
+    'hello': {
         Language.RUSSIAN: "Привет",
         Language.ENGLISH: "Hello",
     },
@@ -48,13 +48,41 @@ STRINGS = {
                           "\n\nEnjoy using it! ☺️"
         ,
     },
-    'Menu': {
+    'menu': {
         Language.RUSSIAN: "Меню",
         Language.ENGLISH: "Menu",
     },
-    'Settings': {
+    'settings': {
         Language.RUSSIAN: "Настройки",
         Language.ENGLISH: "Settings",
+    },
+    'live_search_title': {
+        Language.RUSSIAN: "🔍 <b>Live-поиск</b>",
+        Language.ENGLISH: "🔍 <b>Live-search</b>",
+    },
+    'live_search_prompt_text_template': {
+        Language.RUSSIAN:
+            "\n\n<i>Вводите поисковый запрос из любого чата, упоминая бота:</i>\
+            \n\nГлобальный поиск 🌐\
+            \n'@{bot_username} <i>ваш_запрос</i>'\
+            \n\nПоиск папок {smile_folder}\
+            \n'@{bot_username} folders/<i>ваш_запрос</i>'\
+            \n\nПоиск записей {smile_item}\
+            \n'@{bot_username} items/<i>ваш_запрос</i>'\
+            \n\nПоиск файлов {smile_file}\
+            \n'@{bot_username} files/<i>ваш_запрос</i>'\
+            \n\n<i>Либо используйте кнопки</i> ⬇️",
+        Language.ENGLISH:
+            "\n\n<i>Enter your search query from any chat by mentioning the bot:</i>\
+            \n\nGlobal Search 🌐\
+            \n'@{bot_username} <i>your_query</i>'\
+            \n\nFolder Search {smile_folder}\
+            \n'@{bot_username} folders/<i>your_query</i>'\
+            \n\nRecord Search {smile_item}\
+            \n'@{bot_username} items/<i>your_query</i>'\
+            \n\nFile Search {smile_file}\
+            \n'@{bot_username} files/<i>your_query</i>'\
+            \n\n<i>Or use the buttons below</i> ⬇️",
     },
 
 }

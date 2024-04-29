@@ -1,11 +1,10 @@
 from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 
-from dialogs import general_keyboards
 from dialogs.general_handlers import open_main_menu_handler
-from dialogs.main_menu import keyboards
 from dialogs.main_menu.getters import get_start_data, get_main_menu_data, get_live_search_data
 from dialogs.main_menu.handlers import *
+from dialogs.widgets import InlineQueryButton
 from handlers_pack.states import MainMenuState
 
 start_window = Window(
@@ -29,7 +28,26 @@ main_menu_window = Window(
 
 live_search_window = Window(
     Format("{message_text}"),
-    *keyboards.live_search(),
+    InlineQueryButton(
+        Format('{btn_global}'),
+        id="global_search",
+        switch_inline_query_current_chat=Const("")
+    ),
+    InlineQueryButton(
+        Format('{btn_folders}'),
+        id="folders_search",
+        switch_inline_query_current_chat=Const("folders/")
+    ),
+    InlineQueryButton(
+        Format('{btn_items}'),
+        id="items_search",
+        switch_inline_query_current_chat=Const("items/")
+    ),
+    InlineQueryButton(
+        Format('{btn_files}'),
+        id="files_search",
+        switch_inline_query_current_chat=Const("files/")
+    ),
     Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=MainMenuState.LiveSearch,
     getter=get_live_search_data
