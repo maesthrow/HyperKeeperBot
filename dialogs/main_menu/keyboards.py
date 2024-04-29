@@ -49,6 +49,6 @@ SEARCH_BUTTONS = {
     },
     'files': {
         Language.RUSSIAN: f"🔍 Поиск файлов {smile_file}",
-        Language.ENGLISH: f"🔍 Files Search {smile_file}",
+        Language.ENGLISH: f"🔍 File Search {smile_file}",
     },
 }
