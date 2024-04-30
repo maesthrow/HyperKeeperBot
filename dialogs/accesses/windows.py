@@ -25,7 +25,7 @@ users_menu_window = Window(
         hide_on_single_page=True
     ),
     Button(
-        Const("☰ Меню"),
+        text=Format("{btn_menu}"),
         id="main_menu",
         on_click=to_main_menu_handler,
     ),
@@ -48,7 +48,7 @@ user_folders_window = Window(
         width=2,
         hide_on_single_page=True
     ),
-    Back(Const("↩️ Назад")),
+    Back(text=Format("{btn_back}")),
     state=AccessesStates.ShowUserFolders,
     getter=get_from_user_folders_data
 )
@@ -82,7 +82,7 @@ show_selected_user_folder_window = Window(
         width=2,
         hide_on_single_page=True
     ),
-    Button(Const("↩️ Назад"), id='back_folder', on_click=on_back_folder_click_handler),
+    Button(Format("{btn_back}"), id='back_folder', on_click=on_back_folder_click_handler),
     state=AccessesStates.ShowSelectedUserFolder,
     getter=get_from_user_folder_data
 )

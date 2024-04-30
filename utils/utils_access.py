@@ -9,12 +9,17 @@ from utils.utils_folders_reader import get_folder
 
 
 async def get_user_info(tg_user_id: str):
-    chat = await bot.get_chat(chat_id=tg_user_id)
-    info = [chat.full_name]
-    if chat.username:
-        info.append(f'@{chat.username}')
-    user_info = ' '.join(info)
-    return user_info
+    try:
+        chat = await bot.get_chat(chat_id=tg_user_id)
+        if not chat:
+            return None
+        info = [chat.full_name]
+        if chat.username:
+            info.append(f'@{chat.username}')
+        user_info = ' '.join(info)
+        return user_info
+    except:
+        return None
 
 
 def get_access_str_by_type(access_type: AccessType):

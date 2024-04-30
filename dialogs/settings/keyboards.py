@@ -8,6 +8,7 @@ from dialogs.settings.getters import counts
 from dialogs.settings.handlers import language_menu_handler, folders_on_page_count_menu_handler, \
     on_back_settings_click_handler, language_changed, folders_on_page_count_changed, items_on_page_count_changed, \
     items_on_page_count_menu_handler
+from enums.enums import Language
 
 _settings_menu_buttons = [
     Button(Const("🗂️ Количество папок на странице"), id="open_storage", on_click=folders_on_page_count_menu_handler),
@@ -15,21 +16,24 @@ _settings_menu_buttons = [
     Button(Const("🌐 Язык интерфейса"), id="search_menu", on_click=language_menu_handler),
 ]
 
+SETTINGS_MENU_BUTTONS = {
+    'folders_on_page_count': {
+        Language.RUSSIAN: "🗂️ Количество папок на странице",
+        Language.ENGLISH: "🗂️ Number of Folders per Page",
+    },
+    'items_on_page_count': {
+        Language.RUSSIAN: "📄 Количество записей на странице",
+        Language.ENGLISH: "📄 Number of Items per Page",
+    },
+    'language_menu': {
+        Language.RUSSIAN: "🌐 Язык интерфейса",
+        Language.ENGLISH: "🌐 Interface Language",
+    },
+}
 
 class Entities(Enum):
     FOLDERS = 'f'
     ITEMS = 'i'
-
-
-def settings_menu() -> widgets:
-    keyboard = [
-        Column(*_settings_menu_buttons)
-    ]
-    return keyboard
-
-
-def back_to_settings_menu_button():
-    return Button(text=Const("↩️ Назад"), id='back', on_click=on_back_settings_click_handler)
 
 
 def languages_buttons():
@@ -38,11 +42,11 @@ def languages_buttons():
                  id='russian', on_state_changed=language_changed),
         Checkbox(Const("✓ 🇺🇸 English"), Const("🇺🇸 English"),
                  id='english', on_state_changed=language_changed),
-        Checkbox(Const("✓ 🇪🇸 Español"), Const("🇪🇸 Español"),
-                 id='spain', on_state_changed=language_changed),
-        Checkbox(Const("✓ 🇫🇷 Français"), Const("🇫🇷 Français"),
-                 id='french', on_state_changed=language_changed),
-        back_to_settings_menu_button()
+        # Checkbox(Const("✓ 🇪🇸 Español"), Const("🇪🇸 Español"),
+        #          id='spain', on_state_changed=language_changed),
+        # Checkbox(Const("✓ 🇫🇷 Français"), Const("🇫🇷 Français"),
+        #          id='french', on_state_changed=language_changed),
+        #back_to_settings_menu_button()
     )
 
 
@@ -73,6 +77,6 @@ def _get_count_buttons(entities: Entities):
         rows.append(Row(*row))
     return (
         *rows,
-        back_to_settings_menu_button()
+        #back_to_settings_menu_button()
     )
 

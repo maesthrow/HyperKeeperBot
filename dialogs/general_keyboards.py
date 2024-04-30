@@ -9,8 +9,9 @@ BUTTONS = {
         Language.RUSSIAN: "☰ Меню",
         Language.ENGLISH: "☰ Menu",
     },
+    'back': {
+        Language.RUSSIAN: "↩️ Назад",
+        Language.ENGLISH: "↩️ Back",
+    },
 }
 
-
-def to_main_menu_button():
-    return Button(text=Const("☰ Меню"), id="main_menu", on_click=open_main_menu_handler)

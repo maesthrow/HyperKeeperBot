@@ -24,18 +24,15 @@ async def get_text(
 
 async def get_start_first_text(user: User):
     language: Language = await get_current_lang(user.id)
-    hello = _get_text(param='hello', language=language)
-    lets_get_started = _get_text(param='lets_get_started', language=language)
     start_first = _get_text(param='start_first', language=language)
-    start_first_text = f"👋 {hello}, {user.first_name}, {lets_get_started}! 🚀️{start_first}"
+    start_hello = _get_text('start_hello', language).format(user_first_name=user.first_name)
+    start_first_text = f"{start_hello}️{start_first}"
     return start_first_text
 
 
 async def get_start_text(user: User):
     language: Language = await get_current_lang(user.id)
-    hello = _get_text(param='hello', language=language)
-    lets_get_started = _get_text(param='lets_get_started', language=language)
     start = _get_text(param='start', language=language)
-    start_text = (f"👋 {hello}, {user.first_name}, {lets_get_started}! 🚀️"
-                  f"{start}")
+    start_hello = _get_text('start_hello', language).format(user_first_name=user.first_name)
+    start_text = f"{start_hello}️{start}"
     return start_text
