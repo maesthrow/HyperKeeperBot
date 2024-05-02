@@ -9,7 +9,7 @@ from callbacks.callbackdata import TextPagesCallback, SaveItemCallback, \
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
     EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback, VoiceSaveTypeCallback, \
-    ReadVoiceRunCallback, AccessRequestCallback, AccessConfirmCallback
+    ReadVoiceRunCallback, AccessRequestCallback, AccessConfirmCallback, AnswerUserAfterContactSupportCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from utils.utils_access import AccessType
@@ -639,5 +639,14 @@ def get_simple_inline_markup(button_text: str) -> InlineKeyboardMarkup:
     builder.button(
         text=button_text,
         callback_data=MessageBoxCallback(result='ok').pack()
+    )
+    return builder.as_markup()
+
+
+def get_contact_support_admin_markup(button_answer_user_text: str, user_id: str) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=button_answer_user_text,
+        callback_data=AnswerUserAfterContactSupportCallback(user_id=user_id).pack()
     )
     return builder.as_markup()

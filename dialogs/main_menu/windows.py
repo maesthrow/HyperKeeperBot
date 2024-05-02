@@ -1,4 +1,5 @@
 from aiogram_dialog import Dialog, Window
+from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs.general_handlers import open_main_menu_handler
@@ -62,10 +63,29 @@ user_profile_window = Window(
 
 help_menu_window = Window(
     Format("{message_text}"),
-    Button(text=Format("{btn_contact_support}"), id="contact_support", on_click=None),
+    Button(text=Format("{btn_contact_support}"), id="contact_support", on_click=contact_support_handler),
     Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=MainMenuState.HelpMenu,
     getter=get_help_menu_data
+)
+
+contact_support_window = Window(
+    Format("{message_text}"),
+    TextInput(
+        id="contact_support_text",
+        on_success=on_contact_support,
+        #on_error=on_error_rename_folder,
+    ),
+    Button(id='cancel_contact_support', text=Const('Отменить'), on_click=cancel_contact_support_handler),
+    state=MainMenuState.ContactSupport,
+    getter=get_contact_support_data
+)
+
+after_contact_support_message_window = Window(
+    Format("{message_text}"),
+    Button(Const("Ok"), id="info_ok", on_click=after_contact_support_ok_handler),
+    state=MainMenuState.AfterContactSupport,
+    getter=get_after_contact_support_message_text
 )
 
 dialog_main_menu = Dialog(
@@ -74,4 +94,6 @@ dialog_main_menu = Dialog(
     live_search_window,
     user_profile_window,
     help_menu_window,
+    contact_support_window,
+    after_contact_support_message_window,
 )

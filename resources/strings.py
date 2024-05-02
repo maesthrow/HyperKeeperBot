@@ -218,4 +218,17 @@ Feel free to explore and utilize the features to enhance your data management ex
                           "\n\nThere is nothing here yet.",
     },
 
+    'contact_support_title': {
+        Language.RUSSIAN: "💬 Обращение в службу поддержки",
+        Language.ENGLISH: "💬 Contact Support",
+    },
+    'contact_support_description': {
+        Language.RUSSIAN: "Пожалуйста, напишите текст вашего запроса и отправьте его нам в сообщении:",
+        Language.ENGLISH: "Please type your inquiry and send us the message:",
+    },
+    'after_contact_support_text': {
+        Language.RUSSIAN: "Спасибо за обращение! Мы постараемся связаться с вами в ближайшее время. 🙏",
+        Language.ENGLISH: "Thank you for reaching out! We will contact you as soon as possible. 🙏",
+    },
+
 }

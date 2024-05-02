@@ -7,6 +7,8 @@ class MainMenuState(StatesGroup):
     LiveSearch = State()
     UserProfile = State()
     HelpMenu = State()
+    ContactSupport = State()
+    AfterContactSupport = State()
 
 
 class SettingsMenuState(StatesGroup):

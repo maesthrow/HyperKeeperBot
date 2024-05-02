@@ -191,3 +191,7 @@ class AccessConfirmOkCallback(CallbackData, prefix='access_confirm_ok'):
 
 class AccessConfirmRejectCallback(CallbackData, prefix='access_confirm_reject'):
     pass
+
+
+class AnswerUserAfterContactSupportCallback(CallbackData, prefix='answer_user_after_contact_support'):
+    user_id: str
