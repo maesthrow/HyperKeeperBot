@@ -9,7 +9,7 @@ from aiogram_dialog.widgets.kbd import Button, Select
 from callbacks.callbackdata import FolderCallback
 from enums.enums import AccessType
 from handlers_pack.handlers_folder import show_folders, to_folder
-from handlers_pack.states import FolderControlStates
+from handlers_pack.states import FolderControlState
 from load_all import bot
 from models.access_folder_model import AccessFolder
 from models.folder_model import Folder
@@ -55,15 +55,15 @@ async def pin_code_handler(callback: CallbackQuery, button: Button, dialog_manag
 
 
 async def access_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.AccessMenu)
+    await dialog_manager.switch_to(FolderControlState.AccessMenu)
 
 
 async def statistic_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.StatisticMenu)
+    await dialog_manager.switch_to(FolderControlState.StatisticMenu)
 
 
 async def delete_all_items_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.DeleteAllItemsQuestion)
+    await dialog_manager.switch_to(FolderControlState.DeleteAllItemsQuestion)
 
 
 async def rename_folder_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -71,11 +71,11 @@ async def rename_folder_handler(callback: CallbackQuery, button: Button, dialog_
     data = await get_data(user_id)
     data['any_message_ignore'] = True
     await set_data(user_id, data)
-    await dialog_manager.switch_to(FolderControlStates.Rename)
+    await dialog_manager.switch_to(FolderControlState.Rename)
 
 
 async def delete_folder_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.Delete)
+    await dialog_manager.switch_to(FolderControlState.Delete)
 
 
 async def search_in_folder_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -108,11 +108,11 @@ async def confirm_delete_all_items_handler(
         await callback.answer(text=f"Что то пошло не так при удалении записей.", show_alert=True)
 
     dialog_manager.current_context().dialog_data["message_text"] = message_text
-    await dialog_manager.switch_to(FolderControlStates.InfoMessage)
+    await dialog_manager.switch_to(FolderControlState.InfoMessage)
 
 
 async def info_message_ok_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.MainMenu)
+    await dialog_manager.switch_to(FolderControlState.MainMenu)
 
 
 async def cancel_delete_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -120,7 +120,7 @@ async def cancel_delete_handler(callback: CallbackQuery, button: Button, dialog_
     data = await get_data(user_id)
     data['any_message_ignore'] = False
     await set_data(user_id, data)
-    await dialog_manager.switch_to(FolderControlStates.MainMenu)
+    await dialog_manager.switch_to(FolderControlState.MainMenu)
 
 
 async def on_rename_folder(
@@ -138,7 +138,7 @@ async def on_rename_folder(
     data['any_message_ignore'] = False
     await set_data(user_id, data)
     await show_folders(user_id, need_to_resend=True)
-    await dialog_manager.switch_to(FolderControlStates.InfoMessage)
+    await dialog_manager.switch_to(FolderControlState.InfoMessage)
 
 
 async def on_error_rename_folder(data, widget, dialog_manager):
@@ -162,9 +162,9 @@ async def confirm_delete_handler(callback: CallbackQuery, button: Button, dialog
         if result:
             message_text = f"Папка {smile_folder} '{folder_name}' удалена ☑️"
             parent_folder_id = get_parent_folder_id(folder_id)
-            await to_folder(call=callback, callback_data=FolderCallback(folder_id=parent_folder_id))
             dialog_manager.current_context().dialog_data["message_text"] = message_text
-            await dialog_manager.switch_to(FolderControlStates.AfterDelete)
+            await dialog_manager.switch_to(FolderControlState.AfterDelete)
+            await to_folder(user_id=user_id, callback_data=FolderCallback(folder_id=parent_folder_id))
             return
         else:
             message_text = f"Не получилось удалить папку {smile_folder} '{folder_name}'"
@@ -172,7 +172,7 @@ async def confirm_delete_handler(callback: CallbackQuery, button: Button, dialog
         message_text = f"Что то пошло не так при удалении папки"
 
     dialog_manager.current_context().dialog_data["message_text"] = message_text
-    await dialog_manager.switch_to(FolderControlStates.InfoMessage)
+    await dialog_manager.switch_to(FolderControlState.InfoMessage)
 
 
 # async def access_confirm_ok_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -196,7 +196,7 @@ async def confirm_delete_handler(callback: CallbackQuery, button: Button, dialog
 
 
 async def access_confirm_message_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.AccessMenu)
+    await dialog_manager.switch_to(FolderControlState.AccessMenu)
 
 
 async def access_user_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, user_id):
@@ -208,7 +208,7 @@ async def access_user_selected_handler(callback: CallbackQuery, widget: Select, 
     dialog_manager.current_context().dialog_data = {
         'user': user, 'folder_name': folder_name, 'folder_id': folder_id
     }
-    await dialog_manager.switch_to(FolderControlStates.AccessUserSelected)
+    await dialog_manager.switch_to(FolderControlState.AccessUserSelected)
 
 
 async def access_user_expand_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -224,7 +224,7 @@ async def access_user_stop_handler(callback: CallbackQuery, button: Button, dial
 
 
 async def info_message_access_user_selected_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.AccessMenu)
+    await dialog_manager.switch_to(FolderControlState.AccessMenu)
 
 
 async def edit_access_for_user(dialog_manager: DialogManager, access_type: AccessType):
@@ -260,7 +260,7 @@ async def edit_access_for_user(dialog_manager: DialogManager, access_type: Acces
     else:
         message_text = "Что то пошло не так."
     dialog_manager.current_context().dialog_data["message_text"] = message_text
-    await dialog_manager.switch_to(FolderControlStates.InfoMessageAccessUserSelected)
+    await dialog_manager.switch_to(FolderControlState.InfoMessageAccessUserSelected)
 
 
 async def get_result_full_delete_access(from_user_id, accessing_users: list, folder):
@@ -309,7 +309,7 @@ async def stop_all_users_access_handler(callback: CallbackQuery, button: Button,
     dialog_manager.current_context().dialog_data = {
         'users': users, 'folder_name': folder_name, 'folder_id': folder_id
     }
-    await dialog_manager.switch_to(FolderControlStates.StopAllUsersAccess)
+    await dialog_manager.switch_to(FolderControlState.StopAllUsersAccess)
 
 
 async def confirm_stop_all_users_access_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -335,11 +335,11 @@ async def confirm_stop_all_users_access_handler(callback: CallbackQuery, button:
         message_text = (f'Что то пошло не так при попытке приостановить доступ к папке '
                         f'{smile_folder} {folder.name} для некоторых пользователей.\nПопробуйте повторить еще раз.')
     dialog_manager.current_context().dialog_data["message_text"] = message_text
-    await dialog_manager.switch_to(FolderControlStates.AfterStopAllUsersAccess)
+    await dialog_manager.switch_to(FolderControlState.AfterStopAllUsersAccess)
 
 
 async def cancel_stop_all_users_access_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(FolderControlStates.AccessMenu)
+    await dialog_manager.switch_to(FolderControlState.AccessMenu)
 
 
 async def on_back_click_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):

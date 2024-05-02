@@ -12,7 +12,7 @@ from callbacks.callbackdata import MessageBoxCallback, \
     NewPinCodeButtonCallback, EnterPinCodeButtonCallback, PinControlCallback
 from handlers_pack import states
 from handlers_pack.handlers_folder import show_folders
-from handlers_pack.states import FolderControlStates
+from handlers_pack.states import FolderControlState
 from load_all import dp, bot
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
@@ -319,7 +319,7 @@ async def button_pin_folder_handler(call: CallbackQuery, state: FSMContext, dial
             await bot.delete_message(user_id, call.message.message_id)
             await state.set_state(state=None)
         else:
-            await dialog_manager.start(FolderControlStates.MainMenu)
+            await dialog_manager.start(FolderControlState.MainMenu)
     elif action == 'backspace':
         inline_markup = call.message.reply_markup
         pin_code_button: InlineKeyboardButton = inline_markup.inline_keyboard[0][0]

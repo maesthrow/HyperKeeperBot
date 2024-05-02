@@ -6,7 +6,7 @@ from aiogram.types import KeyboardButton, Message
 from aiogram_dialog import DialogManager
 
 from handlers_pack import states
-from handlers_pack.states import ItemState, FolderControlStates
+from handlers_pack.states import ItemState, FolderControlState
 from utils.data_manager import get_data, set_data
 
 

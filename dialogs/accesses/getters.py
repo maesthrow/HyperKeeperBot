@@ -64,7 +64,6 @@ async def get_from_user_folder_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     language = await get_current_lang(user_id)
     dialog_data = dialog_manager.current_context().dialog_data
-    print(f'dialog_data {dialog_data}')
     back_data = dialog_data.get('back_data', None)
     folder_dict = {}
     access_folder_dict = dialog_data.get('access_folder_dict', None)

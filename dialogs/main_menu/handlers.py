@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.kbd import Button
 
 from dialogs.general_handlers import try_delete_message
 from handlers_pack.handlers import show_storage
-from handlers_pack.states import MainMenuState, AccessesStates, SettingsMenuState
+from handlers_pack.states import MainMenuState, AccessesState, SettingsMenuState
 from load_all import bot
 from utils.utils_data import get_current_folder_id
 
@@ -25,7 +25,7 @@ async def open_storage_handler(callback: CallbackQuery, button: Button, dialog_m
 async def accesses_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     start_message = await bot.send_message(dialog_manager.event.from_user.id, '🔐', reply_markup=ReplyKeyboardRemove())
     await dialog_manager.start(
-        AccessesStates.UsersMenu,
+        AccessesState.UsersMenu,
         show_mode=ShowMode.DELETE_AND_SEND,
         data={
             'start_message': start_message,

@@ -19,12 +19,13 @@ from handlers_pack.handlers_read_voice import read_voice_offer
 from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
-from handlers_pack.states import AccessesStates, MainMenuState, SettingsMenuState
+from handlers_pack.states import AccessesState, MainMenuState, SettingsMenuState
 from load_all import bot, dp
 from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import has_user
+from resources.text_getter import get_text
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
     smile_folder
@@ -89,7 +90,7 @@ async def start_handler(tg_user: User, state: FSMContext, dialog_manager: Dialog
 @router.message(Command(commands=["access"]))
 async def accesses_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
     start_message = await bot.send_message(message.from_user.id, '🔐', reply_markup=ReplyKeyboardRemove())
-    await dialog_manager.start(AccessesStates.UsersMenu, data={'start_message': start_message})
+    await dialog_manager.start(AccessesState.UsersMenu, data={'start_message': start_message})
 
 
 @router.message(Command(commands=["search"]))
@@ -172,15 +173,17 @@ async def show_storage(user_id=None, message: Message = None, state: FSMContext 
         # await folders_message.edit_reply_markup(reply_markup=folders_inline_markup)
     folders_inline_markup = finalized_inline_markup(folders_inline_markup, folder_id)
 
-    print(f"len {len(folders_inline_markup.inline_keyboard)}\n{folders_inline_markup.inline_keyboard}")
-
     folders_message = await send_storage_with_items(
         user_id=user_id,
         message=folders_message,
         inline_markup=folders_inline_markup,
         max_attempts=1
     )
-    # await asyncio.sleep(0.3)
+
+    if not folders_inline_markup.inline_keyboard:
+        storage_empty_message = await get_text(user_id, 'storage_empty_message')
+        await bot.send_message(user_id, text=storage_empty_message)
+
     data['current_folder_id'] = folder_id
     data['folders_message'] = folders_message
     data['current_keyboard'] = markup

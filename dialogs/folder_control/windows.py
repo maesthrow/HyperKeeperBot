@@ -13,33 +13,33 @@ from dialogs.folder_control.getters import get_main_menu_data, get_message_text,
     get_user_selected_data, get_stop_all_users_access_data
 from dialogs.folder_control.handlers import on_rename_folder, on_error_rename_folder, cancel_delete_handler, \
     access_user_selected_handler, access_confirm_message_handler, on_back_click_handler
-from handlers_pack.states import FolderControlStates
+from handlers_pack.states import FolderControlState
 
 folder_control_main_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_main_menu(),
-    state=FolderControlStates.MainMenu,
+    state=FolderControlState.MainMenu,
     getter=get_main_menu_data
 )
 
 folder_control_info_message_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_info_message(),
-    state=FolderControlStates.InfoMessage,
+    state=FolderControlState.InfoMessage,
     getter=get_message_text
 )
 
 folder_control_statistic_window = Window(
     Format("{folder_statistic_text}"),
     *keyboards.folder_control_statistic(),
-    state=FolderControlStates.StatisticMenu,
+    state=FolderControlState.StatisticMenu,
     getter=get_statistic_data
 )
 
 folder_control_delete_all_items_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_delete_all_items(),
-    state=FolderControlStates.DeleteAllItemsQuestion,
+    state=FolderControlState.DeleteAllItemsQuestion,
     getter=get_delete_all_items_data
 )
 
@@ -51,7 +51,7 @@ folder_control_rename_window = Window(
         on_error=on_error_rename_folder,
         filter=filter_invalid_chars),
     Button(id='cancel_rename', text=Const('Отменить'), on_click=cancel_delete_handler),
-    state=FolderControlStates.Rename,
+    state=FolderControlState.Rename,
     getter=get_rename_data,
     parse_mode=ParseMode.MARKDOWN_V2
 )
@@ -59,14 +59,14 @@ folder_control_rename_window = Window(
 folder_control_delete_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_delete(),
-    state=FolderControlStates.Delete,
+    state=FolderControlState.Delete,
     getter=get_delete_data
 )
 
 folder_control_after_delete_message_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_after_delete_message(),
-    state=FolderControlStates.AfterDelete,
+    state=FolderControlState.AfterDelete,
     getter=get_message_text
 )
 
@@ -87,14 +87,14 @@ folder_control_access_menu_window = Window(
         hide_on_single_page=True
     ),
     *keyboards.folder_control_access_menu(1, 2),
-    state=FolderControlStates.AccessMenu,
+    state=FolderControlState.AccessMenu,
     getter=get_access_menu_data
 )
 
 folder_control_access_confirm_window = Window(
     Format("{message_text}"),
     Button(id='access_confirm', text=Const('Ok'), on_click=access_confirm_message_handler),
-    state=FolderControlStates.AccessConfirm,
+    state=FolderControlState.AccessConfirm,
     getter=get_start_data_message_text
 )
 
@@ -102,28 +102,28 @@ folder_control_access_user_selected_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_user_selected(),
     Back(Const("↩️ Назад"), on_click=on_back_click_handler),
-    state=FolderControlStates.AccessUserSelected,
+    state=FolderControlState.AccessUserSelected,
     getter=get_user_selected_data
 )
 
 folder_control_info_message_access_user_selected_window = Window(
     Format("{message_text}"),
     *keyboards.folder_control_info_message_access_user_selected(),
-    state=FolderControlStates.InfoMessageAccessUserSelected,
+    state=FolderControlState.InfoMessageAccessUserSelected,
     getter=get_message_text
 )
 
 folder_control_stop_all_users_access_window = Window(
     Format("{message_text}"),
     *keyboards.stop_all_users_access(),
-    state=FolderControlStates.StopAllUsersAccess,
+    state=FolderControlState.StopAllUsersAccess,
     getter=get_stop_all_users_access_data
 )
 
 folder_control_after_stop_all_users_access_window = Window(
     Format("{message_text}"),
     Button(id='after_stop_access', text=Const('Ok'), on_click=access_confirm_message_handler),
-    state=FolderControlStates.AfterStopAllUsersAccess,
+    state=FolderControlState.AfterStopAllUsersAccess,
     getter=get_message_text
 )
 

@@ -5,7 +5,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
 
 from dialogs.general_handlers import try_delete_message
-from handlers_pack.states import AccessesStates, MainMenuState
+from handlers_pack.states import AccessesState, MainMenuState
 from utils.utils_ import get_level_folders, smile_folder
 from utils.utils_folders_reader import get_folder_name
 
@@ -17,7 +17,7 @@ async def user_selected_handler(callback: CallbackQuery, widget: Select, dialog_
     dialog_manager.current_context().dialog_data = {
         'user': user,
     }
-    await dialog_manager.switch_to(AccessesStates.ShowUserFolders)
+    await dialog_manager.switch_to(AccessesState.ShowUserFolders)
 
 
 async def back_main_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -53,7 +53,7 @@ async def access_folder_selected_handler(callback: CallbackQuery, widget: Select
         'folder_path': folder_path,
     }
     dialog_manager.current_context().dialog_data = dialog_data
-    await dialog_manager.switch_to(AccessesStates.ShowSelectedUserFolder)
+    await dialog_manager.switch_to(AccessesState.ShowSelectedUserFolder)
 
 
 async def folder_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, folder_id):
@@ -70,7 +70,7 @@ async def folder_selected_handler(callback: CallbackQuery, widget: Select, dialo
         'back_data': data.get('back_data', None)
     }
     dialog_manager.current_context().dialog_data = dialog_data
-    await dialog_manager.switch_to(AccessesStates.ShowSelectedUserFolder)
+    await dialog_manager.switch_to(AccessesState.ShowSelectedUserFolder)
 
 
 async def on_back_folder_click_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -80,7 +80,7 @@ async def on_back_folder_click_handler(callback: CallbackQuery, button: Button, 
         back_data = back_data.get('back_data', None)
         if back_data:
             dialog_manager.current_context().dialog_data = back_data
-            await dialog_manager.switch_to(AccessesStates.ShowSelectedUserFolder)
+            await dialog_manager.switch_to(AccessesState.ShowSelectedUserFolder)
         else:
             await dialog_manager.back()
     else:

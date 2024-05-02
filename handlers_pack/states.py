@@ -44,7 +44,7 @@ class FileProcess(State):
     pass
 
 
-class FolderControlStates(StatesGroup):
+class FolderControlState(StatesGroup):
     MainMenu = State()
     InfoMessage = State()
     StatisticMenu = State()
@@ -60,10 +60,11 @@ class FolderControlStates(StatesGroup):
     AfterStopAllUsersAccess = State()
 
 
-class AccessesStates(StatesGroup):
+class AccessesState(StatesGroup):
     UsersMenu = State()
     ShowUserFolders = State()
     ShowSelectedUserFolder = State()
 
 
-
+class ItemControlState(StatesGroup):
+    ShowItem = State()

@@ -13,7 +13,7 @@ from aiogram_dialog import DialogManager
 
 from callbacks.callbackdata import FolderCallback
 from handlers_pack import states
-from handlers_pack.states import FolderControlStates
+from handlers_pack.states import FolderControlState
 from load_all import bot, dp
 from models.folder_model import Folder
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
@@ -39,7 +39,7 @@ from utils.utils_parse_mode_converter import escape_markdown
 cancel_enter_folder_name_button = InlineKeyboardButton(text="Отмена", callback_data=f"cancel_enter_folder_name")
 back_to_up_level_folder_button = InlineKeyboardButton(text="↩️ Назад", callback_data="back_to_up_level_folder")
 up_to_root_level_folder_button = InlineKeyboardButton(
-    text="⤴️ 🗂️ Хранилище", callback_data="up_to_root_level_folder") #⤴️ 🗂️
+    text="⤴️ 🗂️ Хранилище", callback_data="up_to_root_level_folder")  # ⤴️ 🗂️
 
 router = Router()
 dp.include_router(router)
@@ -199,8 +199,14 @@ async def is_only_folders_mode_keyboard(user_id):
 
 
 @router.callback_query(FolderCallback.filter())
-async def to_folder(call: CallbackQuery, callback_data: FolderCallback, state: FSMContext):
-    user_id = call.from_user.id
+async def to_folder(
+        call: CallbackQuery = None,
+        callback_data: FolderCallback = None,
+        state: FSMContext = None,
+        user_id=None
+):
+    if not user_id and call:
+        user_id = call.from_user.id
     folder_id = callback_data.folder_id
 
     folder: Folder = await get_folder(user_id, folder_id)
@@ -564,11 +570,11 @@ async def go_to_page_items(call: CallbackQuery):
 
 @router.message(F.text == current_folder_control_button.text)
 async def folder_control_menu_handler(message: Message, dialog_manager: DialogManager):
-    await dialog_manager.start(FolderControlStates.MainMenu)
+    await dialog_manager.start(FolderControlState.MainMenu)
     await bot.delete_message(message.chat.id, message.message_id)
 
 
-#@router.message(F.text == current_folder_control_button.text)
+# @router.message(F.text == current_folder_control_button.text)
 async def folder_control_menu_handler_old(message: Message):
     user_id = message.from_user.id
     current_folder_id = await get_current_folder_id(user_id)

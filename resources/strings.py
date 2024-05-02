@@ -100,5 +100,16 @@ STRINGS = {
             \n'@{bot_username} files/<i>your_query</i>'\
             \n\n<i>Or use the buttons below</i> ⬇️",
     },
-
+    'storage_empty_message': {
+        Language.RUSSIAN: "В вашем Хранилище пока что ничего нет."
+                          "\n\n❇️ Создайте собственное дерево папок, используя кнопки на клавиатуре в нижней части экрана."
+                          "\n\n❇️ А для создания записи просто отправьте в чат сообщение с любым содержимым, "
+                          "и я сохраню ваш контент в выбранную папку. "
+                          "\n\nВперед! 🚀️",
+        Language.ENGLISH: "Your Storage is currently empty."
+                          "\n\n❇️ Create your own folder tree using the buttons on the keyboard at the bottom of the screen."
+                          "\n\n❇️ To create a record, simply send a message with any content in the chat, "
+                          "and I will save your content in the selected folder. "
+                          "\n\nGo ahead! 🚀",
+    },
 }

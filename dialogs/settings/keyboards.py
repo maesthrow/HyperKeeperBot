@@ -31,6 +31,7 @@ SETTINGS_MENU_BUTTONS = {
     },
 }
 
+
 class Entities(Enum):
     FOLDERS = 'f'
     ITEMS = 'i'

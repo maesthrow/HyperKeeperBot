@@ -6,7 +6,7 @@ from aiogram_dialog import DialogManager, ShowMode
 
 from callbacks.callbackdata import AccessConfirmCallback
 from enums.enums import AccessType
-from handlers_pack.states import FolderControlStates
+from handlers_pack.states import FolderControlState
 from load_all import dp, bot
 from models.folder_model import Folder
 from utils.utils_ import smile_folder
@@ -148,7 +148,7 @@ async def access_folder_handler(call: CallbackQuery, state: FSMContext, dialog_m
         )
 
     await dialog_manager.start(
-        state=FolderControlStates.AccessConfirm,
+        state=FolderControlState.AccessConfirm,
         show_mode=ShowMode.EDIT,
         data={"message_text": from_user_message_text}
     )
