@@ -9,7 +9,7 @@ def _get_text(
         param: str = "empty_param",
         language: Language = Language.ENGLISH
 ) -> str:
-    text: str = STRINGS.get(param, param).get(language, param)
+    text: str = STRINGS.get(param, STRINGS['empty_param']).get(language, param)
     return text
 
 

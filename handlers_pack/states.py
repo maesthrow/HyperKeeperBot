@@ -5,6 +5,8 @@ class MainMenuState(StatesGroup):
     Start = State()
     Menu = State()
     LiveSearch = State()
+    UserProfile = State()
+    HelpMenu = State()
 
 
 class SettingsMenuState(StatesGroup):

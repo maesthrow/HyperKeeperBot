@@ -5,6 +5,7 @@ import dialogs.general_keyboards as general_keyboards
 from models.item_model import INVISIBLE_CHAR
 from resources.text_getter import get_start_first_text, get_start_text, get_text
 from utils.utils_ import smile_folder, smile_item, smile_file
+from utils.utils_access import get_user_info
 from utils.utils_data import get_current_lang
 
 
@@ -65,3 +66,30 @@ async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
     }
     dialog_manager.current_context().dialog_data = data
     return data
+
+
+async def get_user_profile_data(dialog_manager: DialogManager, **kwargs):
+    user = dialog_manager.event.from_user
+    language = await get_current_lang(user.id)
+    title_text = await get_text(user.id, 'user_profile')
+    user_profile_info = await get_user_info(str(user.id))
+    message_text = f'<b>{title_text}</b>\n\n{user_profile_info}'
+
+    return {
+        'message_text': message_text,
+        'btn_menu': general_keyboards.BUTTONS['menu'].get(language),
+    }
+
+
+async def get_help_menu_data(dialog_manager: DialogManager, **kwargs):
+    user = dialog_manager.event.from_user
+    language = await get_current_lang(user.id)
+    title_text = await get_text(user.id, 'help')
+    help_commands_text = await get_text(user.id, 'help_commands')
+    message_text = f'<b>{title_text}</b>\n\n{help_commands_text}'
+
+    return {
+        'message_text': message_text,
+        'btn_contact_support': keyboards.HELP_BUTTONS['contact_support'].get(language),
+        'btn_menu': general_keyboards.BUTTONS['menu'].get(language),
+    }

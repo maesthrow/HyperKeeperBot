@@ -15,12 +15,17 @@ from utils.utils_items_reader import get_folder_items
 async def get_users_menu_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     language = await get_current_lang(user_id)
+    title_text = await get_text(user_id, 'accesses_title')
     accesses_collection = await get_accesses_collection(user_id)
     users_ids = accesses_collection.keys()
     users = [await get_from_user_dict(from_user_id) for from_user_id in users_ids]
+    message_text = title_text
+    if not users:
+        empty_access_users_message = await get_text(user_id, 'empty_access_users_message')
+        message_text += f'\n\n{empty_access_users_message}'
     data = {
         'users': users,
-        'message_text': await get_text(user_id, 'accesses_title'),
+        'message_text': message_text,
         'back_data': dialog_manager.current_context().dialog_data,
         'is_main_menu_owner': dialog_manager.current_context().start_data.get('is_main_menu_owner', False),
         'btn_menu': general_keyboards.BUTTONS['menu'].get(language)

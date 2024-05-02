@@ -103,6 +103,16 @@ async def settings_handler(message: aiogram.types.Message, dialog_manager: Dialo
     await dialog_manager.start(SettingsMenuState.Menu)
 
 
+@router.message(Command(commands=["profile"]))
+async def profile_handler(message: aiogram.types.Message, dialog_manager: DialogManager):
+    await dialog_manager.start(MainMenuState.UserProfile)
+
+
+@router.message(Command(commands=["help"]))
+async def profile_handler(message: aiogram.types.Message, dialog_manager: DialogManager):
+    await dialog_manager.start(MainMenuState.HelpMenu)
+
+
 @router.message(Command(commands=["storage"]))
 async def storage(message: Message, state: FSMContext):
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:

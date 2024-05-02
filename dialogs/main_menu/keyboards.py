@@ -52,3 +52,11 @@ SEARCH_BUTTONS = {
         Language.ENGLISH: f"🔍 File Search {smile_file}",
     },
 }
+
+
+HELP_BUTTONS = {
+    'contact_support': {
+        Language.RUSSIAN: "💬 Написать в поддержку",
+        Language.ENGLISH: "💬 Contact Support",
+    },
+}

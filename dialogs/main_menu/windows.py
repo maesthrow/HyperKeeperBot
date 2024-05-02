@@ -2,7 +2,7 @@ from aiogram_dialog import Dialog, Window
 from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs.general_handlers import open_main_menu_handler
-from dialogs.main_menu.getters import get_start_data, get_main_menu_data, get_live_search_data
+from dialogs.main_menu.getters import *
 from dialogs.main_menu.handlers import *
 from dialogs.widgets import InlineQueryButton
 from handlers_pack.states import MainMenuState
@@ -53,8 +53,25 @@ live_search_window = Window(
     getter=get_live_search_data
 )
 
+user_profile_window = Window(
+    Format("{message_text}"),
+    Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
+    state=MainMenuState.UserProfile,
+    getter=get_user_profile_data
+)
+
+help_menu_window = Window(
+    Format("{message_text}"),
+    Button(text=Format("{btn_contact_support}"), id="contact_support", on_click=None),
+    Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
+    state=MainMenuState.HelpMenu,
+    getter=get_help_menu_data
+)
+
 dialog_main_menu = Dialog(
     start_window,
     main_menu_window,
-    live_search_window
+    live_search_window,
+    user_profile_window,
+    help_menu_window,
 )

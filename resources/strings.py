@@ -72,6 +72,14 @@ STRINGS = {
         Language.RUSSIAN: "Настройки",
         Language.ENGLISH: "Settings",
     },
+    'user_profile': {
+        Language.RUSSIAN: "👤 Мой профиль",
+        Language.ENGLISH: "👤 My profile",
+    },
+    'help': {
+        Language.RUSSIAN: "❔ Помощь",
+        Language.ENGLISH: "❔ Help",
+    },
     'live_search_title': {
         Language.RUSSIAN: "🔍 <b>Live-поиск</b>",
         Language.ENGLISH: "🔍 <b>Live-search</b>",
@@ -112,4 +120,102 @@ STRINGS = {
                           "and I will save your content in the selected folder. "
                           "\n\nGo ahead! 🚀",
     },
+    'help_commands': {
+        Language.RUSSIAN: """<b>Добро пожаловать в раздел помощи Телеграм-бота HyperKeeper 🚀</b>
+        
+Наш бот разработан для того, чтобы предоставить вам интуитивно понятный и эффективный способ управления вашим личным хранилищем, поиска данных и многого другого. Вот краткое описание основных команд, которое поможет вам начать работу и максимально эффективно использовать доступные функции :
+
+<b>🗂️ Доступ к вашему хранилищу</b>
+/storage
+
+Используйте кнопку "🗂️ Открыть хранилище", чтобы открыть и управлять вашим личным пространством хранения.
+Внутри хранилища вы можете:
+Создавать папки для организации ваших данных.
+Сохранять файлы и создавать записи.
+Делиться этим с друзьями или предоставлять им доступ к целым папкам.
+
+<b>🔍 Функционал поиска</b>
+/search
+
+Выполните глобальный поиск, отправив @{bot_username} <i>ваш_запрос</i> или используя кнопку "🔍 Глобальный поиск 🌐".
+Вы можете осуществлять поиск внутри:
+Папок, используя @{bot_username} folders/<i>ваш_запрос</i>
+Записей, используя @{bot_username} items/<i>ваш_запрос</i>
+Файлов, используя @{bot_username} files/<i>ваш_запрос</i>
+
+<b>👤 Управление вашим профилем</b>
+/profile
+
+Получите доступ и обновите настройки вашего профиля, нажав на кнопку "👤 Мой профиль".
+
+<b>🔐 Доступ от других пользователей</b>
+/access
+
+Просмотрите и управляйте разрешениями доступа, которые другие пользователи вам предоставили, нажав на кнопку "🔐 Доступы от других пользователей".
+
+<b>️⚙️ Настройки</b>
+/settings
+
+Настройте свой опыт, изменяя параметры, такие как язык интерфейса и количество папок или записей на странице. Доступ к этому осуществляется через кнопку "⚙️ Настройки".
+
+<b>❔ Нужна дополнительная помощь?</b>
+/help
+
+Если у вас есть вопросы или нужна дополнительная помощь, используйте кнопку "💬 Написать в поддержку".
+
+Не стесняйтесь исследовать и использовать функции для улучшения вашего опыта управления данными. Наш бот здесь, чтобы помогать вам на каждом шагу! Приятного использования! ☺️""",
+        Language.ENGLISH: """<b>Welcome to the Help Section of Telegram Bot HyperKeeper 🚀</b>
+
+Our bot is designed to provide you with an intuitive and efficient way to manage your personal storage, search data, and much more. Here's a quick commands description to help you get started and make the most of the features available:
+
+<b>🗂️ Accessing Your Storage</b>
+/storage
+
+Click on the "🗂️ Open storage" button to open and manage your personal storage space.
+Inside the storage, you can:
+Create folders to organize your data.
+Save files and create records.
+Share these with friends or grant them access to entire folders.
+
+<b>🔍 Search Functionality</b>
+/search
+
+Perform a Global Search by sending @{bot_username} <i>your_query</i> or by using the "🔍 Global Search 🌐" button.
+You can specifically search within:
+Folders using @{bot_username} folders/<i>your_query</i>
+Records using @{bot_username} items/<i>your_query</i>
+Files using @{bot_username} files/<i>your_query</i>
+
+<b>👤 Managing Your Profile</b>
+/profile
+
+Access and update your profile settings by clicking on the "👤 My profile" button.
+
+<b>🔐 Access from Other Users</b>
+/access
+
+View and manage access permissions that other users have given you by clicking on the "🔐 Access from other users" button.
+
+<b>⚙️ Settings</b>
+/settings
+
+Customize your experience by adjusting settings like the interface language and the number of folders or items displayed per page. Access this by clicking the "⚙️ Settings" button.
+
+<b>❔ Need More Help?</b>
+/help
+
+If you have any questions or need further assistance, use the "💬 Contact Support" button.
+
+Feel free to explore and utilize the features to enhance your data management experience. Our bot is here to assist you every step of the way! Enjoy using it! ☺️""",
+    },
+
+    'empty_access_users_message': {
+        Language.RUSSIAN: "В этом разделе будет отображаться список пользователей, "
+                          "которые предоставили вам доступ к содержимому их папок."
+                          "\n\nЗдесь пока что ничего нет.",
+        Language.ENGLISH: "This section will display a list of users who have granted you access "
+                          "to the contents of their folders."
+                          "\n\nThere is nothing here yet.",
+    },
+
 }

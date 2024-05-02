@@ -38,7 +38,7 @@ async def search_menu_handler(callback: CallbackQuery, button: Button, dialog_ma
 
 
 async def user_profile_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    pass
+    await dialog_manager.switch_to(MainMenuState.UserProfile)
 
 
 async def settings_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -46,4 +46,4 @@ async def settings_menu_handler(callback: CallbackQuery, button: Button, dialog_
 
 
 async def help_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    pass
+    await dialog_manager.start(MainMenuState.HelpMenu)
