@@ -6,8 +6,10 @@ from aiogram_dialog import setup_dialogs
 
 from dialogs.accesses.windows import dialog_accesses
 from dialogs.folder_control.windows import dialog_folder_control
+from dialogs.item_control.windows import dialog_item_control
 from dialogs.main_menu.windows import dialog_main_menu
 from dialogs.settings.windows import dialog_settings_menu
+from dialogs.user_support.windows import dialog_user_support
 from load_all import bot, dp
 from mongo_db.mongo import close_client
 
@@ -42,11 +44,14 @@ if __name__ == '__main__':
     import handlers_pack.handlers_edit_item_files
     import handlers_pack.handlers_pin_folder_control
     import handlers_pack.handlers_access
+    import handlers_pack.handlers_user_support
 
     dp.include_router(dialog_main_menu)
     dp.include_router(dialog_folder_control)
     dp.include_router(dialog_accesses)
     dp.include_router(dialog_settings_menu)
+    dp.include_router(dialog_item_control)
+    dp.include_router(dialog_user_support)
     setup_dialogs(dp)
 
 

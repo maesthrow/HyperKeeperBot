@@ -69,24 +69,6 @@ help_menu_window = Window(
     getter=get_help_menu_data
 )
 
-contact_support_window = Window(
-    Format("{message_text}"),
-    TextInput(
-        id="contact_support_text",
-        on_success=on_contact_support,
-        #on_error=on_error_rename_folder,
-    ),
-    Button(id='cancel_contact_support', text=Const('Отменить'), on_click=cancel_contact_support_handler),
-    state=MainMenuState.ContactSupport,
-    getter=get_contact_support_data
-)
-
-after_contact_support_message_window = Window(
-    Format("{message_text}"),
-    Button(Const("Ok"), id="info_ok", on_click=after_contact_support_ok_handler),
-    state=MainMenuState.AfterContactSupport,
-    getter=get_after_contact_support_message_text
-)
 
 dialog_main_menu = Dialog(
     start_window,
@@ -94,6 +76,4 @@ dialog_main_menu = Dialog(
     live_search_window,
     user_profile_window,
     help_menu_window,
-    contact_support_window,
-    after_contact_support_message_window,
 )

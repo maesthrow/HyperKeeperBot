@@ -1,11 +1,12 @@
 from aiogram_dialog import DialogManager
 
+from dialogs import general_keyboards
 from enums.enums import AccessType
 from models.folder_model import Folder
 from models.item_model import INVISIBLE_CHAR
 from utils.utils_ import smile_folder, smile_item
 from utils.utils_access import get_access_users_info, get_user_info, get_access_str_by_type
-from utils.utils_data import get_current_folder_id
+from utils.utils_data import get_current_folder_id, get_current_lang
 from utils.utils_folders import get_folder_statistic
 from utils.utils_folders_reader import get_folder_name, get_folder
 from utils.utils_handlers import get_folders_message_text
@@ -75,8 +76,8 @@ async def get_delete_all_items_data(dialog_manager: DialogManager, **kwargs):
 
 
 async def get_rename_data(dialog_manager: DialogManager, **kwargs):
-    data = {}
     user_id = dialog_manager.event.from_user.id
+    language = await get_current_lang(user_id)
     folder_id = await get_current_folder_id(user_id)
     folder_name = await get_folder_name(user_id, folder_id)
     folder_name = escape_markdown(folder_name)
@@ -84,9 +85,11 @@ async def get_rename_data(dialog_manager: DialogManager, **kwargs):
                    f"\n\nМожете скопировать текущее название:" \
                    f"\n'`{folder_name}`'" \
                    f"\n\n_*Напишите новое название папки:*_"
-    data['user_id'] = user_id
-    data['folder_id'] = folder_id
-    data['message_text'] = message_text
+    data = {
+        'user_id': user_id,
+        'folder_id': folder_id,
+        'message_text': message_text,
+        'btn_cancel': general_keyboards.BUTTONS['cancel'].get(language)}
     return data
 
 
@@ -152,7 +155,7 @@ async def get_user_selected_data(dialog_manager: DialogManager, **kwargs):
     message_text = f'👤 {user_name}' \
                    f'\n\nИмеет доступ {access_srt} папки:' \
                    f'\n\n{smile_folder} {folder_name}'
-                 # f'\n\n<i>Выберите действие:</i>')
+    # f'\n\n<i>Выберите действие:</i>')
 
     data['user'] = user
     data['message_text'] = message_text

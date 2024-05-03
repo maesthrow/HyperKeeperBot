@@ -94,20 +94,3 @@ async def get_help_menu_data(dialog_manager: DialogManager, **kwargs):
         'btn_menu': general_keyboards.BUTTONS['menu'].get(language),
     }
 
-
-async def get_contact_support_data(dialog_manager: DialogManager, **kwargs):
-    user = dialog_manager.event.from_user
-    title_text = await get_text(user.id, 'contact_support_title')
-    contact_support_description = await get_text(user.id, 'contact_support_description')
-    message_text = f'<b>{title_text}</b>\n\n{contact_support_description}'
-    return {
-        'message_text': message_text,
-    }
-
-
-async def get_after_contact_support_message_text(dialog_manager: DialogManager, **kwargs):
-    user = dialog_manager.event.from_user
-    message_text = await get_text(user.id, 'after_contact_support_text')
-    return {
-        'message_text': message_text,
-    }

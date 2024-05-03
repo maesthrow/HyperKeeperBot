@@ -7,8 +7,6 @@ class MainMenuState(StatesGroup):
     LiveSearch = State()
     UserProfile = State()
     HelpMenu = State()
-    ContactSupport = State()
-    AfterContactSupport = State()
 
 
 class SettingsMenuState(StatesGroup):
@@ -72,3 +70,8 @@ class AccessesState(StatesGroup):
 
 class ItemControlState(StatesGroup):
     ShowItem = State()
+
+
+class UserSupportState(StatesGroup):
+    ContactSupport = State()
+    AfterContactSupport = State()

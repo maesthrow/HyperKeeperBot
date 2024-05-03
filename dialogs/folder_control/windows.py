@@ -50,7 +50,7 @@ folder_control_rename_window = Window(
         on_success=on_rename_folder,
         on_error=on_error_rename_folder,
         filter=filter_invalid_chars),
-    Button(id='cancel_rename', text=Const('Отменить'), on_click=cancel_delete_handler),
+    Button(id='cancel_rename', text=Format('{btn_cancel}'), on_click=cancel_delete_handler),
     state=FolderControlState.Rename,
     getter=get_rename_data,
     parse_mode=ParseMode.MARKDOWN_V2

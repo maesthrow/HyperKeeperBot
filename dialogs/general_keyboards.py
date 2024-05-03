@@ -13,5 +13,9 @@ BUTTONS = {
         Language.RUSSIAN: "↩️ Назад",
         Language.ENGLISH: "↩️ Back",
     },
+    'cancel': {
+        Language.RUSSIAN: "Отменить",
+        Language.ENGLISH: "Cancel",
+    },
 }
 
