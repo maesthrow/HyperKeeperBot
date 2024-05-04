@@ -13,7 +13,7 @@ from handlers_pack.states import FolderControlState
 from load_all import bot
 from models.access_folder_model import AccessFolder
 from models.folder_model import Folder
-from utils.data_manager import get_data, set_data
+from utils.data_manager import get_data, set_data, set_any_message_ignore
 from utils.utils_ import smile_folder
 from utils.utils_access import get_user_info
 from utils.utils_accesses_folders_db import util_access_delete_from_user_folder, util_access_edit_from_user_folder
@@ -68,9 +68,7 @@ async def delete_all_items_handler(callback: CallbackQuery, button: Button, dial
 
 async def rename_folder_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     user_id = dialog_manager.event.from_user.id
-    data = await get_data(user_id)
-    data['any_message_ignore'] = True
-    await set_data(user_id, data)
+    await set_any_message_ignore(user_id, True)
     await dialog_manager.switch_to(FolderControlState.Rename)
 
 
@@ -117,9 +115,7 @@ async def info_message_ok_handler(callback: CallbackQuery, button: Button, dialo
 
 async def cancel_delete_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     user_id = dialog_manager.event.from_user.id
-    data = await get_data(user_id)
-    data['any_message_ignore'] = False
-    await set_data(user_id, data)
+    await set_any_message_ignore(user_id, False)
     await dialog_manager.switch_to(FolderControlState.MainMenu)
 
 
@@ -134,9 +130,7 @@ async def on_rename_folder(
     else:
         message_text = "Что то пошло не так при редактировании папки ❌"
     dialog_manager.current_context().dialog_data["message_text"] = message_text
-    data = await get_data(user_id)
-    data['any_message_ignore'] = False
-    await set_data(user_id, data)
+    await set_any_message_ignore(user_id, False)
     await show_folders(user_id, need_to_resend=True)
     await dialog_manager.switch_to(FolderControlState.InfoMessage)
 

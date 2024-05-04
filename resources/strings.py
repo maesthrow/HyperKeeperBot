@@ -230,5 +230,12 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.RUSSIAN: "Спасибо за обращение! Мы постараемся связаться с вами в ближайшее время. 🙏",
         Language.ENGLISH: "Thank you for reaching out! We will contact you as soon as possible. 🙏",
     },
-
+    'answer_user_contact_support_title': {
+        Language.RUSSIAN: "Ответ от службы поддержки по вашему обращению:",
+        Language.ENGLISH: "Response from Support Regarding Your Inquiry:",
+    },
+    'close': {
+        Language.RUSSIAN: "Закрыть",
+        Language.ENGLISH: "Close",
+    },
 }

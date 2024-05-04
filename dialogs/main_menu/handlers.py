@@ -10,7 +10,7 @@ from dialogs.general_handlers import try_delete_message
 from handlers_pack.handlers import show_storage
 from handlers_pack.states import MainMenuState, AccessesState, SettingsMenuState, UserSupportState
 from load_all import bot
-from utils.data_manager import get_data, set_data
+from utils.data_manager import get_data, set_data, set_any_message_ignore
 from utils.utils_access import get_user_info
 from utils.utils_button_manager import get_contact_support_admin_markup
 from utils.utils_data import get_current_folder_id
@@ -56,8 +56,6 @@ async def help_menu_handler(callback: CallbackQuery, button: Button, dialog_mana
 
 async def contact_support_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     user_id = dialog_manager.event.from_user.id
-    data = await get_data(user_id)
-    data['any_message_ignore'] = True
-    await set_data(user_id, data)
+    await set_any_message_ignore(user_id, True)
     await dialog_manager.start(UserSupportState.ContactSupport)
 

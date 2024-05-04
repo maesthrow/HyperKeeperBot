@@ -75,3 +75,5 @@ class ItemControlState(StatesGroup):
 class UserSupportState(StatesGroup):
     ContactSupport = State()
     AfterContactSupport = State()
+    AnswerUserContactSupport = State()
+    AfterAnswerUserContactSupport = State()

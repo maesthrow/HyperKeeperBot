@@ -17,7 +17,7 @@ async def get_text(
         user_id,
         param: str
 ) -> str:
-    language: Language = await get_current_lang(user_id)
+    language: Language = await get_current_lang(int(user_id))
     text = _get_text(param=param, language=language)
     return text
 

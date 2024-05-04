@@ -194,4 +194,11 @@ class AccessConfirmRejectCallback(CallbackData, prefix='access_confirm_reject'):
 
 
 class AnswerUserAfterContactSupportCallback(CallbackData, prefix='answer_user_after_contact_support'):
-    user_id: str
+    contact_user_id: str
+
+
+class AnswerAdminAfterAnswerUserContactSupportCallback(
+    CallbackData,
+    prefix='answer_admin_after_answer_user_contact_contact_support'
+):
+    pass

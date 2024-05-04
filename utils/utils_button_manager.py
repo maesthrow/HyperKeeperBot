@@ -9,9 +9,11 @@ from callbacks.callbackdata import TextPagesCallback, SaveItemCallback, \
     RequestDeleteFilesCallback, MessageBoxCallback, EditFolderCallback, StatisticFolderCallback, SearchInFolderCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
     EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback, VoiceSaveTypeCallback, \
-    ReadVoiceRunCallback, AccessRequestCallback, AccessConfirmCallback, AnswerUserAfterContactSupportCallback
+    ReadVoiceRunCallback, AccessRequestCallback, AccessConfirmCallback, AnswerUserAfterContactSupportCallback, \
+    AnswerAdminAfterAnswerUserContactSupportCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
+from resources.text_getter import get_text
 from utils.utils_access import AccessType
 from utils.utils_bot import to_url_data
 from utils.utils_files import file_has_caption
@@ -643,10 +645,30 @@ def get_simple_inline_markup(button_text: str) -> InlineKeyboardMarkup:
     return builder.as_markup()
 
 
-def get_contact_support_admin_markup(button_answer_user_text: str, user_id: str) -> InlineKeyboardMarkup:
+def get_contact_support_admin_markup(button_answer_user_text: str, contact_user_id: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(
         text=button_answer_user_text,
-        callback_data=AnswerUserAfterContactSupportCallback(user_id=user_id).pack()
+        callback_data=AnswerUserAfterContactSupportCallback(contact_user_id=contact_user_id).pack()
     )
+    builder.button(
+        text='Закрыть',
+        callback_data=MessageBoxCallback(result='close').pack(),
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def get_contact_support_user_markup(button_answer_admin_text: str, contact_user_id: str) -> InlineKeyboardMarkup:
+    btn_close_text = await get_text(contact_user_id, 'close')
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text=button_answer_admin_text,
+        callback_data=AnswerAdminAfterAnswerUserContactSupportCallback().pack()
+    )
+    builder.button(
+        text=btn_close_text,
+        callback_data=MessageBoxCallback(result='close').pack(),
+    )
+    builder.adjust(1)
     return builder.as_markup()
