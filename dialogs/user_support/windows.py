@@ -1,3 +1,4 @@
+from aiogram.enums import ParseMode
 from aiogram_dialog import Window, Dialog
 from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.text import Format, Const
@@ -12,6 +13,7 @@ contact_support_window = Window(
         on_success=on_contact_support,
     ),
     Button(id='cancel_contact_support', text=Format('{btn_cancel}'), on_click=cancel_contact_support_handler),
+    #Button(id='back_contact_support', text=Format('{btn_back}'), on_click=back_contact_support_handler),
     state=UserSupportState.ContactSupport,
     getter=get_contact_support_data
 )
@@ -30,13 +32,19 @@ answer_user_contact_support_window = Window(
         id="answer_user_contact_support_text",
         on_success=on_answer_user_contact_support,
     ),
+    # Button(
+    #     id='cancel_answer_user_contact_support',
+    #     text=Format('{btn_cancel}'),
+    #     on_click=cancel_answer_user_contact_support_handler
+    # ),
     Button(
-        id='cancel_answer_user_contact_support',
-        text=Format('{btn_cancel}'),
-        on_click=cancel_answer_user_contact_support_handler
+        id='back_answer_user_contact_support',
+        text=Format('{btn_back}'),
+        on_click=back_answer_user_contact_support_handler
     ),
     state=UserSupportState.AnswerUserContactSupport,
-    getter=get_answer_user_contact_support_data
+    getter=get_answer_user_contact_support_data,
+    parse_mode=ParseMode.MARKDOWN_V2
 )
 
 after_answer_user_contact_support_message_window = Window(

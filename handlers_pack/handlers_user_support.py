@@ -1,6 +1,6 @@
 from aiogram import Router
-from aiogram.types import CallbackQuery
-from aiogram_dialog import DialogManager
+from aiogram.types import CallbackQuery, Message
+from aiogram_dialog import DialogManager, StartMode, ShowMode
 
 from callbacks.callbackdata import AnswerUserAfterContactSupportCallback, \
     AnswerAdminAfterAnswerUserContactSupportCallback
@@ -21,7 +21,13 @@ async def answer_user_after_contact_support_handler(
     await call.answer()
     contact_user_id = callback_data.contact_user_id
     await set_any_message_ignore(call.from_user.id, True)
-    await dialog_manager.start(UserSupportState.AnswerUserContactSupport, data={'contact_user_id': contact_user_id})
+    await dialog_manager.start(
+        UserSupportState.AnswerUserContactSupport,
+        data={
+            'contact_user_id': contact_user_id,
+            'contact_text': _get_contact_text(call.message),
+        }
+    )
 
 
 @router.callback_query(AnswerAdminAfterAnswerUserContactSupportCallback.filter())
@@ -31,4 +37,9 @@ async def answer_user_after_contact_support_handler(
 ):
     await call.answer()
     await set_any_message_ignore(call.from_user.id, True)
-    await dialog_manager.start(UserSupportState.ContactSupport)
+    await dialog_manager.start(UserSupportState.ContactSupport, show_mode=ShowMode.SEND)
+
+
+def _get_contact_text(message: Message) -> str:
+    return '\n\n'.join(message.text.split('\n\n')[2:])
+

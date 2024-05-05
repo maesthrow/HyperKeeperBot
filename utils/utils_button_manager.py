@@ -652,7 +652,7 @@ def get_contact_support_admin_markup(button_answer_user_text: str, contact_user_
         callback_data=AnswerUserAfterContactSupportCallback(contact_user_id=contact_user_id).pack()
     )
     builder.button(
-        text='Закрыть',
+        text='✖️ Закрыть',
         callback_data=MessageBoxCallback(result='close').pack(),
     )
     builder.adjust(1)
@@ -667,7 +667,7 @@ async def get_contact_support_user_markup(button_answer_admin_text: str, contact
         callback_data=AnswerAdminAfterAnswerUserContactSupportCallback().pack()
     )
     builder.button(
-        text=btn_close_text,
+        text=f'✖️ {btn_close_text}',
         callback_data=MessageBoxCallback(result='close').pack(),
     )
     builder.adjust(1)

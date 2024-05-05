@@ -222,13 +222,17 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.RUSSIAN: "💬 Обращение в службу поддержки",
         Language.ENGLISH: "💬 Contact Support",
     },
+    'quick_response': {
+        Language.RUSSIAN: "💬 Быстрый ответ",
+        Language.ENGLISH: "💬 Quick Response",
+    },
     'contact_support_description': {
         Language.RUSSIAN: "Пожалуйста, напишите текст вашего запроса и отправьте его нам в сообщении:",
         Language.ENGLISH: "Please type your inquiry and send us the message:",
     },
     'after_contact_support_text': {
-        Language.RUSSIAN: "Спасибо за обращение! Мы постараемся связаться с вами в ближайшее время. 🙏",
-        Language.ENGLISH: "Thank you for reaching out! We will contact you as soon as possible. 🙏",
+        Language.RUSSIAN: "спасибо за обращение! Мы постараемся связаться с вами в ближайшее время. 🙏",
+        Language.ENGLISH: "thank you for reaching out! We will contact you as soon as possible. 🙏",
     },
     'answer_user_contact_support_title': {
         Language.RUSSIAN: "Ответ от службы поддержки по вашему обращению:",
