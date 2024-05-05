@@ -6,6 +6,7 @@ from aiogram_dialog import setup_dialogs
 
 from dialogs.accesses.windows import dialog_accesses
 from dialogs.folder_control.windows import dialog_folder_control
+from dialogs.giga_chat.windows import dialog_giga_chat
 from dialogs.item_control.windows import dialog_item_control
 from dialogs.main_menu.windows import dialog_main_menu
 from dialogs.settings.windows import dialog_settings_menu
@@ -52,6 +53,7 @@ if __name__ == '__main__':
     dp.include_router(dialog_settings_menu)
     dp.include_router(dialog_item_control)
     dp.include_router(dialog_user_support)
+    dp.include_router(dialog_giga_chat)
     setup_dialogs(dp)
 
 

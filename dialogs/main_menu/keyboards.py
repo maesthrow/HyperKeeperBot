@@ -15,6 +15,10 @@ BUTTONS = {
         Language.RUSSIAN: "🔐 Доступы от других пользователей",
         Language.ENGLISH: "🔐 Access from other users",
     },
+    'chatgpt': {
+        Language.RUSSIAN: "🧠 ChatGPT",
+        Language.ENGLISH: "🧠 ChatGPT",
+    },
     'search': {
         Language.RUSSIAN: "🔍️ Live-поиск",
         Language.ENGLISH: "🔍️ Live search",

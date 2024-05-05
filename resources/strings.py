@@ -242,4 +242,9 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.RUSSIAN: "Закрыть",
         Language.ENGLISH: "Close",
     },
+
+    'start_chat_text': {
+        Language.RUSSIAN: "Привет! Чем могу помочь?",
+        Language.ENGLISH: "Hello! How can I help?",
+    },
 }

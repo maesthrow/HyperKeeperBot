@@ -34,6 +34,7 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
         'message_text': f'<b>☰ {menu_text}</b>',  # {INVISIBLE_CHAR * 40}'
         'btn_storage': keyboards.BUTTONS['storage'].get(language),
         'btn_accesses': keyboards.BUTTONS['accesses'].get(language),
+        'btn_chatgpt': keyboards.BUTTONS['chatgpt'].get(language),
         'btn_search': keyboards.BUTTONS['search'].get(language),
         'btn_profile': keyboards.BUTTONS['profile'].get(language),
         'btn_settings': keyboards.BUTTONS['settings'].get(language),

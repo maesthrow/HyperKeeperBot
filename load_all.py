@@ -7,9 +7,19 @@ from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 from wit import Wit
 
+from langchain.chat_models.gigachat import GigaChat
+
 load_dotenv()
+
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+
 WIT_AI_TOKEN = os.getenv('WIT_AI_TOKEN')
+
+GIGA_AUTH_DATA = os.getenv("GIGA_AUTH_DATA")
+
+# Авторизация в сервисе GigaChat
+giga_chat = GigaChat(credentials=GIGA_AUTH_DATA, verify_ssl_certs=False)
+
 
 logging.basicConfig(format=u'%(filename)s [LINE:%(lineno)d] #%(levelname)-8s [%(asctime)s]  %(message)s',
                     level=logging.DEBUG)

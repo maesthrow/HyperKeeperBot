@@ -77,3 +77,8 @@ class UserSupportState(StatesGroup):
     AfterContactSupport = State()
     AnswerUserContactSupport = State()
     AfterAnswerUserContactSupport = State()
+
+
+class GigaChatState(StatesGroup):
+    NewChat = State()
+    Request = State()

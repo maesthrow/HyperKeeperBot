@@ -19,6 +19,7 @@ main_menu_window = Window(
     Format("{message_text}"),
     Button(Format('{btn_storage}'), id="open_storage", on_click=open_storage_handler),
     Button(Format('{btn_accesses}'), id="accesses_menu", on_click=accesses_menu_handler),
+    Button(Format('{btn_chatgpt}'), id="chatgpt", on_click=chatgpt_new_chat_handler),
     Button(Format('{btn_search}'), id="search_menu", on_click=search_menu_handler),
     Button(Format('{btn_profile}'), id="user_profile", on_click=user_profile_handler),
     Button(Format('{btn_settings}'), id="settings_menu", on_click=settings_menu_handler),

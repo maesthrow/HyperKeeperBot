@@ -8,7 +8,7 @@ from aiogram_dialog.widgets.kbd import Button
 
 from dialogs.general_handlers import try_delete_message
 from handlers_pack.handlers import show_storage
-from handlers_pack.states import MainMenuState, AccessesState, SettingsMenuState, UserSupportState
+from handlers_pack.states import MainMenuState, AccessesState, SettingsMenuState, UserSupportState, GigaChatState
 from load_all import bot
 from utils.data_manager import get_data, set_data, set_any_message_ignore
 from utils.utils_access import get_user_info
@@ -36,6 +36,12 @@ async def accesses_menu_handler(callback: CallbackQuery, button: Button, dialog_
             'start_message': start_message,
         }
     )
+
+
+async def chatgpt_new_chat_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    user_id = dialog_manager.event.from_user.id
+    await set_any_message_ignore(user_id, True)
+    await dialog_manager.start(GigaChatState.NewChat)
 
 
 async def search_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
