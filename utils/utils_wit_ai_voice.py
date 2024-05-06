@@ -83,7 +83,7 @@ async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, mess
     await bot.send_chat_action(message.chat.id, "typing")
 
     # Проверяем длительность аудио и разбиваем, если необходимо
-    max_duration = 19 * 1000  # Максимальная длительность в миллисекундах
+    max_duration = round(19.9 * 1000)  # Максимальная длительность в миллисекундах
     if len(audio) > max_duration:
         message_text = message.text
         parts_count = len(audio) // max_duration + 1
@@ -115,12 +115,15 @@ async def get_voice_text_from_audio(audio, temp_source_path, temp_mp3_path, mess
                     message_text = notifies[-1][:-1]
                 else:
                     message_text += '.'
-            await bot.edit_message_text(
-                chat_id=message.chat.id,
-                message_id=message.message_id,
-                text=message_text
-            )
-            await bot.send_chat_action(message.chat.id, "typing")
+            try:
+                await bot.edit_message_text(
+                    chat_id=message.chat.id,
+                    message_id=message.message_id,
+                    text=message_text
+                )
+                await bot.send_chat_action(message.chat.id, "typing")
+            except:
+                pass
 
         remove_temp_file(temp_source_path)
     else:

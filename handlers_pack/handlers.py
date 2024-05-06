@@ -15,6 +15,7 @@ from aiogram_dialog import DialogManager, ShowMode
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
 from dialogs.giga_chat.keyboards import get_chat_reply_keyboard
 from handlers_pack import states
+from handlers_pack.filters import NewItemValidateFilter
 from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
 from handlers_pack.handlers_item_add_mode import add_files_to_message_handler
 from handlers_pack.handlers_read_voice import read_voice_offer
@@ -54,7 +55,6 @@ async def start(message: Message, dialog_manager: DialogManager, state: FSMConte
 
 
 async def start_init(tg_user, message, state, url_data: List[str], dialog_manager: DialogManager):
-
     is_first_connect = not await has_user(tg_user)
     # Добавляем пользователя и все его коллекции в базу данных, если их еще нет
     if is_first_connect:
@@ -96,17 +96,20 @@ async def accesses_handler(message: Message, state: FSMContext, dialog_manager: 
 
 
 @router.message(Command(commands=["gpt"]))
-async def accesses_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
+async def gpt_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
     user_id = dialog_manager.event.from_user.id
     language = await get_current_lang(user_id)
     await set_any_message_ignore(user_id, True)
     reply_keyboard = get_chat_reply_keyboard(language)
     new_chat_title = await get_text(user_id, 'giga_new_chat_title')
     message_text = f'<b>{new_chat_title}</b>'
-    tasks = []
-    tasks.append(bot.send_message(user_id, message_text, reply_markup=reply_keyboard))
-    tasks.append(dialog_manager.start(GigaChatState.NewChat, show_mode=ShowMode.DELETE_AND_SEND))
-    await asyncio.gather(*tasks)
+    try:
+        await dialog_manager.done()
+    except:
+        pass
+    await bot.send_message(user_id, message_text, reply_markup=reply_keyboard)
+    await dialog_manager.start(GigaChatState.NewChat, show_mode=ShowMode.DELETE_AND_SEND)
+    #await asyncio.gather(*tasks)
 
 
 @router.message(Command(commands=["search"]))
@@ -125,7 +128,7 @@ async def profile_handler(message: aiogram.types.Message, dialog_manager: Dialog
 
 
 @router.message(Command(commands=["help"]))
-async def profile_handler(message: aiogram.types.Message, dialog_manager: DialogManager):
+async def help_handler(message: aiogram.types.Message, dialog_manager: DialogManager):
     await dialog_manager.start(MainMenuState.HelpMenu)
 
 
@@ -248,7 +251,6 @@ async def back_to_folder(message: aiogram.types.Message):
     await show_folders(message.from_user.id, folder_id, page_folder=1, page_item=1, need_to_resend=True)
 
 
-
 # @router.message(NotEditFileCaptionFilter(), F.via_bot, F.text.startswith('folders/'))  # NotAddToFilter(),
 # async def search_folder_result_message(message: Message, state: FSMContext):
 #     message_data = message.text.replace('folders/', '', 1)
@@ -269,9 +271,13 @@ async def add_text_to_new_item_handler(call: CallbackQuery, state: FSMContext):
     await call.answer()
 
 
-@router.message(F.via_bot == None, F.content_type.in_(
-    ['photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact']
-))
+@router.message(
+    F.via_bot == None,
+    F.content_type.in_([
+        'photo', 'document', 'video', 'audio', 'voice', 'video_note', 'sticker', 'location', 'contact'
+    ]),
+    NewItemValidateFilter(),
+)
 async def media_files_handler(message: Message, state: FSMContext):
     if message.content_type == 'audio':
         print(f'audio {message.audio}')
@@ -301,4 +307,3 @@ async def media_files_handler(message: Message, state: FSMContext):
 async def message_box_show_handler(call: CallbackQuery, state: FSMContext):
     await bot.delete_message(call.from_user.id, call.message.message_id)
     await state.set_state(state=None)
-

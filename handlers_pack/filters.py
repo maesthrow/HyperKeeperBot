@@ -40,7 +40,6 @@ class NewItemValidateFilter(Filter):
     async def __call__(self, message: Message, state: FSMContext) -> bool:
         user_id = message.from_user.id
         current_state = await state.get_state()
-        print(f'current_state = {current_state}')
         data = await get_data(user_id)
         any_message_ignore = data.get('any_message_ignore', False)
         result = (

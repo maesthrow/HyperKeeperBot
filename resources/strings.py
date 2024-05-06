@@ -248,10 +248,12 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.ENGLISH: "💬 New Chat",
     },
     'giga_chat_system_message': {
-        Language.RUSSIAN: 'Ты эмпатичный бот-помощник мужского пола, тебя зовут "HyperKeeper🚀". '
-                          'Ты помогаешь пользователю решить любые его задачи.',
-        Language.ENGLISH: 'You are an empathetic male assistant bot named "HyperKeeper🚀". '
-                          'You help users solve any of their tasks.',
+        Language.RUSSIAN: 'Ты эмпатичный вежливый бот-помощник мужского пола, тебя зовут "HyperKeeper🚀". '
+                          'Ты помогаешь пользователю решить любые его задачи. '
+                          'Ты очень умный и быстро улавливаешь суть контекста и всегда найдешь идеальный ответ.',
+        Language.ENGLISH: 'You are an empathetic, polite, male assistant bot named "HyperKeeper🚀". '
+                          'You help the user solve any of their tasks. '
+                          'You are very intelligent and quickly grasp the context, always finding the perfect answer.',
     },
     'start_chat_text': {
         Language.RUSSIAN: "Привет! Чем могу помочь?",

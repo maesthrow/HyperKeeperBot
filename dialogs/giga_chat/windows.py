@@ -1,6 +1,6 @@
-from aiogram.enums import ParseMode
+from aiogram.enums import ParseMode, ContentType
 from aiogram_dialog import Window, Dialog
-from aiogram_dialog.widgets.input import TextInput
+from aiogram_dialog.widgets.input import TextInput, MessageInput
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Format
 
@@ -16,6 +16,10 @@ new_chat_window = Window(
         id="user_first_request_text",
         on_success=on_first_user_request,
     ),
+    MessageInput(
+        content_types=[ContentType.VOICE, ContentType.VIDEO_NOTE],
+        func=on_first_user_voice_request
+    ),
     state=GigaChatState.NewChat,
     getter=get_new_chat_data
 )
@@ -25,6 +29,10 @@ Format("{message_text}"),
     TextInput(
         id="user_request_text",
         on_success=on_user_request,
+    ),
+    MessageInput(
+        content_types=[ContentType.VOICE, ContentType.VIDEO_NOTE],
+        func=on_user_voice_request
     ),
     state=GigaChatState.Request,
     getter=get_request_data,
