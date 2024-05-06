@@ -257,4 +257,10 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.RUSSIAN: "Привет! Чем могу помочь?",
         Language.ENGLISH: "Hello! How can I help?",
     },
+    'over_limit_giga_chat_text': {
+        Language.RUSSIAN: "К сожалению, вы исчерпали свой дневной лимит на обращения к ChatGPT."
+                          "\nВозвращайтесь завтра, я буду рад снова вам помочь!",
+        Language.ENGLISH: "Unfortunately, you've reached your daily limit for inquiries to ChatGPT."
+                          "\nPlease come back tomorrow, I'll be happy to help you again!",
+    }
 }

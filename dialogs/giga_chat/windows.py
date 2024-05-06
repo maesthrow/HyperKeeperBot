@@ -16,7 +16,6 @@ new_chat_window = Window(
         id="user_first_request_text",
         on_success=on_first_user_request,
     ),
-    #Button(id='stop_chat', text=Format('{btn_stop_chat}'), on_click=stop_chat_handler),
     state=GigaChatState.NewChat,
     getter=get_new_chat_data
 )
@@ -27,7 +26,6 @@ Format("{message_text}"),
         id="user_request_text",
         on_success=on_user_request,
     ),
-    #Button(id='stop_chat', text=Format('{btn_stop_chat}'), on_click=stop_chat_handler),
     state=GigaChatState.Request,
     getter=get_request_data,
     parse_mode=ParseMode.MARKDOWN_V2

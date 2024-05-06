@@ -56,8 +56,6 @@ if __name__ == '__main__':
     dp.include_router(dialog_giga_chat)
     setup_dialogs(dp)
 
-
-
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
@@ -68,6 +66,7 @@ async def setup_bot_commands():
     bot_commands = [
         BotCommand(command="/start", description="🚀️ начало работы"),
         BotCommand(command="/storage", description="🗂️ открыть хранилище"),
+        BotCommand(command="/gpt", description="🧠 ChatGPT"),
         BotCommand(command="/access", description="🔐 доступы от других пользователей"),
         BotCommand(command="/search", description="🔍️ live-поиск"),
         BotCommand(command="/profile", description="👤 мой профиль"),
@@ -78,6 +77,7 @@ async def setup_bot_commands():
 
 # start - 🚀️ начало работы
 # storage - 🗂️ открыть хранилище
+# gpt - 🧠 ChatGPT
 # access - 🔐 доступы от других пользователей
 # search - 🔍️ live-поиск
 # profile - 👤 мой профиль

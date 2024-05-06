@@ -1,3 +1,4 @@
+import asyncio
 import concurrent.futures
 import concurrent.futures
 import functools
@@ -9,9 +10,10 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, User
-from aiogram_dialog import DialogManager
+from aiogram_dialog import DialogManager, ShowMode
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
+from dialogs.giga_chat.keyboards import get_chat_reply_keyboard
 from handlers_pack import states
 from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
 from handlers_pack.handlers_item_add_mode import add_files_to_message_handler
@@ -19,21 +21,21 @@ from handlers_pack.handlers_read_voice import read_voice_offer
 from handlers_pack.handlers_save_item_content import files_to_message_handler, save_text_to_new_item_and_set_title
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
-from handlers_pack.states import AccessesState, MainMenuState, SettingsMenuState
+from handlers_pack.states import AccessesState, MainMenuState, SettingsMenuState, GigaChatState
 from load_all import bot, dp
 from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import has_user
 from resources.text_getter import get_text
-from utils.data_manager import get_data, set_data
+from utils.data_manager import get_data, set_data, set_any_message_ignore
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
     smile_folder
 from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_movement_item, \
     get_folders_with_items_inline_markup, new_general_buttons_folder, \
     get_folder_pin_inline_markup
-from utils.utils_data import set_current_folder_id, get_current_folder_id, add_user_collections
+from utils.utils_data import set_current_folder_id, get_current_folder_id, add_user_collections, get_current_lang
 from utils.utils_folders_reader import get_folder
 from utils.utils_handlers import get_folder_path_names
 from utils.utils_items import show_all_items
@@ -91,6 +93,20 @@ async def start_handler(tg_user: User, state: FSMContext, dialog_manager: Dialog
 async def accesses_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
     start_message = await bot.send_message(message.from_user.id, '🔐', reply_markup=ReplyKeyboardRemove())
     await dialog_manager.start(AccessesState.UsersMenu, data={'start_message': start_message})
+
+
+@router.message(Command(commands=["gpt"]))
+async def accesses_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
+    user_id = dialog_manager.event.from_user.id
+    language = await get_current_lang(user_id)
+    await set_any_message_ignore(user_id, True)
+    reply_keyboard = get_chat_reply_keyboard(language)
+    new_chat_title = await get_text(user_id, 'giga_new_chat_title')
+    message_text = f'<b>{new_chat_title}</b>'
+    tasks = []
+    tasks.append(bot.send_message(user_id, message_text, reply_markup=reply_keyboard))
+    tasks.append(dialog_manager.start(GigaChatState.NewChat, show_mode=ShowMode.DELETE_AND_SEND))
+    await asyncio.gather(*tasks)
 
 
 @router.message(Command(commands=["search"]))

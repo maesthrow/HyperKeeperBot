@@ -1,14 +1,13 @@
 import asyncio
 from typing import List
 
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, DateTime
 from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.widgets.kbd import Button
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from dialogs.giga_chat import keyboards
-from dialogs.giga_chat.keyboards import get_chat_reply_keyboard
 from handlers_pack.states import MainMenuState, GigaChatState
 from load_all import giga_chat, bot
 from resources.text_getter import get_text
@@ -40,6 +39,11 @@ async def on_first_user_request(
     if await _check_stop_chat(user_id, language, input_text, response, dialog_manager, data):
         return
 
+    request_giga_chat_count = _get_request_giga_chat_count_info(data)
+    if await _check_limit_giga_chat_requests(user_id, request_giga_chat_count, dialog_manager, data):
+        return
+
+    data['request_giga_chat_count'] = request_giga_chat_count
     data['giga_chat_messages'] = giga_chat_messages
     await set_data(user_id, data)
     dialog_manager.current_context().dialog_data = {'response_text': escape_markdown(response.content)}
@@ -64,6 +68,10 @@ async def on_user_request(
     if await _check_stop_chat(user_id, language, input_text, response, dialog_manager, data):
         return
 
+    request_giga_chat_count = _get_request_giga_chat_count_info(data)
+    if await _check_limit_giga_chat_requests(user_id, request_giga_chat_count, dialog_manager, data):
+        return
+
     data['giga_chat_messages'] = giga_chat_messages
     await set_data(user_id, data)
     dialog_manager.current_context().dialog_data = {'response_text': escape_markdown(response.content)}
@@ -85,17 +93,35 @@ async def _get_response(messages: List):
 
 
 async def _check_stop_chat(user_id, language, input_text, response, dialog_manager, data):
-    print(f'{input_text}')
     stop_chat_btn_text = keyboards.BUTTONS.get('stop_chat').get(language)
-    print(f'{input_text}\n{stop_chat_btn_text}')
     if input_text == stop_chat_btn_text:
-        data['giga_chat_messages'] = None
-        await set_any_message_ignore(user_id, False)
-        await set_data(user_id, data)
-        await bot.send_message(user_id, response.content, reply_markup=ReplyKeyboardRemove())
-        await asyncio.sleep(0.5)
-        await dialog_manager.done()
-        #await dialog_manager.start(MainMenuState.Menu)
-        print('stop')
+        await _stop_chat(user_id, response.content, dialog_manager, data, time_sec=0.5)
         return True
     return False
+
+
+def _get_request_giga_chat_count_info(data):
+    request_giga_chat_count = data.get('request_giga_chat_count', [DateTime.now().day, 0])
+    if request_giga_chat_count[0] == DateTime.now().day:
+        request_giga_chat_count[1] += 1
+    else:
+        request_giga_chat_count[0] = DateTime.now().day
+        request_giga_chat_count[1] = 0
+    return request_giga_chat_count
+
+
+async def _check_limit_giga_chat_requests(user_id, request_giga_chat_count, dialog_manager, data):
+    if request_giga_chat_count[1] > 30:
+        over_limit_text = await get_text(user_id, 'over_limit_giga_chat_text')
+        await _stop_chat(user_id, over_limit_text, dialog_manager, data, time_sec=2)
+        return True
+    return False
+
+
+async def _stop_chat(user_id, message_text, dialog_manager, data, time_sec):
+    await bot.send_message(user_id, message_text, reply_markup=ReplyKeyboardRemove())
+    data['giga_chat_messages'] = None
+    await set_any_message_ignore(user_id, False)
+    await set_data(user_id, data)
+    await asyncio.sleep(time_sec)
+    await dialog_manager.done()
