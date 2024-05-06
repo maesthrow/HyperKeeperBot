@@ -243,6 +243,16 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.ENGLISH: "Close",
     },
 
+    'giga_new_chat_title': {
+        Language.RUSSIAN: "💬 Новый чат",
+        Language.ENGLISH: "💬 New Chat",
+    },
+    'giga_chat_system_message': {
+        Language.RUSSIAN: 'Ты эмпатичный бот-помощник, тебя зовут "HyperKeeper🚀". '
+                          'Ты помогаешь пользователю решить любые его задачи.',
+        Language.ENGLISH: 'You are an empathetic assistant bot named "HyperKeeper🚀". '
+                          'You help users solve any of their tasks.',
+    },
     'start_chat_text': {
         Language.RUSSIAN: "Привет! Чем могу помочь?",
         Language.ENGLISH: "Hello! How can I help?",

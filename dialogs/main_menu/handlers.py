@@ -7,13 +7,15 @@ from aiogram_dialog.widgets.input import ManagedTextInput
 from aiogram_dialog.widgets.kbd import Button
 
 from dialogs.general_handlers import try_delete_message
+from dialogs.giga_chat.keyboards import get_chat_reply_keyboard
 from handlers_pack.handlers import show_storage
 from handlers_pack.states import MainMenuState, AccessesState, SettingsMenuState, UserSupportState, GigaChatState
 from load_all import bot
+from resources.text_getter import get_text
 from utils.data_manager import get_data, set_data, set_any_message_ignore
 from utils.utils_access import get_user_info
 from utils.utils_button_manager import get_contact_support_admin_markup
-from utils.utils_data import get_current_folder_id
+from utils.utils_data import get_current_folder_id, get_current_lang
 
 
 async def close_main_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
@@ -40,8 +42,15 @@ async def accesses_menu_handler(callback: CallbackQuery, button: Button, dialog_
 
 async def chatgpt_new_chat_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     user_id = dialog_manager.event.from_user.id
+    language = await get_current_lang(user_id)
     await set_any_message_ignore(user_id, True)
-    await dialog_manager.start(GigaChatState.NewChat)
+    reply_keyboard = get_chat_reply_keyboard(language)
+    new_chat_title = await get_text(user_id, 'giga_new_chat_title')
+    message_text = f'<b>{new_chat_title}</b>'
+    tasks = []
+    tasks.append(bot.send_message(user_id, message_text, reply_markup=reply_keyboard))
+    tasks.append(dialog_manager.start(GigaChatState.NewChat, show_mode=ShowMode.DELETE_AND_SEND))
+    await asyncio.gather(*tasks)
 
 
 async def search_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
