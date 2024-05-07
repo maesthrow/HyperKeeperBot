@@ -2,11 +2,15 @@ from aiogram_dialog import DialogManager
 
 from dialogs import general_keyboards
 from dialogs.giga_chat import keyboards
+from mongo_db.mongo_collection_chats import add_user_chats
 from resources.text_getter import get_text
 from utils.utils_data import get_current_lang
 
 
 async def get_menu_chats_data(dialog_manager: DialogManager, **kwargs):
+    # Добавляем чаты в БД для старых пользователей
+    await add_user_chats(dialog_manager.event.from_user)
+
     user = dialog_manager.event.from_user
     language = await get_current_lang(user.id)
     giga_menu_chats_title = await get_text(user.id, 'giga_menu_chats_title')

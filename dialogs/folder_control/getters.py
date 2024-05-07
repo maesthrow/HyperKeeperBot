@@ -15,13 +15,14 @@ from utils.utils_parse_mode_converter import escape_markdown
 
 
 async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
-    data = {}
     user_id = dialog_manager.event.from_user.id
     folder_id = await get_current_folder_id(user_id)
     message_text = await get_folders_message_text(user_id, folder_id)
     # message_text = escape_markdown(folders_message_text)
-    data['folder_id'] = folder_id
-    data['message_text'] = f'🛠 <b>Меню управления папкой</b>\n\n{message_text}'
+    data = {
+        'folder_id': folder_id,
+        'message_text': f'🛠 <b>Меню управления папкой</b>\n\n{message_text}'
+    }
     return data
 
 

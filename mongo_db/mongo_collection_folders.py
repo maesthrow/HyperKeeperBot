@@ -20,26 +20,7 @@ async def add_user_folders(tg_user: User):
             "folders": {
                 "0": {
                     "name": "Хранилище",
-                    "folders": {
-                        # "0/1-1": {
-                        #     "name": "Заметки 📒",
-                        #     "access": {
-                        #         "pin": None,
-                        #         "users": {}
-                        #     },
-                        #     "folders": {},
-                        #     "items": {}
-                        # },
-                        # "0/1-2": {
-                        #     "name": "Полезные ссылки 🔗",
-                        #     "access": {
-                        #         "pin": None,
-                        #         "users": {}
-                        #     },
-                        #     "folders": {},
-                        #     "items": {}
-                        # },
-                    },
+                    "folders": {},
                     "items": {}
                 }
             }
@@ -69,7 +50,6 @@ async def set_user_folders_data(tg_user_id, data) -> bool:
     except Exception as e:
         print(f"Ошибка записи в бд -> set_user_folders_data:\n{e}")
         return False
-
 
 
 async def get_user_folders_collection(tg_user_id):

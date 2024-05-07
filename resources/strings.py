@@ -244,10 +244,10 @@ Feel free to explore and utilize the features to enhance your data management ex
     },
 
     'giga_menu_chats_title': {
-        Language.RUSSIAN: "🧠 ChatGPT"
+        Language.RUSSIAN: "<b>🧠 ChatGPT</b>"
                           "\n\nВсе ваши чаты здесь! ☺️"
                           "\n\n<i>Вы можете вернуться к любому из них, либо начать новый:</i>",
-        Language.ENGLISH: "🧠 ChatGPT"
+        Language.ENGLISH: "<b>🧠 ChatGPT</b>"
                           "\n\nAll your chats are here! ☺️"
                           "\n\n<i>You can return to any of them or start a new one:</i>",
     },
