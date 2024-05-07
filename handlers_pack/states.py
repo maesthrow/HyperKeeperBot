@@ -80,5 +80,6 @@ class UserSupportState(StatesGroup):
 
 
 class GigaChatState(StatesGroup):
+    MenuChats = State()
     NewChat = State()
-    Request = State()
+    Query = State()

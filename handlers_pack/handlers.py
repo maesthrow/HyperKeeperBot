@@ -97,19 +97,7 @@ async def accesses_handler(message: Message, state: FSMContext, dialog_manager: 
 
 @router.message(Command(commands=["gpt"]))
 async def gpt_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
-    user_id = dialog_manager.event.from_user.id
-    language = await get_current_lang(user_id)
-    await set_any_message_ignore(user_id, True)
-    reply_keyboard = get_chat_reply_keyboard(language)
-    new_chat_title = await get_text(user_id, 'giga_new_chat_title')
-    message_text = f'<b>{new_chat_title}</b>'
-    try:
-        await dialog_manager.done()
-    except:
-        pass
-    await bot.send_message(user_id, message_text, reply_markup=reply_keyboard)
-    await dialog_manager.start(GigaChatState.NewChat, show_mode=ShowMode.DELETE_AND_SEND)
-    #await asyncio.gather(*tasks)
+    await dialog_manager.start(GigaChatState.MenuChats)
 
 
 @router.message(Command(commands=["search"]))

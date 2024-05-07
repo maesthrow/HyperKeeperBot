@@ -243,6 +243,14 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.ENGLISH: "Close",
     },
 
+    'giga_menu_chats_title': {
+        Language.RUSSIAN: "🧠 ChatGPT"
+                          "\n\nВсе ваши чаты здесь! ☺️"
+                          "\n\n<i>Вы можете вернуться к любому из них, либо начать новый:</i>",
+        Language.ENGLISH: "🧠 ChatGPT"
+                          "\n\nAll your chats are here! ☺️"
+                          "\n\n<i>You can return to any of them or start a new one:</i>",
+    },
     'giga_new_chat_title': {
         Language.RUSSIAN: "💬 Новый чат",
         Language.ENGLISH: "💬 New Chat",
@@ -250,14 +258,25 @@ Feel free to explore and utilize the features to enhance your data management ex
     'giga_chat_system_message': {
         Language.RUSSIAN: 'Ты эмпатичный вежливый бот-помощник мужского пола, тебя зовут "HyperKeeper🚀". '
                           'Ты помогаешь пользователю решить любые его задачи. '
-                          'Ты очень умный и быстро улавливаешь суть контекста и всегда найдешь идеальный ответ.',
-        Language.ENGLISH: 'You are an empathetic, polite, male assistant bot named "HyperKeeper🚀". '
-                          'You help the user solve any of their tasks. '
-                          'You are very intelligent and quickly grasp the context, always finding the perfect answer.',
+                          'Ты очень умный и быстро улавливаешь суть контекста и всегда найдешь идеальный ответ.'
+                          'Ты всегда рад и готов помочь!',
+        Language.ENGLISH: 'You are an empathetic and polite male assistant bot named "HyperKeeper🚀". '
+                          'You help users solve any of their tasks. '
+                          'You are very intelligent and quickly grasp the essence of the context, '
+                          'always finding the perfect answer. '
+                          'You are always happy and ready to help!',
     },
     'start_chat_text': {
         Language.RUSSIAN: "Привет! Чем могу помочь?",
         Language.ENGLISH: "Hello! How can I help?",
+    },
+    'on_close_and_save_chat_text': {
+        Language.RUSSIAN: "Сохранил нашу беседу. Был очень рад помочь вам! ☺️ Возвращайтесь скорее!",
+        Language.ENGLISH: "I've saved our conversation. I was very glad to help you! ☺️ Hope to see you back soon!",
+    },
+    'on_close_chat_text': {
+        Language.RUSSIAN: "До встречи! ☺️ Был рад помочь вам!",
+        Language.ENGLISH: "Goodbye! ☺️ I was glad to help you!",
     },
     'over_limit_giga_chat_text': {
         Language.RUSSIAN: "К сожалению, вы исчерпали свой дневной лимит на обращения к ChatGPT."
