@@ -43,7 +43,7 @@ async def get_item_dict(user_id, item_id):
     return None
 
 
-async def get_item(user_id, item_id):
+async def get_item(user_id, item_id) -> Item | None:
     item_dict = await get_item_dict(user_id, item_id)
     if "media" in item_dict:
         media = item_dict["media"]

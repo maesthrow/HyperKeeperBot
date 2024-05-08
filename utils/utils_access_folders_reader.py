@@ -7,7 +7,7 @@ from utils.utils_folders import get_parent_folder_id
 from utils.utils_folders_reader import get_folder
 
 
-async def get_access_folder(user_id, from_user_id, folder_id):
+async def get_access_folder(user_id, from_user_id, folder_id) -> AccessFolder | None:
     try:
         user_id = int(user_id)
         from_user_id = int(from_user_id)

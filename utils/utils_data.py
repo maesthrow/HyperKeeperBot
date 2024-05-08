@@ -2,7 +2,7 @@ from aiogram.types import User
 
 from enums.enums import Language
 from mongo_db.mongo_collection_accesses import add_user_accesses, get_user_accesses_collection
-from mongo_db.mongo_collection_chats import add_user_chats
+from mongo_db.mongo_collection_chats import add_user_chats, get_user_chats_collection
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID, get_user_folders_collection, add_user_folders
 from mongo_db.mongo_collection_users import get_user_collection, set_user_collection, add_user
 from utils.data_manager import get_data, set_data
@@ -50,6 +50,25 @@ async def set_folders_collection(user_id, folders_collection=None):
     data = await get_data(user_id)
     data['dict_search_data'] = None
     data['folders_collection'] = folders_collection
+    await set_data(user_id, data)
+
+
+async def get_chats_collection(user_id):
+    data = await get_data(user_id)
+    chats_collection = data.get('chats_collection', None)
+    if not chats_collection:
+        chats_collection = await get_user_chats_collection(user_id)
+        await set_chats_collection(user_id, chats_collection)
+
+    return chats_collection
+
+
+async def set_chats_collection(user_id, chats_collection=None):
+    if not chats_collection:
+        chats_collection = await get_user_chats_collection(user_id)
+
+    data = await get_data(user_id)
+    data['chats_collection'] = chats_collection
     await set_data(user_id, data)
 
 

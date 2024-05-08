@@ -35,7 +35,8 @@ async def add_new_folder(user_id, new_folder_name, parent_folder_id):
             "users": {}
         },
         "folders": {},
-        "items": {}}
+        "items": {}
+    }
 
     # Добавляем новую папку в родительскую папку
     target_folders[new_folder_id] = new_folder_data

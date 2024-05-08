@@ -43,7 +43,7 @@ async def get_user_folders_deep_count(user_id, folder_id=ROOT_FOLDER_ID):
     return deep_count
 
 
-async def get_folder(user_id, folder_id: str = ROOT_FOLDER_ID):
+async def get_folder(user_id, folder_id: str = ROOT_FOLDER_ID) -> Folder | None:
     try:
         user_id = int(user_id)
     except:
