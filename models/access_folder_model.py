@@ -1,10 +1,11 @@
 from enums.enums import AccessType
+from models.base_db_model import BaseDbModel
 from models.folder_model import Folder
 from utils.utils_ import smile_folder
 from utils.utils_folders_reader import get_folder_name
 
 
-class AccessFolder:
+class AccessFolder(BaseDbModel):
     def __init__(
             self,
             user_id: int,
@@ -19,9 +20,6 @@ class AccessFolder:
         self.access_type_value = access_type.value if isinstance(access_type, AccessType) else access_type
         self.pin = pin
 
-    def get_access_type(self) -> AccessType:
-        return AccessType(self.access_type_value)
-
     def to_dict(self) -> dict:
         return {
             "user_id": self.user_id,
@@ -30,6 +28,9 @@ class AccessFolder:
             "access_type": self.access_type_value,
             "pin": self.pin,
         }
+
+    def get_access_type(self) -> AccessType:
+        return AccessType(self.access_type_value)
 
     async def to_dict_with_folder_name_and_smile_folder(self) -> dict:
         result = self.to_dict()

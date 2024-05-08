@@ -21,3 +21,7 @@ class AccessType(Enum):
     ABSENSE = ''
     READ = 'r'
     WRITE = 'w'
+
+
+class GPTModel(Enum):
+    GIGA = 'giga'

@@ -1,10 +1,11 @@
 import uuid
 
 from enums.enums import AccessType
+from models.base_db_model import BaseDbModel
 from utils.utils_handlers import get_folders_message_text
 
 
-class Folder:
+class Folder(BaseDbModel):
     def __init__(
             self,
             author_user_id: int,

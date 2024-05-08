@@ -5,23 +5,21 @@ from typing import List, Union
 
 from aiogram.enums import ContentType
 
+from models.base_item_model import BaseItem
+from models.base_db_model import BaseDbModel
 from utils.utils_parse_mode_converter import escape_markdown, full_escape_markdown
+
 
 INVISIBLE_CHAR = "\u00A0"
 
 
-class Item:
-    # default_media = {
-    #     "photo": [],
-    #     "video": [],
-    #     "audio": [],
-    #     "document": [],
-    #     "voice": [],
-    #     "video_note": [],
-    #     "location": [],
-    #     "contact": [],
-    #     "sticker": [],
-    # }
+class Item(BaseDbModel, BaseItem):
+
+    def __init__(self, id: str, text: List[str], title=None, media: dict = None, date_created=None, date_modified=None):
+        super().__init__(id, text, title)
+        self.media = copy.deepcopy(self.default_media) if media is None else media
+        self.date_created = date_created or datetime.now()
+        self.date_modified = date_modified or self.date_created
 
     default_media = {
         ContentType.DOCUMENT: [],
@@ -46,17 +44,6 @@ class Item:
         ContentType.CONTACT: '📞',
         ContentType.STICKER: '🔖',
     }
-
-    def __init__(self, id: str, text: List[str], title=None, media: dict = None, date_created=None, date_modified=None):
-        self.id = id
-        self.title = title
-        self.text = text
-        if not media:
-            self.media = copy.deepcopy(self.default_media)
-        else:
-            self.media = media
-        self.date_created = date_created or datetime.now()
-        self.date_modified = date_modified or self.date_created
 
     def to_dict(self) -> dict:
         return {
@@ -83,19 +70,6 @@ class Item:
     def files_count(self):
         return len(self.get_all_media_values())
 
-    def get_title(self):
-        title = self.title if self.title else ""
-        need_added_chars = 69 - len(title)
-        if need_added_chars > 0:
-            for i in range(need_added_chars):
-                title += ' '
-            title += f"\n{INVISIBLE_CHAR}"
-        return title
-
-    def get_inline_title(self):
-        return self.title if self.title and self.title != "" else \
-            (self.text[0].splitlines()[0] if self.text and self.text[0] != "" else "")
-
     def get_inline_page_text(self, page):
         return self.text[page].splitlines()[0]
 
@@ -113,36 +87,8 @@ class Item:
         text = escape_markdown(self.text[page])
         return f"📄 *{title}*{page_info}{text}\n{INVISIBLE_CHAR}"
 
-    def get_text(self, page=0):
-        return self.text[page]
-
     def page_not_empty(self, page=0):
         return self.text[page] and self.text[page] != INVISIBLE_CHAR
-
-    def get_text_markdown(self, page=0):
-        return escape_markdown(self.text[page])
-
-    def get_text_full_markdown(self, page=0):
-        return full_escape_markdown(self.text[page])
-
-    def pages_count(self):
-        return len(self.text)
-
-    def last_page_number(self):
-        return self.pages_count() - 1
-
-    def add_text(self, text_added: str | List[str], on_new_page=False):
-        if len(self.text) > 0 and not on_new_page:
-            if isinstance(text_added, list):
-                text_added.insert(0, f'{self.text.pop().replace(INVISIBLE_CHAR, '')}\n')
-            else:
-                text_added = f'{self.text.pop().replace(INVISIBLE_CHAR, '')}\n\n{text_added}'
-
-        new_pages = Item.split_text(text_added)
-        if len(new_pages) > 0:
-            if len(self.text) > 0 and self.text[0] == '':
-                self.text.pop()
-            self.text.extend(new_pages)
 
     def insert_text(self, page: int, text_inserted: str | List[str], rewrite_page: bool):
         if not rewrite_page and self.pages_count() > page:
@@ -161,39 +107,6 @@ class Item:
 
     def clear_text(self):
         self.text = [INVISIBLE_CHAR]
-
-    @staticmethod
-    def split_text(text: str | List[str]) -> List[str]:
-        print(f'split_text\n{len(text)}')
-
-        BASE_SPLIT_INDEX = 4000
-        if isinstance(text, list):
-            text = '\n'.join(text)
-
-        text_pages = []
-        while text:
-            if len(text) <= BASE_SPLIT_INDEX:
-                text_pages.append(text.strip())
-                break
-
-            split_index = BASE_SPLIT_INDEX
-            while True:
-                if ((split_index - 100 > 100) and
-                        (len(text[split_index + 1:]) < 100 or
-                         ('\n' not in text[split_index + 1:] and '.' not in text[split_index + 1:]))):
-                    split_index -= 100
-                else:
-                    break
-            analyze_text = text[split_index - 100:split_index + 1]
-            find_index = analyze_text.rfind('\n') if '\n' in analyze_text else analyze_text.rfind(
-                '.') if '.' in analyze_text else analyze_text.rfind(' ')
-            if find_index >= 0:
-                split_index = split_index - 100 + find_index
-
-            text_pages.append(text[:split_index].strip())
-            text = text[split_index + 1:]
-
-        return text_pages
 
     def remove_page(self, page: int):
         self.text.pop(page)
