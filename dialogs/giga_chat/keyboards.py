@@ -40,7 +40,7 @@ def get_chat_reply_keyboard(language: Language):
         [KeyboardButton(text=save_and_close_chat_btn_text)],
         [
             KeyboardButton(text=close_chat_btn_text),
-            KeyboardButton(text=delete_chat_btn_text),
+            #KeyboardButton(text=delete_chat_btn_text),
         ],
     ]
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)

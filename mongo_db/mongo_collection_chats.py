@@ -36,6 +36,7 @@ async def get_user_chats_data(tg_user_id):
 
 async def set_user_chats_data(tg_user_id, data) -> bool:
     """Обновляет данные пользователя."""
+    tg_user_id = int(tg_user_id)
     user_chats_collection = db["chats"]
     try:
         user_chats_collection.update_one({"_id": tg_user_id}, {"$set": data}, upsert=True)

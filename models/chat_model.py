@@ -7,15 +7,18 @@ from utils.utils_parse_mode_converter import escape_markdown
 
 
 class Chat(BaseDbModel, BaseItem):
-    def __init__(self, id: str, text: List[str], title: str = None, gpt_model: GPTModel = GPTModel.GIGA):
+    def __init__(self, id: str, text: List[str] | str, title: str, gpt_model: GPTModel | str):
         super().__init__(id, text, title)
-        self.gpt_model = gpt_model
+        if isinstance(gpt_model, GPTModel):
+            self.gpt_model = gpt_model.value
+        else:
+            self.gpt_model = gpt_model
 
     def to_dict(self) -> dict:
         return {
             "title": self.title,
             "text": self.text,
-            "model": self.gpt_model
+            "gpt_model": self.gpt_model
         }
 
     def get_body_markdown(self, page=0) -> str:
@@ -24,5 +27,27 @@ class Chat(BaseDbModel, BaseItem):
         text = escape_markdown(self.text[page])
         return f"📄 *{title}*\n\n{text}\n{INVISIBLE_CHAR}"
 
+    def get_text_markdown_for_show_chat_history(self, page=0):
+        markdown_text = self.get_text_markdown()
+        result_markdown_text = (markdown_text
+                                .replace('`*', '*').replace('*`', '*')
+                                .replace('\n\_', '\n_').replace('\_\n', '_\n'))
+        if result_markdown_text[-2:] == '\\_':
+            result_markdown_text = result_markdown_text[:-2] + '_'
+        return result_markdown_text
+
+    @staticmethod
+    def smile():
+        return '💬'
 
 
+class SimpleChat(BaseDbModel):
+    def __init__(self, id: str, title: str):
+        self.id = id
+        self.title = title
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "title": self.title,
+        }

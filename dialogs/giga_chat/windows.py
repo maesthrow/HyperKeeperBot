@@ -1,7 +1,9 @@
+import operator
+
 from aiogram.enums import ParseMode, ContentType
 from aiogram_dialog import Window, Dialog
 from aiogram_dialog.widgets.input import TextInput, MessageInput
-from aiogram_dialog.widgets.kbd import Button
+from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select
 from aiogram_dialog.widgets.text import Format
 
 from dialogs.general_handlers import open_main_menu_handler
@@ -14,9 +16,37 @@ from handlers_pack.states import GigaChatState
 menu_chats_window = Window(
     Format("{message_text}"),
     Button(id='new_chat', text=Format('{btn_new_chat}'), on_click=new_chat_handler),
+    ScrollingGroup(
+        Select(
+            Format("{item[title]}"),
+            id='chats_scroll',
+            item_id_getter=operator.itemgetter('id'),
+            items='chats',
+            on_click=chat_selected_handler
+        ),
+        id='chats',
+        height=5,
+        width=1,
+        hide_on_single_page=True
+    ),
     Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=GigaChatState.MenuChats,
     getter=get_menu_chats_data
+)
+
+selected_chat_window = Window(
+    Format("{message_text}"),
+    TextInput(
+        id="user_query_text",
+        on_success=on_resume_chat_user_query,
+    ),
+    MessageInput(
+        content_types=[ContentType.VOICE, ContentType.VIDEO_NOTE],
+        func=on_resume_chat_user_voice_query
+    ),
+    state=GigaChatState.SelectedChat,
+    getter=get_selected_chat_data,
+    parse_mode=ParseMode.MARKDOWN_V2
 )
 
 new_chat_window = Window(
@@ -52,4 +82,5 @@ dialog_giga_chat = Dialog(
     new_chat_window,
     query_window,
     menu_chats_window,
+    selected_chat_window,
 )

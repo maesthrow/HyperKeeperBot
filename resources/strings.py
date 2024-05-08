@@ -48,6 +48,10 @@ STRINGS = {
                           "\n\nEnjoy using it! ☺️"
         ,
     },
+    'you': {
+        Language.RUSSIAN: "Вы",
+        Language.ENGLISH: "You",
+    },
     'menu': {
         Language.RUSSIAN: "Меню",
         Language.ENGLISH: "Menu",
@@ -283,5 +287,9 @@ Feel free to explore and utilize the features to enhance your data management ex
                           "\nВозвращайтесь завтра, я буду рад снова вам помочь!",
         Language.ENGLISH: "Unfortunately, you've reached your daily limit for inquiries to ChatGPT."
                           "\nPlease come back tomorrow, I'll be happy to help you again!",
-    }
+    },
+    'gpt_make_title_chat_command': {
+        Language.RUSSIAN: "Придумай и напиши без каких либо пояснений краткий заголовок по теме этой беседы",
+        Language.ENGLISH: "Devise and write a concise title for this conversation without any explanations.",
+    },
 }

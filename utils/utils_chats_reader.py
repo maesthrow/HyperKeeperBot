@@ -1,4 +1,6 @@
-from models.chat_model import Chat
+from typing import List
+
+from models.chat_model import Chat, SimpleChat
 from utils.utils_data import get_chats_collection
 
 
@@ -25,3 +27,11 @@ async def get_chat(user_id, chat_id: str) -> Chat | None:
         return chat
 
     return None
+
+
+async def get_simple_chats(user_id) -> List[SimpleChat]:
+    chats: dict = await get_chats_collection(user_id)
+    if chats:
+        return [SimpleChat(id=chat_id, title=chats.get(chat_id).get('title')) for chat_id in chats]
+    return []
+

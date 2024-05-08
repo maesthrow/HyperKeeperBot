@@ -7,10 +7,14 @@ INVISIBLE_CHAR = "\u00A0"
 
 
 class BaseItem(ABC):
-    def __init__(self, id: str, text: List[str], title=None):
+    def __init__(self, id: str, text: List[str] | str, title=None):
         self.id = id
         self.title = title
-        self.text = text
+        if isinstance(text, List):
+            self.text = text
+        else:
+            self.text = []
+            self.add_text(text)
 
     def get_title(self) -> str:
         title = self.title if self.title else ""
