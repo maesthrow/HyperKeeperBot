@@ -21,7 +21,7 @@ async def get_chat(user_id, chat_id: str) -> Chat | None:
         chat = Chat(
             id=chat_id,
             title=chat_data['title'],
-            text=chat_data['text'],
+            messages=chat_data['messages'],
             gpt_model=chat_data['gpt_model']
         )
         return chat

@@ -34,7 +34,7 @@ async def get_selected_chat_data(dialog_manager: DialogManager, **kwargs):
     data = dialog_manager.current_context().start_data
     chat_data = data.get('chat')
     chat: Chat = await get_chat(user.id, chat_data.get('id'))
-    message_text = chat.get_text_markdown_for_show_chat_history()
+    message_text = await chat.get_text_markdown_for_show_chat_history(user_id=user.id)
     return {
         'message_text': message_text,
     }

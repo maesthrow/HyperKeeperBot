@@ -14,10 +14,11 @@ from dialogs.giga_chat.keyboards import get_chat_reply_keyboard
 from enums.enums import GPTModel
 from handlers_pack.states import MainMenuState, GigaChatState
 from load_all import giga_chat, bot
-from models.chat_model import Chat
+from models.chat_model import Chat, CHAT_MESSAGE_TYPE
 from resources.text_getter import get_text
 from utils.data_manager import set_any_message_ignore, get_data, set_data
-from utils.utils_chats_db import util_add_new_chat
+from utils.utils_chats_db import util_add_new_chat, util_update_chat
+from utils.utils_chats_reader import get_chat
 from utils.utils_data import get_current_lang
 from utils.utils_parse_mode_converter import escape_markdown
 from utils.utils_wit_ai_voice import get_voice_text, get_video_note_text
@@ -133,18 +134,16 @@ async def on_resume_chat_user_query(
     if await _check_limit_giga_chat_queries(user_id, query_giga_chat_count, dialog_manager, data):
         return
 
-    start_text = await get_text(user_id, 'start_chat_text')
-    giga_chat_system_message = await get_text(user_id, 'giga_chat_system_message')
-    giga_chat_messages = [
-        SystemMessage(content=giga_chat_system_message),
-        AIMessage(content=start_text),
-        HumanMessage(content=message.text) # временное решение
-    ]
+    chat_data = dialog_manager.current_context().start_data.get('chat')
+    chat: Chat = await get_chat(user_id, chat_data.get('id'))
+    giga_chat_messages = chat.get_giga_chat_messages()
+    giga_chat_messages.append(HumanMessage(content=input_text))
     response = await _get_response(giga_chat_messages)
     giga_chat_messages.append(response)
 
     data['query_giga_chat_count'] = query_giga_chat_count
     data['giga_chat_messages'] = giga_chat_messages
+    data['chat'] = chat
     await set_data(user_id, data)
     dialog_manager.current_context().dialog_data = {'response_text': escape_markdown(response.content)}
     await set_any_message_ignore(user_id, True)
@@ -183,7 +182,8 @@ async def _check_stop_chat(user_id, language, input_text, dialog_manager, data):
     save_and_close_chat_btn_text = keyboards.BUTTONS.get('save_and_close_chat').get(language)
     if input_text == save_and_close_chat_btn_text:
         # Сохраняем чат в базу
-        await _on_save_chat(user_id, data)
+        chat: Chat = data.get('chat')
+        await _on_save_chat(user_id, data, chat)
 
         stop_text = await get_text(user_id, 'on_close_and_save_chat_text')
         await _stop_chat(user_id, stop_text, dialog_manager, data, time_sec=1)
@@ -222,26 +222,42 @@ async def _stop_chat(user_id, message_text, dialog_manager, data, time_sec):
     await dialog_manager.done()
 
 
-async def _on_save_chat(user_id, data):
+async def _on_save_chat(user_id, data, chat: Chat = None):
     giga_chat_messages: List = data.get('giga_chat_messages')
 
-    you_text = await get_text(user_id, 'you')
-    chat_text = _make_text_for_chat(giga_chat_messages, you_text)
+    chat_messages = _make_messages_for_chat(giga_chat_messages)
 
     gpt_make_title_chat_command = await get_text(user_id, 'gpt_make_title_chat_command')
     chat_title = await _make_title_for_chat(giga_chat_messages, gpt_make_title_chat_command)
 
-    await util_add_new_chat(user_id, chat_title, chat_text, GPTModel.GIGA)
+    if chat:
+        chat.messages = chat_messages
+        chat.title = chat_title
+        await util_update_chat(user_id, chat)
+    else:
+        await util_add_new_chat(user_id, chat_title, chat_messages, GPTModel.GIGA)
 
 
-def _make_text_for_chat(giga_chat_messages: List[BaseMessage], you_text) -> str:
+def _make_messages_for_chat(giga_chat_messages: List[BaseMessage]) -> List[dict]:
     result = []
     for message in giga_chat_messages:
-        if isinstance(message, AIMessage):
-            result.append(f'`*🧠 GPT*`\n{message.content}')
-        elif isinstance(message, HumanMessage):
-            result.append(f'`*👤 {you_text}:*`\n_{message.content}_')
-    return '\n\n'.join(result)
+        message_type = CHAT_MESSAGE_TYPE.get(type(message))
+        result.append({
+            'type': message_type,
+            'text': message.content
+        })
+
+    return result
+
+
+# def _make_text_for_chat(giga_chat_messages: List[BaseMessage], you_text) -> str:
+#     result = []
+#     for message in giga_chat_messages:
+#         if isinstance(message, AIMessage):
+#             result.append(f'`*🧠 GPT*`\n{message.content}')
+#         elif isinstance(message, HumanMessage):
+#             result.append(f'`*👤 {you_text}:*`\n_{message.content}_')
+#     return '\n\n'.join(result)
 
 
 async def _make_title_for_chat(giga_chat_messages, gpt_make_title_chat_command):

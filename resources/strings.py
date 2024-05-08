@@ -289,7 +289,10 @@ Feel free to explore and utilize the features to enhance your data management ex
                           "\nPlease come back tomorrow, I'll be happy to help you again!",
     },
     'gpt_make_title_chat_command': {
-        Language.RUSSIAN: "Придумай и напиши без каких либо пояснений краткий заголовок по теме этой беседы",
-        Language.ENGLISH: "Devise and write a concise title for this conversation without any explanations.",
+        Language.RUSSIAN: "Придумай и напиши без каких либо пояснений краткий заголовок по теме и содержимому "
+                          "этой беседы",
+        Language.ENGLISH: "Come up with and write a concise title for the topic and content of this conversation "
+                          "without any explanations."
+,
     },
 }

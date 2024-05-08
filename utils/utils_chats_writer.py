@@ -6,7 +6,7 @@ from mongo_db.mongo_collection_chats import set_user_chats_data
 from utils.utils_data import get_chats_collection
 
 
-async def add_new_chat(user_id, chat_title: str, chat_text: List[str] | str, gpt_model: GPTModel):
+async def add_new_chat(user_id, chat_title: str, chat_messages: List[dict] | str, gpt_model: GPTModel):
     """Добавляет новый чат в коллекцию пользователя папку."""
     chats_collection = await get_chats_collection(user_id)
 
@@ -18,7 +18,7 @@ async def add_new_chat(user_id, chat_title: str, chat_text: List[str] | str, gpt
     # Генерируем новый идентификатор для нового чата
     new_chat_id = f"{max_chat_id_number + 1}"
 
-    new_chat = Chat(new_chat_id, title=chat_title, text=chat_text, gpt_model=gpt_model)
+    new_chat = Chat(new_chat_id, title=chat_title, messages=chat_messages, gpt_model=gpt_model)
     new_chat_data = new_chat.to_dict()
 
     chats_collection[new_chat_id] = new_chat_data

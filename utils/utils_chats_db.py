@@ -6,8 +6,8 @@ from utils.utils_chats_writer import add_new_chat, delete_chat, update_chat
 from utils.utils_data import set_chats_collection
 
 
-async def util_add_new_chat(user_id, chat_title: str, chat_text: List[str] | str, gpt_model: GPTModel):
-    result = await add_new_chat(user_id, chat_title, chat_text, gpt_model)
+async def util_add_new_chat(user_id, chat_title: str, chat_messages: List[dict] | str, gpt_model: GPTModel):
+    result = await add_new_chat(user_id, chat_title, chat_messages, gpt_model)
     if result:
         await set_chats_collection(user_id)
     return result
