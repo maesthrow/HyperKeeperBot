@@ -3,7 +3,7 @@ import operator
 from aiogram.enums import ParseMode, ContentType
 from aiogram_dialog import Window, Dialog
 from aiogram_dialog.widgets.input import TextInput, MessageInput
-from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select
+from aiogram_dialog.widgets.kbd import Button, ScrollingGroup, Select, Row
 from aiogram_dialog.widgets.text import Format
 
 from dialogs.general_handlers import open_main_menu_handler
@@ -29,7 +29,12 @@ menu_chats_window = Window(
         width=1,
         hide_on_single_page=True
     ),
-    Button(id='clean_chats_history', text=Format('{btn_clean_chats_history}'), on_click=clean_chats_history_handler),
+    Button(
+        id='clear_chats_history',
+        text=Format('{btn_clear_chats_history}'),
+        on_click=clear_chats_history_handler,
+        when=user_have_chats
+    ),
     Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=GigaChatState.MenuChats,
     getter=get_menu_chats_data
@@ -79,9 +84,47 @@ query_window = Window(
     parse_mode=ParseMode.MARKDOWN_V2
 )
 
+delete_chat_window = Window(
+    Format("{message_text}"),
+    Row(
+        Button(
+            id='confirm_delete_chat',
+            text=Format('{btn_confirm_delete_chat}'),
+            on_click=confirm_delete_chat_handler
+        ),
+        Button(
+            id='cancel_delete_chat',
+            text=Format('{btn_cancel_delete_chat}'),
+            on_click=cancel_delete_chat_handler
+        ),
+    ),
+    state=GigaChatState.DeleteChat,
+    getter=get_delete_chat_data
+)
+
+clear_chats_history_window = Window(
+    Format("{message_text}"),
+    Row(
+        Button(
+            id='confirm_clear_chats_history',
+            text=Format('{btn_confirm_clear_chats_history}'),
+            on_click=confirm_clear_chats_history_handler
+        ),
+        Button(
+            id='cancel_clear_chats_history',
+            text=Format('{btn_cancel_clear_chats_history}'),
+            on_click=cancel_clear_chats_history_handler
+        ),
+    ),
+    state=GigaChatState.ClearChatsHistory,
+    getter=get_clear_chats_history_data
+)
+
 dialog_giga_chat = Dialog(
     new_chat_window,
     query_window,
     menu_chats_window,
     selected_chat_window,
+    delete_chat_window,
+    clear_chats_history_window,
 )

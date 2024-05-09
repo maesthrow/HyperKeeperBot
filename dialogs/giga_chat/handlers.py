@@ -17,7 +17,7 @@ from load_all import giga_chat, bot
 from models.chat_model import Chat, CHAT_MESSAGE_TYPE
 from resources.text_getter import get_text
 from utils.data_manager import set_any_message_ignore, get_data, set_data
-from utils.utils_chats_db import util_add_new_chat, util_update_chat
+from utils.utils_chats_db import util_add_new_chat, util_update_chat, util_delete_chat, util_delete_all_chats
 from utils.utils_chats_reader import get_chat
 from utils.utils_data import get_current_lang
 from utils.utils_parse_mode_converter import escape_markdown
@@ -55,8 +55,8 @@ async def new_chat_handler(callback: CallbackQuery, button: Button, dialog_manag
     await asyncio.gather(*tasks)
 
 
-async def clean_chats_history_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    pass
+async def clear_chats_history_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    await dialog_manager.switch_to(GigaChatState.ClearChatsHistory)
 
 
 async def on_first_user_query(
@@ -107,6 +107,9 @@ async def on_user_query(
     if await _check_stop_chat(user_id, language, input_text, dialog_manager, dialog_data):
         return
 
+    if await _check_delete_chat_command(user_id, language, input_text, dialog_manager, dialog_data):
+        return
+
     query_giga_chat_count = _get_query_giga_chat_count_info(data)
     if await _check_limit_giga_chat_queries(user_id, query_giga_chat_count, dialog_manager, data):
         return
@@ -139,6 +142,9 @@ async def on_resume_chat_user_query(
     dialog_data = dialog_manager.current_context().dialog_data or {}
 
     if await _check_stop_chat(user_id, language, input_text, dialog_manager, dialog_data):
+        return
+
+    if await _check_delete_chat_command(user_id, language, input_text, dialog_manager, dialog_data):
         return
 
     query_giga_chat_count = _get_query_giga_chat_count_info(data)
@@ -196,6 +202,7 @@ async def _get_response(messages: List):
 async def _check_stop_chat(user_id, language, input_text, dialog_manager, dialog_data):
     close_chat_btn_text = keyboards.BUTTONS.get('close_chat').get(language)
     save_and_close_chat_btn_text = keyboards.BUTTONS.get('save_and_close_chat').get(language)
+    delete_chat_btn_text = keyboards.BUTTONS.get('delete_chat').get(language)
     if input_text == save_and_close_chat_btn_text:
         # Сохраняем чат в базу
         chat_data = dialog_data.get('chat', {})
@@ -208,6 +215,21 @@ async def _check_stop_chat(user_id, language, input_text, dialog_manager, dialog
     elif input_text == close_chat_btn_text:
         stop_text = await get_text(user_id, 'on_close_chat_text')
         await _stop_chat(user_id, stop_text, dialog_manager, dialog_data, time_sec=1)
+        return True
+
+    return False
+
+
+async def _check_delete_chat_command(user_id, language, input_text, dialog_manager, dialog_data):
+    delete_chat_btn_text = keyboards.BUTTONS.get('delete_chat').get(language)
+    if input_text == delete_chat_btn_text:
+        chat_data = dialog_manager.current_context().start_data.get('chat')
+        chat: Chat = await get_chat(user_id, chat_data.get('id'))
+        dialog_data['chat'] = chat.to_dict_with_id()
+        dialog_manager.current_context().dialog_data = dialog_data
+
+        await set_any_message_ignore(user_id, True)
+        await dialog_manager.switch_to(GigaChatState.DeleteChat)
         return True
     return False
 
@@ -231,8 +253,8 @@ async def _check_limit_giga_chat_queries(user_id, query_giga_chat_count, dialog_
     return False
 
 
-async def _stop_chat(user_id, message_text, dialog_manager, dialog_data, time_sec):
-    await bot.send_message(user_id, message_text, reply_markup=ReplyKeyboardRemove())
+async def _stop_chat(user_id, stop_text, dialog_manager, dialog_data, time_sec):
+    await bot.send_message(user_id, stop_text, reply_markup=ReplyKeyboardRemove())
     dialog_data['giga_chat_messages'] = None
     await set_any_message_ignore(user_id, False)
     #await set_data(user_id, data)
@@ -308,3 +330,25 @@ async def _generate_start_giga_chat_messages(user_id) -> List[BaseMessage]:
         AIMessage(content=start_text),
     ]
     return giga_chat_messages
+
+
+async def confirm_delete_chat_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    user_id = dialog_manager.event.from_user.id
+    chat_data = dialog_manager.current_context().start_data.get('chat')
+    result = await util_delete_chat(user_id, chat_data.get('id'))
+    if result:
+        await dialog_manager.done()
+
+
+async def cancel_delete_chat_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    await dialog_manager.switch_to(GigaChatState.SelectedChat)
+
+
+async def confirm_clear_chats_history_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    user_id = dialog_manager.event.from_user.id
+    result = await util_delete_all_chats(user_id)
+    await dialog_manager.switch_to(GigaChatState.MenuChats)
+
+
+async def cancel_clear_chats_history_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    await dialog_manager.switch_to(GigaChatState.MenuChats)

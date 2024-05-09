@@ -96,16 +96,16 @@ def _folder_has_not_items(data: dict, widget, context) -> bool:
 
 
 _folder_control_delete_all_items_buttons = [
-    Button(Const("✔️ Да, удалить"), id="delete_all_items", on_click=confirm_delete_all_items_handler,
+    Button(Const("✔️ Да, удалить"), id="confirm_delete_all_items", on_click=confirm_delete_all_items_handler,
            when=_folder_has_items),
-    Button(Const("✖️ Не удалять"), id="not_delete_all_items", on_click=cancel_delete_handler,
+    Button(Const("✖️ Не удалять"), id="cancel_delete_all_items", on_click=cancel_delete_handler,
            when=_folder_has_items),
     Button(Const("Ясно"), id="ok_has_not_items", on_click=cancel_delete_handler, when=_folder_has_not_items),
 ]
 
 _folder_control_delete_buttons = [
-    Button(Const("✔️ Да, удалить"), id="delete_all_items", on_click=confirm_delete_handler),
-    Button(Const("✖️ Не удалять"), id="not_delete_all_items", on_click=cancel_delete_handler),
+    Button(Const("✔️ Да, удалить"), id="confirm_delete_folder", on_click=confirm_delete_handler),
+    Button(Const("✖️ Не удалять"), id="cancel_delete_folder", on_click=cancel_delete_handler),
 ]
 
 _folder_control_stop_all_users_access_buttons = [

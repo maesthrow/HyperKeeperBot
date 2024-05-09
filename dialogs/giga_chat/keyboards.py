@@ -22,9 +22,25 @@ BUTTONS = {
         Language.RUSSIAN: "🗑️ Удалить чат",
         Language.ENGLISH: "🗑️ Delete Chat",
     },
-    'clean_chats_history': {
+    'clear_chats_history': {
         Language.RUSSIAN: "🧹 Очистить историю чатов",
         Language.ENGLISH: "🧹 Clear Chat History",
+    },
+    'confirm_delete_chat': {
+        Language.RUSSIAN: "☑️ Да, удалить",
+        Language.ENGLISH: "☑️ Yes, delete",
+    },
+    'cancel_delete_chat': {
+        Language.RUSSIAN: "✖️ Нет, не удалять",
+        Language.ENGLISH: "✖️ No, don't delete",
+    },
+    'confirm_clear_chats_history': {
+        Language.RUSSIAN: "🧹 Да, очистить",
+        Language.ENGLISH: "🧹 Yes, clear",
+    },
+    'cancel_clear_chats_history': {
+        Language.RUSSIAN: "✖️ Нет, отменить",
+        Language.ENGLISH: "✖️ No, cancel",
     },
 }
 
@@ -51,3 +67,7 @@ def get_chat_reply_keyboard(language: Language, is_new_chat):
         keyboard[1].append(KeyboardButton(text=delete_chat_btn_text))
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
 
+
+def user_have_chats(data: dict, widget, context) -> bool:
+    chats = data.get('chats', {})
+    return len(chats) > 0

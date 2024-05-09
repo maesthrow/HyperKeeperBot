@@ -298,4 +298,12 @@ Feel free to explore and utilize the features to enhance your data management ex
                           "also without quotations. The title length should not exceed 42 characters.",
 
     },
+    'delete_chat_question': {
+        Language.RUSSIAN: "Хотите удалить этот чат?",
+        Language.ENGLISH: "Do you want to delete this chat?",
+    },
+    'clear_chats_history_question': {
+        Language.RUSSIAN: "Хотите очистить историю ваших чатов? Содержимое всех чатов будет удалено.",
+        Language.ENGLISH: "Do you want to clear your chat history? The contents of all chats will be deleted.",
+    },
 }

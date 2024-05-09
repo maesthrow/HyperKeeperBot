@@ -49,3 +49,14 @@ async def delete_chat(user_id, chat_id):
     return False
 
 
+async def delete_all_chats(user_id):
+    """Удаляет все чаты пользователя из базы данных."""
+    try:
+        await set_user_chats_data(user_id, {"chats": {}})
+        return True
+    except:
+        return False
+
+
+
+
