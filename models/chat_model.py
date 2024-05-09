@@ -33,6 +33,11 @@ class Chat(BaseDbModel):
             "gpt_model": self.gpt_model
         }
 
+    def to_dict_with_id(self) -> dict:
+        chat_dict = self.to_dict()
+        chat_dict['id'] = self.id
+        return chat_dict
+
     # def get_body_markdown(self, page=0) -> str:
     #     title = escape_markdown(self.get_title())
     #     title += '\n' if title[-1] != '\n' else ''

@@ -29,6 +29,7 @@ menu_chats_window = Window(
         width=1,
         hide_on_single_page=True
     ),
+    Button(id='clean_chats_history', text=Format('{btn_clean_chats_history}'), on_click=clean_chats_history_handler),
     Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
     state=GigaChatState.MenuChats,
     getter=get_menu_chats_data

@@ -23,6 +23,7 @@ async def get_menu_chats_data(dialog_manager: DialogManager, **kwargs):
     return {
         'message_text': message_text,
         'btn_new_chat': keyboards.BUTTONS['new_chat'].get(language),
+        'btn_clean_chats_history': keyboards.BUTTONS['clean_chats_history'].get(language),
         'btn_menu': general_keyboards.BUTTONS['menu'].get(language),
         'chats': chats
     }

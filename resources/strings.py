@@ -289,10 +289,13 @@ Feel free to explore and utilize the features to enhance your data management ex
                           "\nPlease come back tomorrow, I'll be happy to help you again!",
     },
     'gpt_make_title_chat_command': {
-        Language.RUSSIAN: "Придумай и напиши без каких либо пояснений краткий заголовок по теме и содержимому "
-                          "этой беседы",
-        Language.ENGLISH: "Come up with and write a concise title for the topic and content of this conversation "
-                          "without any explanations."
-,
+        Language.RUSSIAN: "Придумай и напиши краткий заголовок по теме и содержимому "
+                          "этой беседы без учета этого сообщения и без каких либо пояснений, "
+                          "что это заголовок, а так же без кавычек. "
+                          "Длина заголовка должна быть не более 42 символов.",
+        Language.ENGLISH: "Create and write a brief title for this chat based on its theme and content, "
+                          "excluding this message and without any explanations that it is a title, "
+                          "also without quotations. The title length should not exceed 42 characters.",
+
     },
 }

@@ -15,12 +15,16 @@ BUTTONS = {
         Language.ENGLISH: "✅ Save & Close Chat",
     },
     'close_chat': {
-        Language.RUSSIAN: "✖️ Закрыть чат без сохранения",
-        Language.ENGLISH: "✖️ Close Chat Without Saving",
+        Language.RUSSIAN: "✖️ Закрыть чат",
+        Language.ENGLISH: "✖️ Close Chat",
     },
     'delete_chat': {
         Language.RUSSIAN: "🗑️ Удалить чат",
         Language.ENGLISH: "🗑️ Delete Chat",
+    },
+    'clean_chats_history': {
+        Language.RUSSIAN: "🧹 Очистить историю чатов",
+        Language.ENGLISH: "🧹 Clear Chat History",
     },
 }
 
@@ -32,16 +36,18 @@ BUTTONS = {
 # }
 
 
-def get_chat_reply_keyboard(language: Language):
+def get_chat_reply_keyboard(language: Language, is_new_chat):
     save_and_close_chat_btn_text = BUTTONS.get('save_and_close_chat').get(language)
     close_chat_btn_text = BUTTONS.get('close_chat').get(language)
     delete_chat_btn_text = BUTTONS.get('delete_chat').get(language)
     keyboard = [
-        [KeyboardButton(text=save_and_close_chat_btn_text)],
+        [
+            KeyboardButton(text=save_and_close_chat_btn_text)],
         [
             KeyboardButton(text=close_chat_btn_text),
-            #KeyboardButton(text=delete_chat_btn_text),
         ],
     ]
+    if not is_new_chat:
+        keyboard[1].append(KeyboardButton(text=delete_chat_btn_text))
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
 
