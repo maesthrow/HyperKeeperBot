@@ -1,9 +1,8 @@
 from aiogram_dialog import Window, Dialog
 from aiogram_dialog.widgets.text import Format
-from prompt_toolkit.widgets import Button
 
 from dialogs.item_control.getters import get_show_item_data
-from dialogs.widgets import InlineQueryButton
+from dialogs.widgets.inline_query_button import InlineQueryButton
 from handlers_pack.states import ItemControlState
 
 from dialogs.item_control.handlers import *

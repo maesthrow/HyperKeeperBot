@@ -3,7 +3,7 @@ from aiogram_dialog.widgets.kbd import Row, Column
 from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs.folder_control.handlers import *
-from dialogs.widgets import InlineQueryButton
+from dialogs.widgets.inline_query_button import InlineQueryButton
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 
 

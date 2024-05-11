@@ -1,11 +1,10 @@
 from aiogram_dialog import Dialog, Window
-from aiogram_dialog.widgets.input import TextInput
 from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs.general_handlers import open_main_menu_handler
 from dialogs.main_menu.getters import *
 from dialogs.main_menu.handlers import *
-from dialogs.widgets import InlineQueryButton
+from dialogs.widgets.inline_query_button import InlineQueryButton
 from handlers_pack.states import MainMenuState
 
 start_window = Window(

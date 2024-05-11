@@ -17,7 +17,7 @@ users_menu_window = Window(
             id='access_from_users_scroll',
             item_id_getter=operator.itemgetter('from_user_id'),
             items='users',
-            on_click=user_selected_handler
+            on_click=user_selected_handler,
         ),
         id='access_from_users',
         height=5,

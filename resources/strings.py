@@ -306,4 +306,8 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.RUSSIAN: "Хотите очистить историю ваших чатов? Содержимое всех чатов будет удалено.",
         Language.ENGLISH: "Do you want to clear your chat history? The contents of all chats will be deleted.",
     },
+    'chat_content_text': {
+        Language.RUSSIAN: "📑 Содержание чата",
+        Language.ENGLISH: "📑 Chat Content",
+    },
 }

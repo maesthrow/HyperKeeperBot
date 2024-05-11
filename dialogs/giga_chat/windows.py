@@ -10,6 +10,7 @@ from dialogs.general_handlers import open_main_menu_handler
 from dialogs.giga_chat.getters import *
 from dialogs.giga_chat.handlers import *
 from dialogs.giga_chat.keyboards import *
+from dialogs.widgets.scrolling_chat_text_group import ScrollingChatTextGroup
 
 from handlers_pack.states import GigaChatState
 
@@ -42,6 +43,21 @@ menu_chats_window = Window(
 
 selected_chat_window = Window(
     Format("{message_text}"),
+    ScrollingGroup(
+        Select(
+            Format("{item[chat_content_text]}"),
+            id='chat_text_page',
+            item_id_getter=operator.itemgetter('page'),
+            items='chat_pages',
+            on_click=on_page_click,
+            #when=lambda d, w, c: False,
+        ),
+        id='chat_text_pages_scroll',
+        height=1,
+        width=1,
+        on_page_changed=on_page_changed,
+        hide_on_single_page=False,
+    ),
     TextInput(
         id="user_query_text",
         on_success=on_resume_chat_user_query,

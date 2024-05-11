@@ -15,6 +15,8 @@ CHAT_MESSAGE_TYPE = {
     SystemMessage: 'sy',
 }
 
+PAGE_LEN = 800
+
 
 class Chat(BaseDbModel):
     def __init__(self, id: str, title: str, messages: List[dict], gpt_model: GPTModel | str):
@@ -44,7 +46,20 @@ class Chat(BaseDbModel):
     #     text = escape_markdown(self.text[page])
     #     return f"📄 *{title}*\n\n{text}\n{INVISIBLE_CHAR}"
 
-    async def get_text_markdown_for_show_chat_history(self, user_id, page=0):
+    async def get_pages_text_markdown_for_show_chat_history(self, user_id):
+        full_text = await self.get_text_markdown_for_show_chat_history(user_id)
+        messages = full_text.split("\n\n")
+        pages = ['']
+        page = 0
+        for message in messages:
+            if len(pages[page]) < PAGE_LEN and (len(message) + len(pages[page]) < PAGE_LEN):
+                pages[page] += f'\n\n{message}'
+            else:
+                page += 1
+                pages.append(message)
+        return pages
+
+    async def get_text_markdown_for_show_chat_history(self, user_id):
         you_text = await get_text(user_id, 'you')
         markdown_text = self._make_text_for_chat(you_text)
         return markdown_text

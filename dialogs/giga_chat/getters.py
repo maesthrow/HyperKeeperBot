@@ -1,4 +1,5 @@
 from aiogram_dialog import DialogManager
+from aiogram_dialog.widgets.kbd import ScrollingGroup
 
 from dialogs import general_keyboards
 from dialogs.giga_chat import keyboards
@@ -32,13 +33,35 @@ async def get_menu_chats_data(dialog_manager: DialogManager, **kwargs):
 
 async def get_selected_chat_data(dialog_manager: DialogManager, **kwargs):
     user = dialog_manager.event.from_user
-    language = await get_current_lang(user.id)
     data = dialog_manager.current_context().start_data
     chat_data = data.get('chat')
     chat: Chat = await get_chat(user.id, chat_data.get('id'))
-    message_text = await chat.get_text_markdown_for_show_chat_history(user_id=user.id)
+    chat_content_text = await get_text(user.id, 'chat_content_text')
+
+    text_pages = await chat.get_pages_text_markdown_for_show_chat_history(user_id=user.id)
+    last_page = len(text_pages) - 1
+
+    dialog_data = dialog_manager.current_context().dialog_data
+    if dialog_data:
+        current_page = dialog_data.get('page', last_page)
+    else:
+        current_page = last_page
+    message_text = text_pages[current_page]
+    chat_pages = [
+        {
+            'page': n, 'text': [page_text], 'chat_content_text': chat_content_text
+        }
+        for n, page_text in enumerate(text_pages)
+    ]
+    scrolling_group: ScrollingGroup = dialog_manager.find('chat_text_pages_scroll')
+    scrolling_group.set_widget_data(dialog_manager, current_page)
+
+    dialog_manager.current_context().dialog_data = {'chat_pages': chat_pages}
+
     return {
         'message_text': message_text,
+        'chat_pages': chat_pages,
+        'page': current_page
     }
 
 

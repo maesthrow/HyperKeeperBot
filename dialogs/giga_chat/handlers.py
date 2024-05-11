@@ -3,10 +3,11 @@ from typing import List
 
 from aiogram.enums import ContentType
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove, DateTime
-from aiogram_dialog import DialogManager, ShowMode
+from aiogram_dialog import DialogManager, ShowMode, ChatEvent
 from aiogram_dialog.api.internal import Widget
+from aiogram_dialog.widgets.common import ManagedScroll
 from aiogram_dialog.widgets.input import ManagedTextInput
-from aiogram_dialog.widgets.kbd import Button, Select
+from aiogram_dialog.widgets.kbd import Button, Select, ScrollingGroup
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, BaseMessage
 
 from dialogs.giga_chat import keyboards
@@ -352,3 +353,27 @@ async def confirm_clear_chats_history_handler(callback: CallbackQuery, button: B
 
 async def cancel_clear_chats_history_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
     await dialog_manager.switch_to(GigaChatState.MenuChats)
+
+
+async def on_page_click(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
+    return
+    new_page = dialog_manager.current_context().dialog_data.get('page', 0)
+    scrolling_group: ScrollingGroup = dialog_manager.find('chat_text_pages_scroll')
+    page = await scrolling_group.get_page(dialog_manager) + 1
+    dialog_manager.current_context().dialog_data = {'page': page}
+    print(f'page = {page}')
+    await dialog_manager.start(GigaChatState.SelectedChat, data={'page': page})
+
+
+async def on_page_changed(event: ChatEvent, scroll: ManagedScroll, dialog_manager: DialogManager):
+    new_page = await scroll.get_page()
+    chat_pages: List[dict] = dialog_manager.current_context().dialog_data.get('chat_pages')
+    new_text = chat_pages[new_page]['text']
+    print(f'new_page {new_page}\nnew_text {new_text}')
+
+    # Обновляем данные, которые используются для отображения текста в окне
+    dialog_manager.current_context().dialog_data['message_text'] = new_text
+    dialog_manager.current_context().dialog_data['page'] = new_page
+
+    await dialog_manager.switch_to(GigaChatState.SelectedChat)
+

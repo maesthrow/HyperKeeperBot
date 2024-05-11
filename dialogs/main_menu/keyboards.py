@@ -1,8 +1,3 @@
-from aiogram_dialog import widgets
-from aiogram_dialog.widgets.kbd import Column
-from aiogram_dialog.widgets.text import Const
-
-from dialogs.widgets import InlineQueryButton
 from enums.enums import Language
 from utils.utils_ import smile_folder, smile_item, smile_file
 
