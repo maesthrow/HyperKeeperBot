@@ -10,22 +10,22 @@ from dialogs.general_handlers import open_main_menu_handler
 from dialogs.giga_chat.getters import *
 from dialogs.giga_chat.handlers import *
 from dialogs.giga_chat.keyboards import *
-from dialogs.widgets.scrolling_chat_text_group import ScrollingChatTextGroup
+from dialogs.widgets.custom_scrolling_group import CustomScrollingGroup
 
-from handlers_pack.states import GigaChatState
+from handlers_pack.states import GigaChatState, GigaChatResumeState
 
 menu_chats_window = Window(
     Format("{message_text}"),
     Button(id='new_chat', text=Format('{btn_new_chat}'), on_click=new_chat_handler),
-    ScrollingGroup(
+    CustomScrollingGroup(
         Select(
             Format("{item[title]}"),
-            id='chats_scroll',
+            id='chats_select',
             item_id_getter=operator.itemgetter('id'),
             items='chats',
             on_click=chat_selected_handler
         ),
-        id='chats',
+        id='chats_scroll',
         height=5,
         width=1,
         hide_on_single_page=True
@@ -43,20 +43,19 @@ menu_chats_window = Window(
 
 selected_chat_window = Window(
     Format("{message_text}"),
-    ScrollingGroup(
+    CustomScrollingGroup(
         Select(
-            Format("{item[chat_content_text]}"),
+            Format("{item[delete_last_pair_chat_messages_text]}"),
             id='chat_text_page',
             item_id_getter=operator.itemgetter('page'),
             items='chat_pages',
             on_click=on_page_click,
-            #when=lambda d, w, c: False,
         ),
         id='chat_text_pages_scroll',
         height=1,
         width=1,
         on_page_changed=on_page_changed,
-        hide_on_single_page=False,
+        hide_on_single_page=True,
     ),
     TextInput(
         id="user_query_text",
@@ -144,3 +143,5 @@ dialog_giga_chat = Dialog(
     delete_chat_window,
     clear_chats_history_window,
 )
+
+

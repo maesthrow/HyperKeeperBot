@@ -4,7 +4,7 @@ from aiogram_dialog.api.internal import RawKeyboard
 from aiogram_dialog.widgets.kbd import ScrollingGroup
 
 
-class ScrollingChatTextGroup(ScrollingGroup):
+class CustomScrollingGroup(ScrollingGroup):
     async def _render_pager(
             self,
             pages: int,
@@ -26,7 +26,7 @@ class ScrollingChatTextGroup(ScrollingGroup):
                     text="1", callback_data=self._item_callback_data("0"),
                 ),
                 InlineKeyboardButton(
-                    text="<",
+                    text="◀️",
                     callback_data=self._item_callback_data(prev_page),
                 ),
                 InlineKeyboardButton(
@@ -34,7 +34,7 @@ class ScrollingChatTextGroup(ScrollingGroup):
                     callback_data=self._item_callback_data(current_page),
                 ),
                 InlineKeyboardButton(
-                    text=">",
+                    text="▶️",
                     callback_data=self._item_callback_data(next_page),
                 ),
                 InlineKeyboardButton(
@@ -43,3 +43,6 @@ class ScrollingChatTextGroup(ScrollingGroup):
                 ),
             ],
         ]
+
+    def get_page_count_public(self) -> int:
+        return len(self.buttons) // self.height + bool(len(self.buttons) % self.height)

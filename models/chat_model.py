@@ -1,5 +1,6 @@
 from typing import List
 
+from aiogram.types import DateTime
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, BaseMessage
 
 from enums.enums import GPTModel
@@ -15,11 +16,18 @@ CHAT_MESSAGE_TYPE = {
     SystemMessage: 'sy',
 }
 
-PAGE_LEN = 800
+PAGE_LEN = 3000
 
 
 class Chat(BaseDbModel):
-    def __init__(self, id: str, title: str, messages: List[dict], gpt_model: GPTModel | str):
+    def __init__(
+            self,
+            id: str,
+            title: str,
+            messages: List[dict],
+            gpt_model: GPTModel | str,
+            date_modified: DateTime
+    ):
         self.id = id
         self.title = title
         self.messages = messages
@@ -27,12 +35,14 @@ class Chat(BaseDbModel):
             self.gpt_model = gpt_model.value
         else:
             self.gpt_model = gpt_model
+        self.date_modified = date_modified
 
     def to_dict(self) -> dict:
         return {
             "title": self.title,
             "messages": self.messages,
-            "gpt_model": self.gpt_model
+            "gpt_model": self.gpt_model,
+            "date_modified": self.date_modified
         }
 
     def to_dict_with_id(self) -> dict:
@@ -40,11 +50,12 @@ class Chat(BaseDbModel):
         chat_dict['id'] = self.id
         return chat_dict
 
-    # def get_body_markdown(self, page=0) -> str:
-    #     title = escape_markdown(self.get_title())
-    #     title += '\n' if title[-1] != '\n' else ''
-    #     text = escape_markdown(self.text[page])
-    #     return f"📄 *{title}*\n\n{text}\n{INVISIBLE_CHAR}"
+    def is_valid(self):
+        return (self.id
+                and self.title
+                and self.messages
+                and self.gpt_model
+                and self.date_modified)
 
     async def get_pages_text_markdown_for_show_chat_history(self, user_id):
         full_text = await self.get_text_markdown_for_show_chat_history(user_id)
@@ -84,18 +95,31 @@ class Chat(BaseDbModel):
                 result.append(HumanMessage(content=message['text']))
         return result
 
+    def delete_last_pair_messages(self):
+        if len(self.messages) > 2:
+            self.messages = self.messages[:-2]
+            return True
+        return False
+
     @staticmethod
     def smile():
         return '💬'
 
 
 class SimpleChat(BaseDbModel):
-    def __init__(self, id: str, title: str):
+    def __init__(
+            self,
+            id: str,
+            title: str,
+            date_modified: DateTime
+    ):
         self.id = id
         self.title = title
+        self.date_modified = date_modified
 
     def to_dict(self) -> dict:
         return {
             "id": self.id,
             "title": self.title,
+            "date_modified": self.date_modified,
         }

@@ -7,7 +7,7 @@ from models.chat_model import Chat
 from mongo_db.mongo_collection_chats import add_user_chats
 from resources.text_getter import get_text
 from utils.data_manager import set_any_message_ignore
-from utils.utils_chats_reader import get_simple_chats, get_chat
+from utils.utils_chats_reader import get_simple_chats, get_chat, get_chat_from_chat_data
 from utils.utils_data import get_current_lang
 
 
@@ -21,13 +21,15 @@ async def get_menu_chats_data(dialog_manager: DialogManager, **kwargs):
     message_text = giga_menu_chats_title
 
     chats = [chat.to_dict() for chat in await get_simple_chats(user.id)]
-    dialog_manager.current_context().dialog_data = {'chats': chats}
+    sorted_chats = sorted(chats, key=lambda chat: chat['date_modified'], reverse=True)
+    dialog_manager.current_context().dialog_data = {'chats': sorted_chats}
+    print(sorted_chats)
     return {
         'message_text': message_text,
         'btn_new_chat': keyboards.BUTTONS['new_chat'].get(language),
         'btn_clear_chats_history': keyboards.BUTTONS['clear_chats_history'].get(language),
         'btn_menu': general_keyboards.BUTTONS['menu'].get(language),
-        'chats': chats
+        'chats': sorted_chats
     }
 
 
@@ -36,7 +38,10 @@ async def get_selected_chat_data(dialog_manager: DialogManager, **kwargs):
     data = dialog_manager.current_context().start_data
     chat_data = data.get('chat')
     chat: Chat = await get_chat(user.id, chat_data.get('id'))
+
     chat_content_text = await get_text(user.id, 'chat_content_text')
+    new_chat_text = await get_text(user.id, 'giga_new_chat_title')
+    delete_last_pair_chat_messages_text = await get_text(user.id, 'delete_last_pair_chat_messages')
 
     text_pages = await chat.get_pages_text_markdown_for_show_chat_history(user_id=user.id)
     last_page = len(text_pages) - 1
@@ -49,7 +54,7 @@ async def get_selected_chat_data(dialog_manager: DialogManager, **kwargs):
     message_text = text_pages[current_page]
     chat_pages = [
         {
-            'page': n, 'text': [page_text], 'chat_content_text': chat_content_text
+            'page': n, 'text': [page_text], 'delete_last_pair_chat_messages_text': delete_last_pair_chat_messages_text
         }
         for n, page_text in enumerate(text_pages)
     ]
@@ -79,6 +84,8 @@ async def get_query_data(dialog_manager: DialogManager, **kwargs):
     user = dialog_manager.event.from_user
     language = await get_current_lang(user.id)
     response_text = dialog_manager.current_context().dialog_data.get('response_text')
+    if not response_text:
+        response_text = dialog_manager.current_context().start_data.get('response_text')
     message_text = response_text
     return {
         'message_text': message_text,

@@ -86,3 +86,8 @@ class GigaChatState(StatesGroup):
     Query = State()
     DeleteChat = State()
     ClearChatsHistory = State()
+
+
+class GigaChatResumeState(StatesGroup):
+    Show = State()
+

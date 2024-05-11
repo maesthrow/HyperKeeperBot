@@ -1,8 +1,10 @@
 from typing import List
 
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Keyboard
 
+from dialogs.widgets.custom_scrolling_group import CustomScrollingGroup
 from enums.enums import Language
 
 BUTTONS = {
@@ -68,6 +70,7 @@ def get_chat_reply_keyboard(language: Language, is_new_chat):
     return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
 
 
-def user_have_chats(data: dict, widget, context) -> bool:
+def user_have_chats(data: dict, widget, dialog_manager: DialogManager) -> bool:
     chats = data.get('chats', {})
     return len(chats) > 0
+
