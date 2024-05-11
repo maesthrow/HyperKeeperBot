@@ -25,7 +25,7 @@ async def get_chat(user_id, chat_id: str) -> Chat | None:
             title=chat_data.get('title'),
             messages=chat_data.get('messages'),
             gpt_model=chat_data.get('gpt_model'),
-            date_modified=chat_data.get('date_modified') or DateTime.now()
+            date_modified=chat_data.get('date_modified', DateTime.now())
         )
         if chat.is_valid():
             return chat
@@ -41,7 +41,7 @@ async def get_chat_from_chat_data(chat_data: dict) -> Chat | None:
             title=chat_data.get('title'),
             messages=chat_data.get('messages'),
             gpt_model=chat_data.get('gpt_model'),
-            date_modified=chat_data.get('date_modified') or DateTime.now()
+            date_modified=chat_data.get('date_modified', DateTime.now())
         )
         if chat.is_valid():
             return chat
@@ -56,7 +56,7 @@ async def get_simple_chats(user_id) -> List[SimpleChat]:
             SimpleChat(
                 id=chat_id,
                 title=chats.get(chat_id).get('title'),
-                date_modified=chats.get(chat_id).get('date_modified'),
+                date_modified=chats.get(chat_id).get('date_modified', DateTime.now()),
             ) for chat_id in chats]
     return []
 
