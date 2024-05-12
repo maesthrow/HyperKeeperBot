@@ -60,7 +60,7 @@ async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
     data = {
         'message_text': prompt_text,
         'btn_menu': general_keyboards.BUTTONS['menu'].get(language),
-        'btn_global': keyboards.SEARCH_BUTTONS['global'].get(language),
+        'btn_general': keyboards.SEARCH_BUTTONS['general'].get(language),
         'btn_folders': keyboards.SEARCH_BUTTONS['folders'].get(language),
         'btn_items': keyboards.SEARCH_BUTTONS['items'].get(language),
         'btn_files': keyboards.SEARCH_BUTTONS['files'].get(language),

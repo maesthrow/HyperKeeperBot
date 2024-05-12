@@ -30,8 +30,8 @@ main_menu_window = Window(
 live_search_window = Window(
     Format("{message_text}"),
     InlineQueryButton(
-        Format('{btn_global}'),
-        id="global_search",
+        Format('{btn_general}'),
+        id="general_search",
         switch_inline_query_current_chat=Const("")
     ),
     InlineQueryButton(

@@ -34,9 +34,9 @@ BUTTONS = {
 
 
 SEARCH_BUTTONS = {
-    'global': {
-        Language.RUSSIAN: "🔍 Глобальный поиск 🌐",
-        Language.ENGLISH: "🔍 Global Search 🌐",
+    'general': {
+        Language.RUSSIAN: "🔍 Общий поиск 🌐",
+        Language.ENGLISH: "🔍 General Search 🌐",
     },
     'folders': {
         Language.RUSSIAN: f"🔍 Поиск папок {smile_folder}",

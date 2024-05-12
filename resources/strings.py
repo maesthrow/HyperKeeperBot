@@ -91,7 +91,7 @@ STRINGS = {
     'live_search_prompt_text_template': {
         Language.RUSSIAN:
             "\n\n<i>Вводите поисковый запрос из любого чата, упоминая бота:</i>\
-            \n\nГлобальный поиск 🌐\
+            \n\nОбщий поиск 🌐\
             \n'@{bot_username} <i>ваш_запрос</i>'\
             \n\nПоиск папок {smile_folder}\
             \n'@{bot_username} folders/<i>ваш_запрос</i>'\
@@ -102,7 +102,7 @@ STRINGS = {
             \n\n<i>Либо используйте кнопки</i> ⬇️",
         Language.ENGLISH:
             "\n\n<i>Enter your search query from any chat by mentioning the bot:</i>\
-            \n\nGlobal Search 🌐\
+            \n\nGeneral Search 🌐\
             \n'@{bot_username} <i>your_query</i>'\
             \n\nFolder Search {smile_folder}\
             \n'@{bot_username} folders/<i>your_query</i>'\
@@ -141,7 +141,7 @@ STRINGS = {
 <b>🔍 Функционал поиска</b>
 /search
 
-Выполните глобальный поиск, отправив @{bot_username} <i>ваш_запрос</i> или используя кнопку "🔍 Глобальный поиск 🌐".
+Выполните общий поиск, отправив @{bot_username} <i>ваш_запрос</i> или используя кнопку "🔍 Общий поиск 🌐".
 Вы можете осуществлять поиск внутри:
 Папок, используя @{bot_username} folders/<i>ваш_запрос</i>
 Записей, используя @{bot_username} items/<i>ваш_запрос</i>
@@ -184,7 +184,7 @@ Share these with friends or grant them access to entire folders.
 <b>🔍 Search Functionality</b>
 /search
 
-Perform a Global Search by sending @{bot_username} <i>your_query</i> or by using the "🔍 Global Search 🌐" button.
+Perform a General Search by sending @{bot_username} <i>your_query</i> or by using the "🔍 General Search 🌐" button.
 You can specifically search within:
 Folders using @{bot_username} folders/<i>your_query</i>
 Records using @{bot_username} items/<i>your_query</i>
