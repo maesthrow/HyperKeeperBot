@@ -122,11 +122,7 @@ async def help_handler(message: aiogram.types.Message, dialog_manager: DialogMan
 
 @router.message(Command(commands=["storage"]))
 async def storage(message: Message, state: FSMContext, dialog_manager: DialogManager):
-    # try:
-    #     await dialog_manager.reset_stack()
-    #     await dialog_manager.done()
-    # except:
-    #     pass
+    #await reset_context(dialog_manager)
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         user_id = message.from_user.id
         folder_id = await get_current_folder_id(user_id)
@@ -300,3 +296,11 @@ async def media_files_handler(message: Message, state: FSMContext):
 async def message_box_show_handler(call: CallbackQuery, state: FSMContext):
     await bot.delete_message(call.from_user.id, call.message.message_id)
     await state.set_state(state=None)
+
+
+async def reset_context(dialog_manager: DialogManager):
+    try:
+        await dialog_manager.reset_stack()
+        await dialog_manager.done()
+    except:
+        pass
