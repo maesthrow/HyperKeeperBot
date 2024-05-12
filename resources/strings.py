@@ -311,7 +311,7 @@ Feel free to explore and utilize the features to enhance your data management ex
         Language.ENGLISH: "📑 Chat Content",
     },
     'delete_last_pair_chat_messages': {
-        Language.RUSSIAN: "🚮 Удалить последнюю пару Запрос-Ответ", # ➿ 🗯️
-        Language.ENGLISH: "🚮 Delete the last Question-Answer pair",
+        Language.RUSSIAN: "⌫ Удалить последнюю пару Запрос-Ответ", # ➿ 🗯️ ⌫ 🚮
+        Language.ENGLISH: "⌫ Delete the last Question-Answer pair",
     },
 }

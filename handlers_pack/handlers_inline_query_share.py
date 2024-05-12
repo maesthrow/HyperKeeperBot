@@ -132,7 +132,7 @@ async def inline_query(query: Union[types.InlineQuery]):  # , types.CallbackQuer
         )
         builder.add(
             InlineKeyboardButton(
-                text="🧐 Обзор контента",
+                text="🧐 Обзор файлов",
                 switch_inline_query_current_chat=f"browse_{author_user_id}_{item_id}_{text_page}_content"
             )
         )

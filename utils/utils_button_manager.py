@@ -195,7 +195,7 @@ item_inline_buttons_with_files = [
         InlineKeyboardButton(text="🗑", callback_data="delete_item"),
     ],
     [
-        InlineKeyboardButton(text="🧐 Обзор контента", switch_inline_query_current_chat="none"),
+        InlineKeyboardButton(text="🧐 Обзор файлов", switch_inline_query_current_chat="none"),
         show_item_files_button,
     ],
     # show_item_files_buttons

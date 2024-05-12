@@ -121,7 +121,12 @@ async def help_handler(message: aiogram.types.Message, dialog_manager: DialogMan
 
 
 @router.message(Command(commands=["storage"]))
-async def storage(message: Message, state: FSMContext):
+async def storage(message: Message, state: FSMContext, dialog_manager: DialogManager):
+    try:
+        await dialog_manager.reset_stack()
+        await dialog_manager.done()
+    except:
+        pass
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         user_id = message.from_user.id
         folder_id = await get_current_folder_id(user_id)
