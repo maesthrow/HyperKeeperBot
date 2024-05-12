@@ -126,6 +126,7 @@ async def get_from_user_folder_data(dialog_manager: DialogManager, **kwargs):
     data['user_folders'] = user_folders
     data['user_folder_items'] = user_folder_items
     data['message_text'] = message_text
+    data['btn_back'] = general_keyboards.BUTTONS['back'].get(language)
 
     should_update_back_data = (
             not back_data or

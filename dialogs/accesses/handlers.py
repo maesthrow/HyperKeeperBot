@@ -85,3 +85,11 @@ async def on_back_folder_click_handler(callback: CallbackQuery, button: Button, 
             await dialog_manager.back()
     else:
         await dialog_manager.back()
+
+
+async def item_selected_handler(callback: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id):
+    data = dialog_manager.current_context().dialog_data
+    items = data.get('user_folder_items')
+    item_dict = next(filter(lambda _item: _item['item_id'] == item_id, items), None)
+    print(f'item_dict {item_dict}')
+    
