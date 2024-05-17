@@ -83,7 +83,7 @@ async def show_item(user_id, item_id, author_user_id=None, page=0):
         author_user_id = user_id
     item = await get_item(author_user_id, item_id)
 
-    inline_markup = await get_item_inline_markup(author_user_id, item, page=page)
+    inline_markup = await get_item_inline_markup(user_id, author_user_id, item, page=page)
     message_text = item.get_body_markdown(page)
     if item.files_count() > 0:
         message_text = f'{message_text}\n_{item.get_files_statistic_text()}_'
@@ -105,11 +105,15 @@ async def show_item(user_id, item_id, author_user_id=None, page=0):
     await set_data(author_user_id, data)
 
 
-async def get_item_inline_markup(author_user_id, item: Item, page: int):
+async def get_item_inline_markup(user_id, author_user_id, item: Item, page: int):
     if item.files_count() == 0:
         item_inlines = copy.deepcopy(item_inline_buttons)
+        if user_id != author_user_id:
+            item_inlines = [item_inline_buttons[0]]
     else:
         item_inlines = copy.deepcopy(item_inline_buttons_with_files)
+        if user_id != author_user_id:
+            item_inlines.pop(1)
         files_button: InlineKeyboardButton = FilesButtons.get_show_button(item.files_count())
         item_inlines[-1][-1] = files_button
 
@@ -499,7 +503,7 @@ async def movement_item_execute(message: aiogram.types.Message, folder_id=None):
 
 @router.callback_query(SendItemCallback.filter())
 async def send_item_handler(call: CallbackQuery, callback_data: SendItemCallback):
-    print("send_item_handler")
+    #print("send_item_handler")
     user_id = call.from_user.id
     author_user_id = callback_data.author_user_id
     item_id = callback_data.item_id

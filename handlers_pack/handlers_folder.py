@@ -549,7 +549,9 @@ async def go_to_page_items(call: CallbackQuery):
         if inline_markup and inline_markup.inline_keyboard:
             for row in inline_markup.inline_keyboard:
                 button = row[0]  # Получаем первую кнопку в строке
-                if 'folder' in button.callback_data and 'back' not in button.callback_data:
+                if ('folder' in button.callback_data
+                        and 'back' not in button.callback_data
+                        and 'up_to_root_level_folder' not in button.callback_data):
                     new_inline_markup.inline_keyboard.append(row)
 
         for row in items_inline_markup.inline_keyboard:

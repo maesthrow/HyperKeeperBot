@@ -25,6 +25,7 @@ select_smile = '✅'
 
 @router.callback_query(TextPagesCallback.filter())
 async def text_pages_handler(call: CallbackQuery):
+    user_id = call.from_user.id
     call_data: TextPagesCallback = TextPagesCallback.unpack(call.data)
     message = call.message
     inline_markup = message.reply_markup
@@ -52,7 +53,7 @@ async def text_pages_handler(call: CallbackQuery):
     elif call_data.action.startswith('all') or call_data.action.startswith('this'):
         await text_all_pages(author_user_id, item, page, call_data.action, message)
     elif call_data.action == 'back':
-        inline_markup = await get_item_inline_markup(author_user_id, item, page)
+        inline_markup = await get_item_inline_markup(user_id, author_user_id, item, page)
         await message.edit_reply_markup(reply_markup=inline_markup)
     elif call_data.action == 'back_pre_edit':
         item_inlines = copy.deepcopy(item_edit_buttons)
@@ -71,7 +72,7 @@ async def text_pages_handler(call: CallbackQuery):
 
 
 async def text_all_pages(author_user_id: int, item: Item, page_number: int, action: str, message: Message):
-    print(f'action {action}')
+    #print(f'action {action}')
     back_action = 'back'
     this_action = 'this'
     if '_pre_edit' in action:

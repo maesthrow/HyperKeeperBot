@@ -23,7 +23,11 @@ def _has_access_users(data: dict, widget, context) -> bool:
 def _is_read_access_type(data: dict, widget, context) -> bool:
     user = data.get('user', None)
     access_type = AccessType(user.get('access_type', 'r')) if user else AccessType.READ
-    return access_type == AccessType.READ
+    #######################################################
+    # ВКЛЮЧИТЬ ДЛЯ ДОСТУПА К РЕДАКТИРОВАНИЮ
+    #return access_type == AccessType.READ
+    #######################################################
+    return False
 
 
 def _is_write_access_type(data: dict, widget, context) -> bool:

@@ -5,6 +5,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.widgets.kbd import Select, Button
 
 from dialogs.general_handlers import try_delete_message
+from handlers_pack.handlers_item import show_item
 from handlers_pack.states import AccessesState, MainMenuState
 from utils.utils_ import get_level_folders, smile_folder
 from utils.utils_folders_reader import get_folder_name
@@ -91,5 +92,7 @@ async def item_selected_handler(callback: CallbackQuery, widget: Select, dialog_
     data = dialog_manager.current_context().dialog_data
     items = data.get('user_folder_items')
     item_dict = next(filter(lambda _item: _item['item_id'] == item_id, items), None)
-    print(f'item_dict {item_dict}')
-    
+    #print(f'item_dict {item_dict}')
+    user_id = callback.from_user.id
+    author_user_id = item_dict['from_user_id']
+    await show_item(user_id, item_id, author_user_id)

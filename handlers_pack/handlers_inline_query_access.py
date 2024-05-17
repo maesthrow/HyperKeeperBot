@@ -22,10 +22,10 @@ dp.include_router(router)
 async def inline_query_search_folders(query: InlineQuery):
     query_data = query.query
     query_user_id = query.from_user.id
-    print(f'query_user_id {query_user_id}')
+    #print(f'query_user_id {query_user_id}')
     from_user_id, folder_id = query_data.split('_')[1:]
-    print(f'from_user_id {from_user_id}')
-    print(f'folder_id {folder_id}')
+    #print(f'from_user_id {from_user_id}')
+    #print(f'folder_id {folder_id}')
     search_results_folders = await get_access_results(from_user_id, folder_id)
     await bot.answer_inline_query(
         query.id,
@@ -88,7 +88,11 @@ async def get_access_results(from_user_id, folder_id):
         reply_markup=inline_markup,
         # thumbnail_url=search_icon_url,
     )
-    access_results.append(access_write_folder_result)
+
+    #######################################################
+    # ВКЛЮЧИТЬ ДЛЯ ДОСТУПА К РЕДАКТИРОВАНИЮ
+    #access_results.append(access_write_folder_result)
+    #######################################################
 
     return access_results
 
