@@ -116,7 +116,7 @@ async def set_accesses_collection(user_id, accesses_collection=None):
 
 
 async def get_accesses_from_user_collection(user_id, from_user_id):
-    user_id = user_id
+    user_id = str(user_id)
     accesses_collection = await get_accesses_collection(user_id)
     if accesses_collection:
         accesses_from_user_collection = accesses_collection.get(str(from_user_id), {})

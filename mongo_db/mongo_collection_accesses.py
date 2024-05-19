@@ -35,7 +35,7 @@ async def get_user_accesses_data(tg_user_id):
 async def set_user_accesses_data(tg_user_id, data):
     """Обновляет данные доступов пользователя."""
     user_accesses_collection = db["accesses"]
-    user_accesses_collection.update_one({"_id": tg_user_id}, {"$set": data})
+    user_accesses_collection.update_one({"_id": int(tg_user_id)}, {"$set": data})
 
 
 async def get_user_accesses_collection(tg_user_id):
