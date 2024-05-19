@@ -8,7 +8,6 @@ async def add_access_folder_from_user(user_id, from_user_id, folder_id, access_t
     """Добавляет в доступы пользователя папку другого пользователя."""
     try:
         accesses_from_user_collection = await get_accesses_from_user_collection(user_id, from_user_id)
-        print(f'test accesses_from_user_collection {accesses_from_user_collection}')
         must_remove_folders = []
         must_add = True
         for has_folder_id in accesses_from_user_collection.keys():

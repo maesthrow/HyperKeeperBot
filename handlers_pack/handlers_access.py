@@ -265,12 +265,12 @@ async def get_texts_access_folder_confirm_reject(accessing_user_id, from_user_id
 
 
 async def add_user_to_folder_access(user_id, folder: Folder, access_type: AccessType) -> bool:
-    folder.add_access_user(user_id, access_type)
+    folder.set_access_user(user_id, access_type)
     return await edit_folder(folder.author_user_id, folder)
 
 
 async def edit_user_to_folder_access(user_id, folder: Folder, access_type: AccessType) -> bool:
-    folder.edit_access_user(user_id, access_type)
+    folder.set_access_user(user_id, access_type)
     return await edit_folder(folder.author_user_id, folder)
 
 

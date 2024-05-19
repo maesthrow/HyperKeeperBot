@@ -38,11 +38,11 @@ async def get_folder_users_accesses(folder: Folder, users_accesses: dict) -> dic
         for user_id, access_user in users.items():
             if access_user['access_type'] == AccessType.WRITE.value or user_id not in users_accesses:
                 users_accesses[user_id] = access_user['access_type']
-    if folder.folder_id != ROOT_FOLDER_ID:
-        folder_id = get_parent_folder_id(folder.folder_id)
-        folder: Folder = await get_folder(folder.author_user_id, folder_id)
-        if folder:
-            users_accesses = await get_folder_users_accesses(folder, users_accesses)
+    # if folder.folder_id != ROOT_FOLDER_ID:
+    #     folder_id = get_parent_folder_id(folder.folder_id)
+    #     folder: Folder = await get_folder(folder.author_user_id, folder_id)
+    #     if folder:
+    #         users_accesses = await get_folder_users_accesses(folder, users_accesses)
     return users_accesses
 
 

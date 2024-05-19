@@ -86,14 +86,16 @@ async def get_from_user_folder_data(dialog_manager: DialogManager, **kwargs):
     user_sorted_folders = await get_sorted_folders(from_user_id, folder_id)
     user_folders = []
     for folder in user_sorted_folders:
-        user_folders.append(
-            {
-                'from_user_id': from_user_id,
-                'folder_id': folder[0],
-                'folder_name': f'{smile_folder} {folder[1]['name']}',
-                'btn_back': general_keyboards.BUTTONS['back'].get(language)
-            }
-        )
+        if (str(user_id) in folder[1].get('access', {}).get('users', {}) or
+                int(user_id) in folder[1].get('access', {}).get('users', {})):
+            user_folders.append(
+                {
+                    'from_user_id': from_user_id,
+                    'folder_id': folder[0],
+                    'folder_name': f'{smile_folder} {folder[1]['name']}',
+                    'btn_back': general_keyboards.BUTTONS['back'].get(language)
+                }
+            )
 
     folder_items = await get_folder_items(from_user_id, folder_id)
     user_folder_items = []

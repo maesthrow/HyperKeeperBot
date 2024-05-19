@@ -81,33 +81,71 @@ class Folder(BaseDbModel):
     def get_access_user(self, user_id) -> AccessType:
         user_id = str(user_id)
         users = self.get_access_users()
-        print(f'users {users}')
         if users and user_id in users:
             return AccessType(users[user_id].get('access_type', ''))
         else:
             return AccessType.ABSENSE
 
-    def add_access_user(self, user_id, access_type: AccessType):
+    def set_access_user(self, user_id, access_type: AccessType):
         user_id = str(user_id)
         users = self.get_access_users()
         users[user_id] = {
             "access_type": access_type.value
         }
+        self.set_access_user_recursive(user_id, access_type, self.folders)
 
-    def edit_access_user(self, user_id, access_type: AccessType):
-        user_id = str(user_id)
-        users = self.get_access_users()
-        users[user_id] = {
-            "access_type": access_type.value
-        }
+    def set_access_user_recursive(self, user_id, access_type: AccessType, folders: dict):
+        if not folders:
+            return
+
+        for folder in folders.values():
+            # Устанавливаем или обновляем доступ для пользователя
+            folder.setdefault('access', {}).setdefault('users', {})[user_id] = {
+                "access_type": access_type.value
+            }
+
+            # Рекурсивно обрабатываем вложенные папки
+            sub_folders = folder.get('folders')
+            if sub_folders:
+                self.set_access_user_recursive(user_id, access_type, sub_folders)
 
     def delete_access_user(self, user_id):
         user_id = str(user_id)
         users = self.get_access_users()
         users.pop(user_id)
+        self.delete_access_user_recursive(user_id, self.folders)
+
+    def delete_access_user_recursive(self, user_id, folders: dict):
+        if not folders:
+            return
+
+        for folder in folders.values():
+            # Удаляем доступ для пользователя, если он существует
+            users = folder.get('access', {}).get('users', {})
+            users.pop(user_id, None)
+
+            # Рекурсивно обрабатываем вложенные папки
+            sub_folders = folder.get('folders')
+            if sub_folders:
+                self.delete_access_user_recursive(user_id, sub_folders)
 
     def delete_access_all_users(self):
         self.access['users'] = {}
+        self.delete_access_all_users_recursive(self.folders)
+
+    def delete_access_all_users_recursive(self, folders: dict):
+        if not folders:
+            return
+
+        for folder in folders.values():
+            # Удаляем доступ для пользователя, если он существует
+            access = folder.get('access', {})
+            access['users'] = {}
+
+            # Рекурсивно обрабатываем вложенные папки
+            sub_folders = folder.get('folders')
+            if sub_folders:
+                self.delete_access_all_users_recursive(sub_folders)
 
     def get_access_tokens(self) -> list:
         tokens = list()

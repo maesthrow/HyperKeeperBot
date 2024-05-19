@@ -265,34 +265,41 @@ async def get_result_full_delete_access(from_user_id, accessing_users: list, fol
         if access_from_user_changed:
             result_accessing_users.append(user)
 
-    if len(result_accessing_users) == len(accessing_users):
-        user_from_access_changed = await h_a.delete_all_users_from_folder_access(folder)
+    user_from_access_changed = await h_a.delete_all_users_from_folder_access(folder)
+    if user_from_access_changed:
+        return accessing_users
     else:
-        for user in result_accessing_users:
-            user_id = user.get('user_id', None)
-            await h_a.delete_user_from_folder_access(user_id, folder)
-    return result_accessing_users
+        return result_accessing_users
+    # if len(result_accessing_users) == len(accessing_users):
+    #     user_from_access_changed = await h_a.delete_all_users_from_folder_access(folder)
+    # else:
+    #     for user in result_accessing_users:
+    #         user_id = user.get('user_id', None)
+    #         await h_a.delete_user_from_folder_access(user_id, folder)
+    #return result_accessing_users
 
 
 async def get_result_delete_access(from_user_id, accessing_user_id, folder):
     access_from_user_changed = await util_access_delete_from_user_folder(
         accessing_user_id, from_user_id, folder.folder_id
     )
-    if access_from_user_changed:
-        user_from_access_changed = await h_a.delete_user_from_folder_access(accessing_user_id, folder)
-    else:
-        user_from_access_changed = False
-    return access_from_user_changed and user_from_access_changed
+    user_from_access_changed = await h_a.delete_user_from_folder_access(accessing_user_id, folder)
+    # if access_from_user_changed:
+    #     user_from_access_changed = await h_a.delete_user_from_folder_access(accessing_user_id, folder)
+    # else:
+    #     user_from_access_changed = False
+    return not (not access_from_user_changed and not user_from_access_changed)
 
 
 async def get_result_edit_access(from_user_id, accessing_user_id, folder, access_type: AccessType):
     access_folder = AccessFolder(accessing_user_id, from_user_id, folder.folder_id, access_type)
     access_from_user_changed = await util_access_edit_from_user_folder(access_folder)
-    if access_from_user_changed:
-        user_from_access_changed = await h_a.edit_user_to_folder_access(accessing_user_id, folder, access_type)
-    else:
-        user_from_access_changed = False
-    return access_from_user_changed and user_from_access_changed
+    user_from_access_changed = await h_a.edit_user_to_folder_access(accessing_user_id, folder, access_type)
+    # if access_from_user_changed:
+    #     user_from_access_changed = await h_a.edit_user_to_folder_access(accessing_user_id, folder, access_type)
+    # else:
+    #     user_from_access_changed = False
+    return not (not access_from_user_changed and not user_from_access_changed)
 
 
 async def stop_all_users_access_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
