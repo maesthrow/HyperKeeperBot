@@ -79,7 +79,7 @@ async def setup_bot_commands():
 # storage - 🗂️ открыть хранилище
 # gpt - 🧠 ChatGPT
 # access - 🔐 доступы от других пользователей
-# search - 🔍️ live-поиск
+# search - 🔍️ быстрый поиск
 # profile - 👤 мой профиль
 # settings - ⚙️ настройки
 # help - ❔ помощь

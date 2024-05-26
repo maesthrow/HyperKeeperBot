@@ -45,7 +45,7 @@ async def chatgpt_new_chat_handler(callback: CallbackQuery, button: Button, dial
 
 
 async def search_menu_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):
-    await dialog_manager.switch_to(MainMenuState.LiveSearch)
+    await dialog_manager.switch_to(MainMenuState.QuickSearch)
 
 
 async def user_profile_handler(callback: CallbackQuery, button: Button, dialog_manager: DialogManager):

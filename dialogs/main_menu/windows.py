@@ -27,7 +27,7 @@ main_menu_window = Window(
     getter=get_main_menu_data
 )
 
-live_search_window = Window(
+quick_search_window = Window(
     Format("{message_text}"),
     InlineQueryButton(
         Format('{btn_general}'),
@@ -50,8 +50,8 @@ live_search_window = Window(
         switch_inline_query_current_chat=Const("files/")
     ),
     Button(text=Format("{btn_menu}"), id="main_menu", on_click=open_main_menu_handler),
-    state=MainMenuState.LiveSearch,
-    getter=get_live_search_data
+    state=MainMenuState.QuickSearch,
+    getter=get_quick_search_data
 )
 
 user_profile_window = Window(
@@ -73,7 +73,7 @@ help_menu_window = Window(
 dialog_main_menu = Dialog(
     start_window,
     main_menu_window,
-    live_search_window,
+    quick_search_window,
     user_profile_window,
     help_menu_window,
 )

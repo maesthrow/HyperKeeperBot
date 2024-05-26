@@ -101,8 +101,8 @@ async def gpt_handler(message: Message, state: FSMContext, dialog_manager: Dialo
 
 
 @router.message(Command(commands=["search"]))
-async def inline_search(message: Message, state: FSMContext, dialog_manager: DialogManager):
-    await dialog_manager.start(MainMenuState.LiveSearch)
+async def quick_search_handler(message: Message, state: FSMContext, dialog_manager: DialogManager):
+    await dialog_manager.start(MainMenuState.QuickSearch)
 
 
 @router.message(Command(commands=["settings"]))

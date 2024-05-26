@@ -6,6 +6,7 @@ from models.item_model import INVISIBLE_CHAR
 from resources.text_getter import get_start_first_text, get_start_text, get_text
 from utils.utils_ import smile_folder, smile_item, smile_file
 from utils.utils_access import get_user_info
+from utils.utils_bot import get_bot_name
 from utils.utils_data import get_current_lang
 
 
@@ -42,15 +43,15 @@ async def get_main_menu_data(dialog_manager: DialogManager, **kwargs):
     }
 
 
-async def get_live_search_data(dialog_manager: DialogManager, **kwargs):
+async def get_quick_search_data(dialog_manager: DialogManager, **kwargs):
     user_id = dialog_manager.event.from_user.id
     language = await get_current_lang(user_id)
     data = dialog_manager.current_context().dialog_data
-    live_search_title = await get_text(user_id, 'live_search_title')
-    prompt_text = f"{live_search_title}{INVISIBLE_CHAR * 20}"
+    quick_search_title = await get_text(user_id, 'quick_search_title')
+    prompt_text = f"{quick_search_title}{INVISIBLE_CHAR * 20}"
     if not data:
         bot_username = (await dialog_manager.event.bot.get_me()).username
-        prompt_text_template = await get_text(user_id, 'live_search_prompt_text_template')
+        prompt_text_template = await get_text(user_id, 'quick_search_prompt_text_template')
         prompt_text += prompt_text_template.format(
             bot_username=bot_username,
             smile_folder=smile_folder,
@@ -87,6 +88,8 @@ async def get_help_menu_data(dialog_manager: DialogManager, **kwargs):
     language = await get_current_lang(user.id)
     title_text = await get_text(user.id, 'help')
     help_commands_text = await get_text(user.id, 'help_commands')
+    bot_username = await get_bot_name()
+    help_commands_text = help_commands_text.replace('{bot_username}', bot_username)
     message_text = f'<b>{title_text}</b>\n\n{help_commands_text}'
 
     return {

@@ -84,11 +84,11 @@ STRINGS = {
         Language.RUSSIAN: "❔ Помощь",
         Language.ENGLISH: "❔ Help",
     },
-    'live_search_title': {
-        Language.RUSSIAN: "🔍 <b>Live-поиск</b>",
-        Language.ENGLISH: "🔍 <b>Live-search</b>",
+    'quick_search_title': {
+        Language.RUSSIAN: "🔍 <b>Быстрый поиск</b>",
+        Language.ENGLISH: "🔍 <b>Quick search</b>",
     },
-    'live_search_prompt_text_template': {
+    'quick_search_prompt_text_template': {
         Language.RUSSIAN:
             "\n\n<i>Вводите поисковый запрос из любого чата, упоминая бота:</i>\
             \n\nОбщий поиск 🌐\
@@ -136,26 +136,32 @@ STRINGS = {
 Внутри хранилища вы можете:
 Создавать папки для организации ваших данных.
 Сохранять файлы и создавать записи.
-Делиться этим с друзьями или предоставлять им доступ к целым папкам.
+Делиться этим с друзьями или предоставлять им доступ к своим папкам.
 
-<b>🔍 Функционал поиска</b>
+<b>🔍 Функционал быстрого поиска</b>
 /search
 
-Выполните общий поиск, отправив @{bot_username} <i>ваш_запрос</i> или используя кнопку "🔍 Общий поиск 🌐".
-Вы можете осуществлять поиск внутри:
-Папок, используя @{bot_username} folders/<i>ваш_запрос</i>
-Записей, используя @{bot_username} items/<i>ваш_запрос</i>
-Файлов, используя @{bot_username} files/<i>ваш_запрос</i>
+🌐 Выполняйте поиск по всему, что имеется в вашем хранилище, используя команду:
+@{bot_username} <i>ваш_запрос</i>
+
+Вы можете осуществлять поиск чего то конкретного, например:
+🗂️ Папок, используя:
+@{bot_username} folders/<i>ваш_запрос</i>
+📄 Записей, используя:
+@{bot_username} items/<i>ваш_запрос</i>
+🗃️ Файлов, используя:
+@{bot_username} files/<i>ваш_запрос</i>
 
 <b>👤 Управление вашим профилем</b>
 /profile
 
-Получите доступ и обновите настройки вашего профиля, нажав на кнопку "👤 Мой профиль".
+Получайте доступ и обновляйте настройки вашего профиля, используя кнопку "👤 Мой профиль".
 
 <b>🔐 Доступ от других пользователей</b>
 /access
 
-Просмотрите и управляйте разрешениями доступа, которые другие пользователи вам предоставили, нажав на кнопку "🔐 Доступы от других пользователей".
+Просматаривайте контент, который другие пользователи предоставили вам.
+Используйте для этого кнопку "🔐 Доступы от других пользователей".
 
 <b>️⚙️ Настройки</b>
 /settings
@@ -168,49 +174,56 @@ STRINGS = {
 Если у вас есть вопросы или нужна дополнительная помощь, используйте кнопку "💬 Написать в поддержку".
 
 Не стесняйтесь исследовать и использовать функции для улучшения вашего опыта управления данными. Наш бот здесь, чтобы помогать вам на каждом шагу! Приятного использования! ☺️""",
-        Language.ENGLISH: """<b>Welcome to the Help Section of Telegram Bot HyperKeeper 🚀</b>
 
-Our bot is designed to provide you with an intuitive and efficient way to manage your personal storage, search data, and much more. Here's a quick commands description to help you get started and make the most of the features available:
+        Language.ENGLISH: """<b>Welcome to the HyperKeeper Telegram Bot Help Section 🚀</b>
 
-<b>🗂️ Accessing Your Storage</b>
+Our bot is designed to provide you with an intuitive and efficient way to manage your personal storage, search for data, and much more. Here is a brief overview of the main commands to help you get started and make the most out of the available features:
+
+<b>🗂️ Access Your Storage</b>
 /storage
 
-Click on the "🗂️ Open storage" button to open and manage your personal storage space.
-Inside the storage, you can:
+Use the "🗂️ Open Storage" button to access and manage your personal storage space.
+Within the storage, you can:
 Create folders to organize your data.
-Save files and create records.
-Share these with friends or grant them access to entire folders.
+Save files and create entries.
+Share this with friends or grant them access to your folders.
 
-<b>🔍 Search Functionality</b>
+<b>🔍 Quick Search Functionality</b>
 /search
 
-Perform a General Search by sending @{bot_username} <i>your_query</i> or by using the "🔍 General Search 🌐" button.
-You can specifically search within:
-Folders using @{bot_username} folders/<i>your_query</i>
-Records using @{bot_username} items/<i>your_query</i>
-Files using @{bot_username} files/<i>your_query</i>
+🌐 Perform a search through everything available in your storage using the command:
+@{bot_username} <i>your_query</i>
 
-<b>👤 Managing Your Profile</b>
+You can search for something specific, for example:
+🗂️ Folders, using:
+@{bot_username} folders/<i>your_query</i>
+📄 Items, using:
+@{bot_username} items/<i>your_query</i>
+🗃️ Files, using:
+@{bot_username} files/<i>your_query</i>
+
+<b>👤 Manage Your Profile</b>
 /profile
 
-Access and update your profile settings by clicking on the "👤 My profile" button.
+Access and update your profile settings using the "👤 My Profile" button.
 
 <b>🔐 Access from Other Users</b>
 /access
 
-View and manage access permissions that other users have given you by clicking on the "🔐 Access from other users" button.
+View the content that other users have shared with you.
+Use the "🔐 Access from Other Users" button for this.
 
-<b>⚙️ Settings</b>
+<b>️⚙️ Settings</b>
 /settings
 
-Customize your experience by adjusting settings like the interface language and the number of folders or items displayed per page. Access this by clicking the "⚙️ Settings" button.
+Customize your experience by adjusting settings such as interface language and the number of folders or items per page. Access this through the "⚙️ Settings" button.
 
-<b>❔ Need More Help?</b>
+<b>❔ Need Additional Help?</b>
 /help
 
-If you have any questions or need further assistance, use the "💬 Contact Support" button.
+If you have questions or need additional assistance, use the "💬 Contact Support" button.
 
-Feel free to explore and utilize the features to enhance your data management experience. Our bot is here to assist you every step of the way! Enjoy using it! ☺️""",
+Feel free to explore and utilize the features to enhance your data management experience. Our bot is here to assist you every step of the way! Enjoy! ☺️""",
     },
 
     'empty_access_users_message': {

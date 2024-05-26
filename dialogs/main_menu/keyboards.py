@@ -15,8 +15,8 @@ BUTTONS = {
         Language.ENGLISH: "🧠 ChatGPT",
     },
     'search': {
-        Language.RUSSIAN: "🔍️ Live-поиск",
-        Language.ENGLISH: "🔍️ Live search",
+        Language.RUSSIAN: "🔍️ Быстрый поиск",
+        Language.ENGLISH: "🔍️ Quick search",
     },
     'profile': {
         Language.RUSSIAN: "👤 Мой профиль",
