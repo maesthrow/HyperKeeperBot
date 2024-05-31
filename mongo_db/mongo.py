@@ -29,7 +29,7 @@ except Exception as e:
 db = client["hk_storage_db"]
 
 
-async def close_client():
+async def close_mongo_client():
     try:
         client.close()
     except Exception as e:

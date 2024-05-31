@@ -12,12 +12,11 @@ from dialogs.main_menu.windows import dialog_main_menu
 from dialogs.settings.windows import dialog_settings_menu
 from dialogs.user_support.windows import dialog_user_support
 from load_all import bot, dp
-from mongo_db.mongo import close_client
-
+from mongo_db.mongo import close_mongo_client
 
 
 async def on_shutdown():
-    await close_client()
+    await close_mongo_client()
     await bot.close()
 
 
@@ -68,7 +67,7 @@ async def setup_bot_commands():
         BotCommand(command="/storage", description="🗂️ открыть хранилище"),
         BotCommand(command="/gpt", description="🧠 ChatGPT"),
         BotCommand(command="/access", description="🔐 доступы от других пользователей"),
-        BotCommand(command="/search", description="🔍️ live-поиск"),
+        BotCommand(command="/search", description="🔍️ быстрый поиск"),
         BotCommand(command="/profile", description="👤 мой профиль"),
         BotCommand(command="/settings", description="⚙️ настройки"),
         BotCommand(command="/help", description="❔ помощь"),

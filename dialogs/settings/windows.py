@@ -4,6 +4,7 @@ from aiogram_dialog.widgets.text import Const, Format
 
 from dialogs import general_keyboards
 from dialogs.general_handlers import open_main_menu_handler
+from dialogs.general_keyboards import always_false
 from dialogs.settings import keyboards
 from dialogs.settings.getters import get_language_data, get_folders_on_page_count_data, get_items_on_page_count_data, \
     get_settings_menu_data

@@ -137,5 +137,5 @@ async def set_accesses_from_user_collection(user_id, from_user_id, from_user_col
 
 async def get_current_lang(user_id):
     settings = await get_from_user_collection(user_id, 'settings')
-    current_language = Language(settings.get('language', Language.ENGLISH.value))
+    current_language = Language(settings.get('language', Language.RUSSIAN.value))
     return current_language

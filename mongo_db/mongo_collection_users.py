@@ -1,5 +1,6 @@
 from aiogram.types import User
 
+from enums.enums import Language
 from mongo_db.mongo import db
 from utils.utils_user import get_user_full_str
 
@@ -23,10 +24,11 @@ async def add_user(tg_user: User):
                 "subscription_code": 0,
                 "is_paid": False,
             },
+            # DEFAULT SETTINGS
             "settings": {
                 "folders_on_page_count": 6,
                 "items_on_page_count": 4,
-                "language": "russian"
+                "language": Language.RUSSIAN.value
             },
             "code_word": None
         }

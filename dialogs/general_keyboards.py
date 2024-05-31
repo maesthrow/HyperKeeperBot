@@ -19,3 +19,7 @@ BUTTONS = {
     },
 }
 
+
+# Функция-предикат, которая всегда возвращает False
+def always_false(data, widget, manager):
+    return False
