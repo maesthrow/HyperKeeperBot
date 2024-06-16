@@ -127,16 +127,29 @@ STRINGS = {
     'help_commands': {
         Language.RUSSIAN: """<b>Добро пожаловать в раздел помощи Телеграм-бота HyperKeeper 🚀</b>
         
-Наш бот разработан для того, чтобы предоставить вам интуитивно понятный и эффективный способ управления вашим личным хранилищем, поиска данных и многого другого. Вот краткое описание основных команд, которое поможет вам начать работу и максимально эффективно использовать доступные функции :
+Наш бот разработан для того, чтобы предоставить вам интуитивно понятный и эффективный способ управления вашим личным хранилищем, поиска данных и многого другого.
+Вот краткое описание основных команд, которое поможет вам начать работу и максимально эффективно использовать доступные функции:
 
 <b>🗂️ Доступ к вашему хранилищу</b>
 /storage
 
-Используйте кнопку "🗂️ Открыть хранилище", чтобы открыть и управлять вашим личным пространством хранения.
+Используйте кнопку "🗂️ Открыть хранилище", чтобы управлять вашим личным пространством хранения.
 Внутри хранилища вы можете:
 Создавать папки для организации ваших данных.
 Сохранять файлы и создавать записи.
 Делиться этим с друзьями или предоставлять им доступ к своим папкам.
+
+<b>🧠 ChatGPT</b>
+/gpt
+
+Общайтесь с ChatGPT с возможностью сохранять ваши диалоги в отдельные чаты, к которым вы сможете вернуться, чтобы в любой момент продолжить беседу.
+Используйте для этого кнопку "🧠 ChatGPT".
+
+<b>🔐 Доступы от других пользователей</b>
+/access
+
+Просматаривайте контент, который другие пользователи предоставили вам.
+Используйте для этого кнопку "🔐 Доступы от других пользователей".
 
 <b>🔍 Функционал быстрого поиска</b>
 /search
@@ -144,86 +157,92 @@ STRINGS = {
 🌐 Выполняйте поиск по всему, что имеется в вашем хранилище, используя команду:
 @{bot_username} <i>ваш_запрос</i>
 
-Вы можете осуществлять поиск чего то конкретного, например:
-🗂️ Папок, используя:
+Вы можете осуществлять поиск чего то конкретного, используя дополнительные слова, например:
+🗂️ Папок:
 @{bot_username} folders/<i>ваш_запрос</i>
-📄 Записей, используя:
+📄 Записей:
 @{bot_username} items/<i>ваш_запрос</i>
-🗃️ Файлов, используя:
+🗃️ Файлов:
 @{bot_username} files/<i>ваш_запрос</i>
 
 <b>👤 Управление вашим профилем</b>
 /profile
 
-Получайте доступ и обновляйте настройки вашего профиля, используя кнопку "👤 Мой профиль".
-
-<b>🔐 Доступ от других пользователей</b>
-/access
-
-Просматаривайте контент, который другие пользователи предоставили вам.
-Используйте для этого кнопку "🔐 Доступы от других пользователей".
+Для этого используйте кнопку "👤 Мой профиль".
 
 <b>️⚙️ Настройки</b>
 /settings
 
-Настройте свой опыт, изменяя параметры, такие как язык интерфейса и количество папок или записей на странице. Доступ к этому осуществляется через кнопку "⚙️ Настройки".
+Настройте свой опыт, изменяя параметры, такие как язык интерфейса и количество папок или записей на странице, используя кнопку "⚙️ Настройки".
 
 <b>❔ Нужна дополнительная помощь?</b>
 /help
 
 Если у вас есть вопросы или нужна дополнительная помощь, используйте кнопку "💬 Написать в поддержку".
 
-Не стесняйтесь исследовать и использовать функции для улучшения вашего опыта управления данными. Наш бот здесь, чтобы помогать вам на каждом шагу! Приятного использования! ☺️""",
+Не стесняйтесь исследовать и использовать функции для улучшения вашего опыта управления данными.
+Наш бот создан, чтобы ежедневно помогать вам!
+Приятного использования! ☺️""",
 
         Language.ENGLISH: """<b>Welcome to the HyperKeeper Telegram Bot Help Section 🚀</b>
 
-Our bot is designed to provide you with an intuitive and efficient way to manage your personal storage, search for data, and much more. Here is a brief overview of the main commands to help you get started and make the most out of the available features:
+Our bot is designed to offer you an intuitive and efficient way to manage your personal storage, search data, and much more.
+Here's a brief overview of the main commands to help you get started and make the most of the available features:
 
-<b>🗂️ Access Your Storage</b>
+<b>🗂️ Access your storage</b>
 /storage
 
-Use the "🗂️ Open Storage" button to access and manage your personal storage space.
-Within the storage, you can:
+Use the "🗂️ Open Storage" button to manage your personal storage space.
+Inside the storage, you can:
+
 Create folders to organize your data.
 Save files and create entries.
-Share this with friends or grant them access to your folders.
+Share this with friends or give them access to your folders.
+
+<b>🧠 ChatGPT</b>
+/gpt
+
+Communicate with ChatGPT with the ability to save your dialogues in separate chats, which you can return to at any time to continue the conversation.
+Use the "🧠 ChatGPT" button for this.
+
+<b>🔐 Access from other users</b>
+/access
+
+View content that other users have shared with you.
+Use the "🔐 Access from other users" button for this.
 
 <b>🔍 Quick Search Functionality</b>
 /search
 
-🌐 Perform a search through everything available in your storage using the command:
+🌐 Perform searches across everything in your storage using the command:
 @{bot_username} <i>your_query</i>
 
-You can search for something specific, for example:
-🗂️ Folders, using:
+You can perform specific searches using additional words, for example:
+🗂️ For folders:
 @{bot_username} folders/<i>your_query</i>
-📄 Items, using:
+📄 For entries:
 @{bot_username} items/<i>your_query</i>
-🗃️ Files, using:
+🗃️ For files:
 @{bot_username} files/<i>your_query</i>
 
-<b>👤 Manage Your Profile</b>
+<b>👤 Manage your profile</b>
 /profile
 
-Access and update your profile settings using the "👤 My Profile" button.
-
-<b>🔐 Access from Other Users</b>
-/access
-
-View the content that other users have shared with you.
-Use the "🔐 Access from Other Users" button for this.
+Use the "👤 My Profile" button for this.
 
 <b>️⚙️ Settings</b>
 /settings
 
-Customize your experience by adjusting settings such as interface language and the number of folders or items per page. Access this through the "⚙️ Settings" button.
+Customize your experience by changing settings such as interface language and the number of folders or entries per page, using the "⚙️ Settings" button.
 
-<b>❔ Need Additional Help?</b>
+<b>❔ Need more help?</b>
 /help
 
 If you have questions or need additional assistance, use the "💬 Contact Support" button.
 
-Feel free to explore and utilize the features to enhance your data management experience. Our bot is here to assist you every step of the way! Enjoy! ☺️""",
+Feel free to explore and use the features to enhance your data management experience.
+Our bot is here to assist you daily!
+Enjoy using it! ☺️""",
     },
 
     'empty_access_users_message': {
