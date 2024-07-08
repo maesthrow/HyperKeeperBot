@@ -34,7 +34,7 @@ async def inline_query_search(query: InlineQuery):
     query_data = query.query
     if not query_data:
         return
-    print(f'query_data = {query_data}')
+    #print(f'query_data = {query_data}')
 
     user_id = query.from_user.id
 
@@ -49,7 +49,7 @@ async def inline_query_search(query: InlineQuery):
 
     await bot.answer_inline_query(
         query.id,
-        results=search_results,
+        results=search_results[:50],
         cache_time=60,
     )
 
@@ -61,7 +61,7 @@ async def inline_query_search_folders(query: InlineQuery):
     search_results_folders = await get_search_results_folders(user_id, query_data)
     await bot.answer_inline_query(
         query.id,
-        results=search_results_folders,
+        results=search_results_folders[:50],
         cache_time=60,
     )
 
@@ -73,7 +73,7 @@ async def inline_query_search_items(query: InlineQuery):
     search_results_items = await get_search_results_items(user_id, query_data)
     await bot.answer_inline_query(
         query.id,
-        results=search_results_items,
+        results=search_results_items[:50],
         cache_time=60,
     )
 
@@ -87,7 +87,7 @@ async def inline_query_search_files(query: InlineQuery):
     #     print(f'result_id = {result.id}')
     await bot.answer_inline_query(
         query.id,
-        results=search_results_files,
+        results=search_results_files[:50],
         cache_time=60,
     )
 
@@ -95,7 +95,7 @@ async def inline_query_search_files(query: InlineQuery):
 async def get_search_results_folders(user_id, query_data):
     search_results = []
     text_search = query_data.replace('folders/', '', 1)
-    print(f'query_data folders = {text_search}')
+    # print(f'query_data folders = {text_search}')
 
     search_folders = await get_search_folders(
         user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=text_search, result_search_folders={}
@@ -178,7 +178,7 @@ async def get_search_results_files(user_id, query_data):
     text_search = query_data.replace('files/', '', 1)
     # if not text_search:
     #     return search_results
-    print(f'query_data files = {text_search}')
+    # print(f'query_data files = {text_search}')
 
     search_files = await get_search_files(
         user_id=user_id, folder_id=ROOT_FOLDER_ID, text_search=text_search, result_search_files={}
