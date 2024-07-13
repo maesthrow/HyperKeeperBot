@@ -35,20 +35,20 @@ BUTTONS = {
 
 SEARCH_BUTTONS = {
     'general': {
-        Language.RUSSIAN: "🔍 Общий поиск 🌐",
-        Language.ENGLISH: "🔍 General Search 🌐",
+        Language.RUSSIAN: "🌐 Общий поиск",
+        Language.ENGLISH: "🌐 General Search",
     },
     'folders': {
-        Language.RUSSIAN: f"🔍 Поиск папок {smile_folder}",
-        Language.ENGLISH: f"🔍 Folder Search {smile_folder}",
+        Language.RUSSIAN: f"{smile_folder} Поиск папок",
+        Language.ENGLISH: f"{smile_folder} Folder Search",
     },
     'items': {
-        Language.RUSSIAN: f"🔍 Поиск записей {smile_item}",
-        Language.ENGLISH: f"🔍 Record Search {smile_item}",
+        Language.RUSSIAN: f"{smile_item} Поиск записей",
+        Language.ENGLISH: f"{smile_item} Record Search",
     },
     'files': {
-        Language.RUSSIAN: f"🔍 Поиск файлов {smile_file}",
-        Language.ENGLISH: f"🔍 File Search {smile_file}",
+        Language.RUSSIAN: f"{smile_file} Поиск файлов",
+        Language.ENGLISH: f"{smile_file} File Search",
     },
 }
 

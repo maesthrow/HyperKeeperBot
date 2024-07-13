@@ -49,14 +49,14 @@ async def get_quick_search_data(dialog_manager: DialogManager, **kwargs):
     data = dialog_manager.current_context().dialog_data
     quick_search_title = await get_text(user_id, 'quick_search_title')
     prompt_text = f"{quick_search_title}{INVISIBLE_CHAR * 20}"
-    if not data:
-        bot_username = (await dialog_manager.event.bot.get_me()).username
-        prompt_text_template = await get_text(user_id, 'quick_search_prompt_text_template')
-        prompt_text += prompt_text_template.format(
-            bot_username=bot_username,
-            smile_folder=smile_folder,
-            smile_item=smile_item,
-            smile_file=smile_file)
+    # if not data:
+    #     bot_username = (await dialog_manager.event.bot.get_me()).username
+    #     prompt_text_template = await get_text(user_id, 'quick_search_prompt_text_template')
+    #     prompt_text += prompt_text_template.format(
+    #         bot_username=bot_username,
+    #         smile_folder=smile_folder,
+    #         smile_item=smile_item,
+    #         smile_file=smile_file)
 
     data = {
         'message_text': prompt_text,
