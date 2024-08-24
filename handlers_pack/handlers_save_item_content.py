@@ -37,7 +37,7 @@ async def text_to_new_item_handler(messages: List[Message], state: FSMContext):
     state_value = await state.get_state()
 
     if not item and state_value != states.ItemState.AddTo:
-        response_text = "Сейчас сохраним новую запись 👌"
+        response_text = "Сейчас сохраним новую запись! 👌"
         item = Item(id="", text=[])
         await save_text_to_new_item_and_set_title(state=state, item=item, messages=messages,
                                                   response_text=response_text)
