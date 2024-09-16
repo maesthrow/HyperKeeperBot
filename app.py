@@ -63,22 +63,22 @@ if __name__ == '__main__':
 
 async def setup_bot_commands():
     bot_commands = [
-        BotCommand(command="/start", description="🚀️ начало работы"),
+        BotCommand(command="/start", description="🚀️ пуск"),
         BotCommand(command="/storage", description="🗂️ открыть хранилище"),
         BotCommand(command="/gpt", description="🧠 ChatGPT"),
-        BotCommand(command="/access", description="🔐 доступы от других пользователей"),
         BotCommand(command="/search", description="🔍️ быстрый поиск"),
+        BotCommand(command="/access", description="🔐 доступы от других пользователей"),
         BotCommand(command="/profile", description="👤 мой профиль"),
         BotCommand(command="/settings", description="⚙️ настройки"),
         BotCommand(command="/help", description="❔ помощь"),
     ]
     await bot.set_my_commands(bot_commands)
 
-# start - 🚀️ начало работы
+# start - 🚀️ пуск
 # storage - 🗂️ открыть хранилище
 # gpt - 🧠 ChatGPT
-# access - 🔐 доступы от других пользователей
 # search - 🔍️ быстрый поиск
+# access - 🔐 доступы от других пользователей
 # profile - 👤 мой профиль
 # settings - ⚙️ настройки
 # help - ❔ помощь
