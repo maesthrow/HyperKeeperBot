@@ -5,9 +5,8 @@ from dotenv import load_dotenv
 from aiogram import Bot, Router
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from langchain_community.chat_models import GigaChat
 from wit import Wit
-
-from langchain.chat_models.gigachat import GigaChat
 
 load_dotenv()
 
