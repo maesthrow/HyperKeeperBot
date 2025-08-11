@@ -10,13 +10,14 @@ from callbacks.callbackdata import TextPagesCallback, SaveItemCallback, \
     PinFolderCallback, PinKeyboardNumberCallback, PinKeyboardButtonCallback, NewPinCodeButtonCallback, \
     EnterPinCodeButtonCallback, PinControlCallback, AccessFolderCallback, AccessControlCallback, VoiceSaveTypeCallback, \
     ReadVoiceRunCallback, AccessRequestCallback, AccessConfirmCallback, AnswerUserAfterContactSupportCallback, \
-    AnswerAdminAfterAnswerUserContactSupportCallback
+    AnswerAdminAfterAnswerUserContactSupportCallback, ItemShowCallback
 from models.item_model import Item, INVISIBLE_CHAR
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from resources.text_getter import get_text
 from utils.utils_access import AccessType
 from utils.utils_bot import to_url_data
 from utils.utils_files import file_has_caption
+from utils.utils_items_reader import get_simple_item
 
 cancel_button = KeyboardButton(text="️🚫 Отменить")
 
@@ -672,3 +673,18 @@ async def get_contact_support_user_markup(button_answer_admin_text: str, contact
     )
     builder.adjust(1)
     return builder.as_markup()
+
+
+async def get_after_rag_search_item_markup(user_id, item_id):
+    buttons = []
+
+    item = await get_simple_item(user_id, item_id)
+
+    item_button_text = item.get_inline_title()
+    if item:
+        buttons.append([InlineKeyboardButton(
+            text=f"{'📄'} {item_button_text}",
+            callback_data=ItemShowCallback(author_user_id=user_id, item_id=item_id, with_folders=False).pack())])
+
+    item_inline_markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+    return item_inline_markup

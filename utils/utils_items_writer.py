@@ -1,5 +1,6 @@
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import set_user_folders_data
+from rag.crud import add_or_update_item_embeddings, remove_user_item_embeddings
 from utils.utils_data import get_folders_collection, set_folders_collection
 from utils.utils_items_reader import get_folder_id, get_item
 
@@ -40,6 +41,12 @@ async def add_item_to_folder(user_id, folder_id, item: Item):
         # Обновляем данные пользователя
         result = await set_user_folders_data(user_id, {"folders": folders_collection})
         if result:
+            add_or_update_item_embeddings(
+                user_id=int(user_id),
+                item_id=new_item_id,
+                title=item.title,
+                text='\n'.join(item.text)
+            )
             return new_item_id  # Успешно добавлена запись
     return None  # Не удалось добавить запись
 
@@ -68,6 +75,8 @@ async def delete_item(user_id, item_id):
         # Обновляем данные пользователя
         await set_user_folders_data(user_id, {"folders": folders_collection})
 
+        remove_user_item_embeddings(user_id=int(user_id), item_id=item_id)
+
         return True  # Успешно переименовано
     else:
         return False  # Папка не найдена
@@ -92,6 +101,8 @@ async def delete_all_items_in_folder(user_id, folder_id):
     # Получаем данные о папке, в которой нужно удалить запись
     target_folder = target_folders.get(folder_id, None)
     if target_folder:
+        for item in target_folder["items"]:
+            remove_user_item_embeddings(user_id=int(user_id), item_id=item["id"])
         target_folder["items"].clear()
         # Обновляем данные пользователя
         await set_user_folders_data(user_id, {"folders": folders_collection})
@@ -126,6 +137,13 @@ async def edit_item(user_id, item_id, item: Item):
         # Обновляем данные пользователя
         await set_user_folders_data(user_id, {"folders": folders_collection})
 
+        add_or_update_item_embeddings(
+            user_id=int(user_id),
+            item_id=item.id,
+            title=item.title,
+            text='\n'.join(item.text)
+        )
+
         return True  # Успешно переименовано
     else:
         return False  # Папка не найдена
@@ -136,8 +154,17 @@ async def move_item(user_id, item_id, dest_folder_id):
 
     result_del = await delete_item(user_id, item_id)
     if result_del:
+        remove_user_item_embeddings(user_id, item_id)
         await set_folders_collection(user_id)
         new_movement_item_id = await add_item_to_folder(user_id, dest_folder_id, item)
+
+        add_or_update_item_embeddings(
+            user_id=int(user_id),
+            item_id=new_movement_item_id,
+            title=item.title,
+            text='\n'.join(item.text)
+        )
+
         return new_movement_item_id
 
     return None

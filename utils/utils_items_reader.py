@@ -14,7 +14,7 @@ def get_folder_id(item_id):
 async def get_folder_items(user_id, folder_id, text_search=None):
     """Возвращает элементы папки по её идентификатору с учетом текстового поиска."""
     folder_data = await get_folder_data(user_id, folder_id)
-    items = folder_data.get("items", {})
+    items = folder_data.get("items", {}) if folder_data else {}
     if text_search:
         # Фильтрация элементов по текстовому поиску в title или text
         filtered_items = {key: value for key, value in items.items()
@@ -58,6 +58,7 @@ async def get_item(user_id, item_id) -> Item | None:
 
 
 async def get_simple_item(user_id, item_id):
+    print(f'get_simple_item -> item_id={item_id}')
     item_dict = await get_item_dict(user_id, item_id)
     if item_dict:
         item = Item(id=item_id, text=item_dict["text"], title=item_dict["title"], date_created=item_dict["date_created"])

@@ -5,7 +5,7 @@ from utils.utils_data import get_folders_collection
 
 async def get_folder_data(user_id, folder_id):
     folders_collection = await get_folders_collection(user_id)
-    folder_ids = folder_id.split('/')
+    folder_ids = folder_id.split('/') if folder_id else []
     target_folders = folders_collection
     folder_id_with_path = None
     target_folder = None
