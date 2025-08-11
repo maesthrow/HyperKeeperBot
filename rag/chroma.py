@@ -1,6 +1,6 @@
 # ======= chroma_setup.py =======
 import os
-
+print("chroma.py")
 os.environ.setdefault("DUCKDB_THREADS", "1")  # снижает шанс падений на Win
 os.environ["CHROMADB_DISABLE_HNSWLIB"] = "1"   # критично: отключаем нативный индекс
 os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
