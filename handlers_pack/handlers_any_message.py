@@ -4,7 +4,6 @@ from aiogram.types import Message
 from aiogram_dialog import DialogManager
 
 from handlers_pack.filters import NewItemValidateFilter
-from handlers_pack.handlers_rag import rag_search_handler
 from handlers_pack.handlers_save_item_content import text_to_message_handler
 from load_all import dp
 
@@ -24,7 +23,8 @@ async def any_message(message: Message, state: FSMContext, dialog_manager: Dialo
             or message.text.lower().startswith(f'{BOT_MENTION_HYP.lower()} ')
             or message.text.lower().startswith(f'{BOT_MENTION_HYP.lower()}, ')
     ):
-        await rag_search_handler(message, state)
+        await text_to_message_handler(message, state)
+        #await rag_search_handler(message, state)
     else:
         await text_to_message_handler(message, state)
 

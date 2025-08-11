@@ -1,4 +1,5 @@
-import asyncio
+import concurrent.futures
+import concurrent.futures
 import concurrent.futures
 import concurrent.futures
 import functools
@@ -10,10 +11,9 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, KeyboardButton, Message, ReplyKeyboardRemove, User
-from aiogram_dialog import DialogManager, ShowMode
+from aiogram_dialog import DialogManager
 
 from callbacks.callbackdata import ChooseTypeAddText, MessageBoxCallback
-from dialogs.giga_chat.keyboards import get_chat_reply_keyboard
 from handlers_pack import states
 from handlers_pack.filters import NewItemValidateFilter
 from handlers_pack.handlers_folder import show_all_folders, show_folders, finalized_inline_markup
@@ -28,17 +28,15 @@ from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import has_user
-from rag.chroma import user_has_embeddings
-from rag.reindex_user_folders import reindex_user_folders
 from resources.text_getter import get_text
-from utils.data_manager import get_data, set_data, set_any_message_ignore
+from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
     smile_folder
 from utils.utils_bot import from_url_data
 from utils.utils_button_manager import create_general_reply_markup, general_buttons_movement_item, \
     get_folders_with_items_inline_markup, new_general_buttons_folder, \
     get_folder_pin_inline_markup
-from utils.utils_data import set_current_folder_id, get_current_folder_id, add_user_collections, get_current_lang
+from utils.utils_data import set_current_folder_id, get_current_folder_id, add_user_collections
 from utils.utils_folders_reader import get_folder
 from utils.utils_handlers import get_folder_path_names
 from utils.utils_items import show_all_items
@@ -80,10 +78,10 @@ async def start_init(tg_user, message, state, url_data: List[str], dialog_manage
 async def start_handler(tg_user: User, state: FSMContext, dialog_manager: DialogManager, is_first_connect: bool):
     await state.clear()
 
-    if not user_has_embeddings(tg_user.id):
-        await bot.send_message(tg_user.id, 'Обучаюсь давать ответы на основе ваших персональных данных')
-        await reindex_user_folders(tg_user.id)
-        await bot.send_message(tg_user.id, 'Успешно обучился и теперь готов отвечать на любые персональные вопросы')
+    # if not user_has_embeddings(tg_user.id):
+    #     await bot.send_message(tg_user.id, 'Обучаюсь давать ответы на основе ваших персональных данных')
+    #     await reindex_user_folders(tg_user.id)
+    #     await bot.send_message(tg_user.id, 'Успешно обучился и теперь готов отвечать на любые персональные вопросы')
 
     start_message = await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
 

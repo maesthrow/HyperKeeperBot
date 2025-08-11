@@ -7,7 +7,6 @@ from rag.answer import build_rag_chain
 from rag.chroma import iter_user_fragments
 from utils.utils_button_manager import get_after_rag_search_item_markup
 from utils.utils_markdown_new import escape_md_preserving_formatting
-from utils.utils_parse_mode_converter import escape_markdown
 
 
 async def rag_search_handler(message: Message, state: FSMContext):
