@@ -1,5 +1,7 @@
 import logging
 import os
+import re
+import sys
 
 from dotenv import load_dotenv
 from aiogram import Bot, Router
@@ -11,6 +13,10 @@ from wit import Wit
 load_dotenv()
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+print(f"[debug] BOT_TOKEN repr={repr(BOT_TOKEN)} len={0 if BOT_TOKEN is None else len(BOT_TOKEN)}", file=sys.stderr)
+if not BOT_TOKEN or not re.fullmatch(r"\d+:[A-Za-z0-9_-]{20,}", BOT_TOKEN.strip()):
+    raise RuntimeError("BOT_TOKEN missing/malformed")
 
 WIT_AI_TOKEN = os.getenv('WIT_AI_TOKEN')
 
