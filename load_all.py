@@ -7,10 +7,13 @@ from dotenv import load_dotenv
 from aiogram import Bot, Router
 from aiogram import Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
-from langchain_community.chat_models import GigaChat
+
 from wit import Wit
 
-load_dotenv()
+env_file = os.getenv("ENV_FILE", ".env")
+print(f"[debug] env_file={env_file}")
+
+load_dotenv(dotenv_path=env_file)
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 
@@ -22,6 +25,7 @@ WIT_AI_TOKEN = os.getenv('WIT_AI_TOKEN')
 
 GIGA_AUTH_DATA = os.getenv("GIGA_AUTH_DATA")
 
+from langchain_community.chat_models import GigaChat
 # Авторизация в сервисе GigaChat
 giga_chat = GigaChat(credentials=GIGA_AUTH_DATA, verify_ssl_certs=False)
 
