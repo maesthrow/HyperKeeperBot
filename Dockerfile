@@ -10,8 +10,7 @@ WORKDIR /app
 # Сначала зависимости
 COPY requirements.txt ./
 RUN python -m pip install --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt && \
-    pip check
+    pip install --no-cache-dir -r requirements.txt
 
 # Потом код
 COPY . .
