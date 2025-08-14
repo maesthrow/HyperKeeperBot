@@ -1,3 +1,4 @@
+import asyncio
 import concurrent.futures
 import concurrent.futures
 import concurrent.futures
@@ -28,6 +29,8 @@ from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import has_user
+from rag.chroma import user_has_embeddings
+from rag.reindex_user_folders import reindex_user_folders
 from resources.text_getter import get_text
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
@@ -78,10 +81,11 @@ async def start_init(tg_user, message, state, url_data: List[str], dialog_manage
 async def start_handler(tg_user: User, state: FSMContext, dialog_manager: DialogManager, is_first_connect: bool):
     await state.clear()
 
-    # if not user_has_embeddings(tg_user.id):
-    #     await bot.send_message(tg_user.id, 'Обучаюсь давать ответы на основе ваших персональных данных')
-    #     await reindex_user_folders(tg_user.id)
-    #     await bot.send_message(tg_user.id, 'Успешно обучился и теперь готов отвечать на любые персональные вопросы')
+    if not user_has_embeddings(tg_user.id):
+        await bot.send_message(tg_user.id, '🤓 Секундочку, обучаюсь давать ответы на основе ваших персональных данных!')
+        await reindex_user_folders(tg_user.id)
+        await bot.send_message(tg_user.id, '✅ Успешно обучился и теперь готов отвечать на любые ваши персональные вопросы!')
+        await asyncio.sleep(1)
 
     start_message = await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
 
