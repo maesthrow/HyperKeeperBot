@@ -5,7 +5,10 @@ from langchain_community.chat_models import GigaChat
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from rag.chroma import rag_search
+from load_all import RAG_ON
+
+if RAG_ON:
+    from rag.chroma import rag_search
 from rag.reranker import CrossEncoderReranker, RerankedDoc
 
 _DEFAULT_SYSTEM = (

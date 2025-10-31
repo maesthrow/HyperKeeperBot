@@ -16,6 +16,8 @@ WIT_AI_TOKEN = os.getenv('WIT_AI_TOKEN')
 
 GIGA_AUTH_DATA = os.getenv("GIGA_AUTH_DATA")
 
+RAG_ON = str(os.getenv("RAG_ON")) == "True"
+
 # Авторизация в сервисе GigaChat
 giga_chat = GigaChat(credentials=GIGA_AUTH_DATA, verify_ssl_certs=False)
 

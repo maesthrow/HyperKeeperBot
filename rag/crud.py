@@ -1,7 +1,10 @@
 import hashlib
 import time
 
-from rag.chroma import collection, chunk_text, add_items
+from load_all import RAG_ON
+
+if RAG_ON:
+    from rag.chroma import collection, chunk_text, add_items
 
 
 def content_hash(title: str|None, text: str|None) -> str:

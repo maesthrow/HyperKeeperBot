@@ -24,13 +24,14 @@ from handlers_pack.handlers_save_item_content import files_to_message_handler, s
 from handlers_pack.handlers_start_command_with_args import start_url_data_folder_handler, start_url_data_item_handler, \
     start_url_data_file_handler, start_url_data_access_provide_handler
 from handlers_pack.states import AccessesState, MainMenuState, SettingsMenuState, GigaChatState
-from load_all import bot, dp
+from load_all import bot, dp, RAG_ON
 from models.folder_model import Folder
 from models.item_model import Item
 from mongo_db.mongo_collection_folders import ROOT_FOLDER_ID
 from mongo_db.mongo_collection_users import has_user
-from rag.chroma import user_has_embeddings
-from rag.reindex_user_folders import reindex_user_folders
+if RAG_ON:
+    from rag.chroma import user_has_embeddings
+    from rag.reindex_user_folders import reindex_user_folders
 from resources.text_getter import get_text
 from utils.data_manager import get_data, set_data
 from utils.utils_ import get_inline_markup_items_in_folder, get_inline_markup_folders, \
@@ -81,7 +82,7 @@ async def start_init(tg_user, message, state, url_data: List[str], dialog_manage
 async def start_handler(tg_user: User, state: FSMContext, dialog_manager: DialogManager, is_first_connect: bool):
     await state.clear()
 
-    if not user_has_embeddings(tg_user.id):
+    if RAG_ON and not user_has_embeddings(tg_user.id):
         await bot.send_message(tg_user.id, '🤓 Секундочку, обучаюсь давать ответы на основе ваших персональных данных!')
         await reindex_user_folders(tg_user.id)
         await bot.send_message(tg_user.id, '✅ Успешно обучился и теперь готов отвечать на любые ваши персональные вопросы!')

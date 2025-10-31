@@ -3,10 +3,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 from aiogram_dialog import DialogManager
 
+from load_all import dp, RAG_ON
+if RAG_ON:
+    from handlers_pack.handlers_rag import rag_search_handler
 from handlers_pack.filters import NewItemValidateFilter
-from handlers_pack.handlers_rag import rag_search_handler
 from handlers_pack.handlers_save_item_content import text_to_message_handler
-from load_all import dp
 
 router = Router()
 dp.include_router(router)
@@ -19,12 +20,11 @@ BOT_MENTION_HYP = "Гип"
 async def any_message(message: Message, state: FSMContext, dialog_manager: DialogManager):
     print("ANY MESSAGE")
 
-    if (message.text.lower().startswith(f'{BOT_MENTION_KEEP.lower()} ')
-            or message.text.lower().startswith(f'{BOT_MENTION_KEEP.lower()}, ')
-            or message.text.lower().startswith(f'{BOT_MENTION_HYP.lower()} ')
-            or message.text.lower().startswith(f'{BOT_MENTION_HYP.lower()}, ')
+    if RAG_ON and ((message.text.lower().startswith(f'{BOT_MENTION_KEEP.lower()} ')
+                    or message.text.lower().startswith(f'{BOT_MENTION_KEEP.lower()}, ')
+                    or message.text.lower().startswith(f'{BOT_MENTION_HYP.lower()} ')
+                    or message.text.lower().startswith(f'{BOT_MENTION_HYP.lower()}, '))
     ):
         await rag_search_handler(message, state)
     else:
         await text_to_message_handler(message, state)
-
