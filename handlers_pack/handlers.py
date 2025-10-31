@@ -88,7 +88,8 @@ async def start_handler(tg_user: User, state: FSMContext, dialog_manager: Dialog
         await bot.send_message(tg_user.id, '✅ Успешно обучился и теперь готов отвечать на любые ваши персональные вопросы!')
         await asyncio.sleep(1)
 
-    start_message = await bot.send_message(tg_user.id, '🚀️', reply_markup=ReplyKeyboardRemove())
+    markup = ReplyKeyboardRemove()  # без клавиатуры
+    start_message = await bot.send_message(tg_user.id, '🚀️', reply_markup=markup)
 
     await dialog_manager.start(
         MainMenuState.Start,

@@ -11,11 +11,8 @@ from wit import Wit
 load_dotenv()
 
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-
 WIT_AI_TOKEN = os.getenv('WIT_AI_TOKEN')
-
 GIGA_AUTH_DATA = os.getenv("GIGA_AUTH_DATA")
-
 RAG_ON = str(os.getenv("RAG_ON")) == "True"
 
 # Авторизация в сервисе GigaChat
