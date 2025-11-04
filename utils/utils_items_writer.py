@@ -49,7 +49,7 @@ async def add_item_to_folder(user_id, folder_id, item: Item):
                 title=item.title,
                 text='\n'.join(item.text)
             )
-            return new_item_id  # Успешно добавлена запись
+        return new_item_id  # Успешно добавлена запись
     return None  # Не удалось добавить запись
 
 
